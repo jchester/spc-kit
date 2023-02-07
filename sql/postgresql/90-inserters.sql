@@ -1,6 +1,6 @@
 create or replace function spc.bulk_insert_example_data_measurements(
   p_instrument_name text,
-  p_series_period   tstzrange,
+  p_window_period   tstzrange,
   p_measurements    decimal[][]
 )
   returns void
@@ -8,6 +8,7 @@ as
 $$
 declare
   v_instrument_queried_id bigint;
+  v_control_window_id     bigint;
   v_sample_period         tstzrange;
   v_measurement_period    tstzrange;
   v_sample_inserted_id    bigint;
@@ -15,12 +16,16 @@ declare
   v_measurement           decimal;
 begin
   select id from spc.instruments where name = p_instrument_name into v_instrument_queried_id;
-  select tstzrange(lower(p_series_period), lower(p_series_period) + interval '1 minute')
+
+  insert into spc.control_window (instrument_id, period, description) values (v_instrument_queried_id, p_window_period, '')
+  returning id into v_control_window_id;
+
+  select tstzrange(lower(p_window_period), lower(p_window_period) + interval '1 minute')
   into v_sample_period;
 
   foreach v_sample slice 1 in array p_measurements loop
-    insert into spc.samples (instrument_id, period)
-    values (v_instrument_queried_id, v_sample_period)
+    insert into spc.samples (control_window_id, period)
+    values (v_control_window_id, v_sample_period)
     returning id into v_sample_inserted_id;
 
     select tstzrange(lower(v_sample_period), lower(v_sample_period) + interval '1 second') into v_measurement_period;

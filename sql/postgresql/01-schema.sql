@@ -18,12 +18,22 @@ create table spc.instruments (
   unique (name, observed_system_id)
 );
 
-create table spc.samples (
+create table spc.control_window (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
   period        tstzrange                              not null,
+  description   text,
 
   unique (period, instrument_id),
+  exclude using gist(period with &&)
+);
+
+create table spc.samples (
+  id                bigserial primary key,
+  control_window_id bigint references spc.control_window (id) not null,
+  period            tstzrange                                 not null,
+
+  unique (period, control_window_id),
   exclude using gist (period with &&)
 );
 

@@ -1,7 +1,8 @@
 create or replace function spc.bulk_insert_example_data_measurements(
-  p_instrument_name text,
-  p_window_period   tstzrange,
-  p_measurements    decimal[][]
+  p_instrument_name     text,
+  p_control_window_desc text,
+  p_window_period       tstzrange,
+  p_measurements        decimal[][]
 )
   returns void
 as

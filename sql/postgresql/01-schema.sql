@@ -18,7 +18,7 @@ create table spc.instruments (
   unique (name, observed_system_id)
 );
 
-create table spc.control_window (
+create table spc.control_windows (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
   period        tstzrange                              not null,
@@ -30,8 +30,8 @@ create table spc.control_window (
 
 create table spc.samples (
   id                bigserial primary key,
-  control_window_id bigint references spc.control_window (id) not null,
-  period            tstzrange                                 not null,
+  control_window_id bigint references spc.control_windows (id) not null,
+  period            tstzrange                                  not null,
 
   unique (period, control_window_id),
   exclude using gist (period with &&)

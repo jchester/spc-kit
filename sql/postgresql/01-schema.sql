@@ -51,7 +51,7 @@ create view spc.sample_statistics as
        , avg(measured_value)                       as sample_mean
        , stddev_pop(measured_value)                as sample_stddev
        , max(measured_value) - min(measured_value) as sample_range
-       , count(1)                                  as sample_count
+       , count(1)                                  as sample_size
   from spc.measurements
   group by sample_id;
 

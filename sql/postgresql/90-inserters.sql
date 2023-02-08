@@ -2,6 +2,7 @@ create or replace function spc.bulk_insert_example_data_measurements(
   p_instrument_name     text,
   p_control_window_desc text,
   p_window_period       tstzrange,
+  p_window_type         spc.window_type,
   p_measurements        decimal[][]
 )
   returns void
@@ -18,8 +19,8 @@ declare
 begin
   select id from spc.instruments where name = p_instrument_name into v_instrument_queried_id;
 
-  insert into spc.control_windows (instrument_id, period, description)
-  values (v_instrument_queried_id, p_window_period, p_control_window_desc)
+  insert into spc.control_windows (instrument_id, period, type, description)
+  values (v_instrument_queried_id, p_window_period, p_window_type, p_control_window_desc)
   returning id into v_control_window_id;
 
   select tstzrange(lower(p_window_period), lower(p_window_period) + interval '1 minute')

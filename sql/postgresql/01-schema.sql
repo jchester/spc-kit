@@ -18,10 +18,13 @@ create table spc.instruments (
   unique (name, observed_system_id)
 );
 
+create type spc.window_type as enum ('limit_establishment', 'limit_application');
+
 create table spc.control_windows (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
   period        tstzrange                              not null,
+  type          spc.window_type                        not null,
   description   text,
 
   unique (period, instrument_id),

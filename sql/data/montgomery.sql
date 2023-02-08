@@ -1,3 +1,6 @@
+-- Data taken from:
+--   Montgomery, Douglas. Introduction to Statistical Quality Control 8th EMEA edition.
+
 insert into spc.observed_systems (name)
 values ('Table 6.1 and Table 6.2');
 

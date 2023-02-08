@@ -54,15 +54,6 @@ create table spc.control_windows (
   unique (period, limit_establishment_window_id)
 );
 
-create view spc.sample_statistics as
-  select sample_id
-       , avg(measured_value)                       as sample_mean
-       , stddev_pop(measured_value)                as sample_stddev
-       , max(measured_value) - min(measured_value) as sample_range
-       , count(1)                                  as sample_size
-  from spc.measurements
-  group by sample_id;
-
 -- https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php
 -- and Appendix VI of Montgomery
 -- @formatter:off
@@ -94,3 +85,58 @@ values
 , (24,    0.612,  0.157,  0.619,  0.9892,   1.0/0.9892,   0.555,  1.445,  0.549,    1.429,  3.895,     1.0/3.895,            0.712,      1.759,    6.031,       0.451,    1.548)
 , (25,    0.6,    0.153,  0.606,  0.9896,   1.0/0.9896,   0.565,  1.435,  0.559,    1.420,  3.931,     1.0/3.931,            0.708,      1.806,    6.056,       0.459,    1.541)
 ;
+
+create view spc.sample_statistics as
+  select s.period
+       , avg(measured_value)                       as sample_mean
+       , stddev_samp(measured_value)               as sample_stddev
+       , max(measured_value) - min(measured_value) as sample_range
+       , count(1)                                  as sample_size
+  from spc.measurements m
+       join spc.samples s on s.id = m.sample_id
+  group by s.period;
+
+create view spc.limit_establishment_statistics as
+  select lew.id             as limit_establishment_window_id
+       , avg(sample_mean)   as grand_mean
+       , avg(sample_stddev) as mean_stddev
+       , avg(sample_range)  as mean_range
+       , avg(sample_size)   as mean_sample_size
+  from spc.sample_statistics                ss
+       join spc.limit_establishment_windows lew on ss.period <@ lew.period
+  group by lew.id;
+
+create view x_bar_r_limits as
+select limit_establishment_window_id
+     , grand_mean +
+       ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) * mean_range) as upper_control_limit
+     , grand_mean                                                                               as center_line
+     , grand_mean -
+       ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) *
+        mean_range)                                                                             as lower_control_limit
+from spc.limit_establishment_statistics;
+
+create view r_limits as
+select limit_establishment_window_id
+     , ((select upper_d4 from spc.scaling_factors where sample_size = mean_sample_size) *
+        mean_range)                                                                                   as upper_control_limit
+     , mean_range                                                                                     as center_line
+     , ((select upper_d3 from spc.scaling_factors where sample_size = mean_sample_size) *
+        mean_range)                                                                                   as lower_control_limit
+from spc.limit_establishment_statistics;
+
+create view x_bar_s_limits as
+select limit_establishment_window_id
+     , grand_mean + ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
+                     mean_stddev) as upper_control_limit
+     , grand_mean                 as center_line
+     , grand_mean - ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
+                     mean_stddev) as lower_control_limit
+from spc.limit_establishment_statistics;
+
+create view s_limits as
+select limit_establishment_window_id
+     , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as upper_control_limit
+     , mean_stddev                                                                               as center_line
+     , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as lower_control_limit
+from spc.limit_establishment_statistics;

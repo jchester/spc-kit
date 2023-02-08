@@ -41,7 +41,7 @@ select spc.bulk_insert_example_data_measurements(
 select spc.bulk_insert_example_data_measurements(
                'Flow Width',
                'Table 6.2',
-               '[2023-01-02 00:00:01,2023-01-03 00:00:00)'::tstzrange,
+               '[2023-01-02 00:00:01,)'::tstzrange,
                'limit_application',
                array [
                  array [1.4483,1.5458,1.4538,1.4303,1.6206],

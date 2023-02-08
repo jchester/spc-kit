@@ -18,25 +18,12 @@ create table spc.instruments (
   unique (name, observed_system_id)
 );
 
-create type spc.window_type as enum ('limit_establishment', 'limit_application');
-
-create table spc.control_windows (
+create table spc.samples (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
   period        tstzrange                              not null,
-  type          spc.window_type                        not null,
-  description   text,
 
   unique (period, instrument_id),
-  exclude using gist(period with &&)
-);
-
-create table spc.samples (
-  id                bigserial primary key,
-  control_window_id bigint references spc.control_windows (id) not null,
-  period            tstzrange                                  not null,
-
-  unique (period, control_window_id),
   exclude using gist (period with &&)
 );
 
@@ -47,6 +34,24 @@ create table spc.measurements (
   measured_value decimal                            not null,
 
   exclude using gist (period with &&)
+);
+
+create table spc.limit_establishment_windows (
+  id            bigserial primary key,
+  instrument_id bigint references spc.instruments (id) not null,
+  period        tstzrange                              not null,
+  description   text,
+
+  unique (period, instrument_id)
+);
+
+create table spc.control_windows (
+  id                            bigserial primary key,
+  limit_establishment_window_id bigint references spc.limit_establishment_windows (id) not null,
+  period                        tstzrange                                              not null,
+  description                   text,
+
+  unique (period, limit_establishment_window_id)
 );
 
 create view spc.sample_statistics as

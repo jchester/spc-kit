@@ -150,6 +150,21 @@ select limit_establishment_window_id
                      mean_stddev) as lower_control_limit
 from spc.limit_establishment_statistics;
 
+create view x_bar_s_rules as
+select ss.id  as sample_id
+     , cw.id  as control_window_id
+     , lew.id as limit_establishment_window_id
+     , ss.period
+     , case
+         when sample_mean > upper_control_limit then 'out_of_control_upper'
+         when sample_mean < lower_control_limit then 'out_of_control_lower'
+         else 'in_control'
+       end    as shewart_control_status
+from spc.sample_statistics                ss
+     join spc.control_windows             cw on ss.period <@ cw.period
+     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+     join spc.x_bar_s_limits on lew.id = x_bar_s_limits.limit_establishment_window_id;
+
 create view s_limits as
 select limit_establishment_window_id
      , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as upper_control_limit

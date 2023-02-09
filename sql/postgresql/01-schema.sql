@@ -87,14 +87,15 @@ values
 ;
 
 create view spc.sample_statistics as
-  select s.period
-       , avg(measured_value)                       as sample_mean
-       , stddev_samp(measured_value)               as sample_stddev
-       , max(measured_value) - min(measured_value) as sample_range
-       , count(1)                                  as sample_size
-  from spc.measurements m
-       join spc.samples s on s.id = m.sample_id
-  group by s.period;
+select s.id
+     , s.period
+     , avg(measured_value)                       as sample_mean
+     , stddev_samp(measured_value)               as sample_stddev
+     , max(measured_value) - min(measured_value) as sample_range
+     , count(1)                                  as sample_size
+from spc.measurements m
+     join spc.samples s on s.id = m.sample_id
+group by s.id, s.period;
 
 create view spc.limit_establishment_statistics as
   select lew.id             as limit_establishment_window_id
@@ -117,7 +118,8 @@ select limit_establishment_window_id
 from spc.limit_establishment_statistics;
 
 create view x_bar_r_rules as
-select cw.id  as control_window_id
+select ss.id as sample_id
+     , cw.id  as control_window_id
      , lew.id as limit_establishment_window_id
      , ss.period
      , case

@@ -65,6 +65,7 @@ create table spc.samples (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
   period        tstzrange                              not null,
+  annotation    text,
 
   unique (period, instrument_id),
   exclude using gist (period with &&)

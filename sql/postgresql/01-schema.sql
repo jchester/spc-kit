@@ -352,11 +352,11 @@ $$;
 
 create view s_limits as
   select limit_establishment_window_id
-       , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) *
-          mean_stddev)                                                                             as upper_control_limit
-       , mean_stddev                                                                               as center_line
+       , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) * 
+          mean_stddev) as upper_control_limit
+       , mean_stddev   as center_line
        , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) *
-          mean_stddev)                                                                             as lower_control_limit
+          mean_stddev) as lower_control_limit
   from spc.limit_establishment_statistics;
 
 comment on view spc.s_limits is $$

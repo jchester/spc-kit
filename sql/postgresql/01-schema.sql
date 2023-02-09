@@ -1,4 +1,32 @@
 create schema if not exists spc;
+comment on schema spc is $$
+Namespace for SPC Kit tables, views and helper functions.
+
+Follows the definitions given in:
+  Montgomery, Douglas. "Introduction to Statistical Quality Control", 8th EMEA Ed.
+
+To use:
+
+* Create entries in observed_systems for each system you wish to observe.
+* Create instruments under each system.
+* Create samples under each instrument for each sampling period.
+* Create measurements under each sample. The number of measurements for each sample must be the same.
+
+Then:
+
+* Identify which time periods are your limit establishment windows - the samples you will
+  use to calculate limits for subsequent control.
+* Add control windows that immediately follow a limit establishment window and finish before
+  the next limit establishment window.
+
+Once you have added this data, you can query the various *_rules views to detect when, in a control
+window, a given sample was out-of-control. There are four available rules views:
+
+* x_bar_r_rules detects out-of-control sample averages based on range variability (Montgomery §6.2.1, Eqn 6.4)
+* r_rules detects out-of-control sample ranges based on range variability (Montgomery §6.2.1, Eqn 6.5)
+* x_bar_s_rules detects out-of-control sample averages based on standard deviation variability (Montgomery §6.3, Eqn 6.28)
+* s_rules detects out-of-control sample standard deviations based on standard deviation variability (Montgomery §6.3, Eqn 6.25 & 6.27)
+$$;
 
 create table spc.observed_systems (
   id   bigserial primary key,

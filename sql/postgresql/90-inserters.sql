@@ -56,3 +56,8 @@ begin
   end loop;
 end
 $$ language plpgsql;
+comment on function spc.bulk_insert_example_data_measurements is $$
+This function is used to quickly load data tables in the data/ directory.
+
+Do not use it to insert your data. It is not designed for general use.
+$$;

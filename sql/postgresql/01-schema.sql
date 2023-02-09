@@ -137,8 +137,6 @@ The constraint that control windows immediately follow their limit establishment
 and will probably require a trigger.
 $$;
 
--- https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php
--- and Appendix VI of Montgomery
 -- @formatter:off
 create view spc.scaling_factors(sample_size, a, a2, a3, c4, c4_reciprocal, b3, b4, b5, b6, lower_d2, lower_d2_reciprocal, lower_d3, upper_d1, upper_d2, upper_d3, upper_d4) as
 values
@@ -177,6 +175,9 @@ performed by the database and so must be sourced from existing lookup tables.
 Because this table only runs to 25 samples, that is the maximum sample size this schema can deal with. Ideally in future
 a program may be able to generate a much larger table for cases where very large samples can be obtained (eg. computer
 benchmarking).
+
+Data from https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php and
+Appendix VI of Montgomery.
 $$;
 -- @formatter:on
 

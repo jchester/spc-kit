@@ -12,7 +12,7 @@ declare
   v_instrument_queried_id         bigint;
   v_limit_establishment_window_id bigint;
   v_sample_period                 tstzrange;
-  v_measurement_period            tstzrange;
+  v_measurement_period            timestamptz;
   v_sample_inserted_id            bigint;
   v_sample                        decimal[];
   v_measurement                   decimal;
@@ -42,13 +42,13 @@ begin
     values (v_instrument_queried_id, v_sample_period)
     returning id into v_sample_inserted_id;
 
-    select tstzrange(lower(v_sample_period), lower(v_sample_period) + interval '1 second') into v_measurement_period;
+    select timestamptz(lower(v_sample_period)) into v_measurement_period;
 
     foreach v_measurement in array v_sample loop
-      insert into spc.measurements(sample_id, period, measured_value)
+      insert into spc.measurements(sample_id, taken_at, measured_value)
       values (v_sample_inserted_id, v_measurement_period, v_measurement);
 
-      select tstzrange(upper(v_measurement_period), upper(v_measurement_period) + interval '1 second')
+      select timestamptz(v_measurement_period + interval '1 second')
       into v_measurement_period;
     end loop;
 

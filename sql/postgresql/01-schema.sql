@@ -30,10 +30,10 @@ create table spc.samples (
 create table spc.measurements (
   id             bigserial primary key,
   sample_id      bigint references spc.samples (id) not null,
-  period         tstzrange                          not null,
+  taken_at       timestamptz                        not null,
   measured_value decimal                            not null,
 
-  exclude using gist (period with &&)
+  unique (taken_at, sample_id)
 );
 
 create table spc.limit_establishment_windows (

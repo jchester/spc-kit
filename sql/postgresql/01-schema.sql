@@ -20,7 +20,7 @@ Then:
   the next limit establishment window.
 
 Once you have added this data, you can query the various *_rules views to detect when, in a control
-window, a given sample was out-of-control. There are four available rules views:
+window, a given sample was out-of-control. There are four available rules views, using Shewart's control charts as their basis:
 
 * x_bar_r_rules detects out-of-control sample averages based on range variability (Montgomery §6.2.1, Eqn 6.4)
 * r_rules detects out-of-control sample ranges based on range variability (Montgomery §6.2.1, Eqn 6.5)

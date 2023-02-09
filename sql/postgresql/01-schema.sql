@@ -1,4 +1,5 @@
 create schema if not exists spc;
+
 comment on schema spc is $$
 Namespace for SPC Kit tables, views and helper functions.
 
@@ -34,6 +35,7 @@ create table spc.observed_systems (
 
   unique (name)
 );
+
 comment on table spc.observed_systems is $$
 This represents a single system under observation, which may have multiple associated
 streams of measurement samples via instruments. Example systems would include a widget
@@ -51,6 +53,7 @@ create table spc.instruments (
 
   unique (name, observed_system_id)
 );
+
 comment on table spc.instruments is $$
 Instruments are the sources of measurements. Each instrument belongs to one system.
 Examples of instruments include a widget diameter gauge or webpage time-to-first-byte.
@@ -64,6 +67,7 @@ create table spc.samples (
   unique (period, instrument_id),
   exclude using gist (period with &&)
 );
+
 comment on table spc.samples is $$
 Samples are periodic occasions on which multiple measurements are collected from an
 instrument. Each sample belongs to one instrument but may have many measurements.
@@ -80,6 +84,7 @@ create table spc.measurements (
 
   unique (taken_at, sample_id)
 );
+
 comment on table spc.measurements is $$
 A measurement represents a single value collected from a single instrument at a
 single point in time, as part of a sample. Each measurement belongs to a single
@@ -101,6 +106,7 @@ create table spc.limit_establishment_windows (
 
   unique (period, instrument_id)
 );
+
 comment on table spc.limit_establishment_windows is $$
 Windows are essentially ranges of time during which samples are collected for a
 given instrument on a given system. The limit establishment window is the period of
@@ -126,6 +132,7 @@ create table spc.control_windows (
 
   unique (period, limit_establishment_window_id)
 );
+
 comment on table spc.control_windows is $$
 Control windows are periods during which calculated limits are to be applied. Every
 control window has one limit establishment window to which it belongs and from which
@@ -176,19 +183,21 @@ Because this table only runs to 25 samples, that is the maximum sample size this
 Ideally in future a program may be able to generate a much larger table for cases where very large
 samples can be obtained (eg. computer benchmarking).
 $$;
+-- @formatter:on
 
 -- Shewart chart statistics
 
 create view spc.sample_statistics as
-select s.id
-     , s.period
-     , avg(measured_value)                       as sample_mean
-     , stddev_samp(measured_value)               as sample_stddev
-     , max(measured_value) - min(measured_value) as sample_range
-     , count(1)                                  as sample_size
-from spc.measurements m
-     join spc.samples s on s.id = m.sample_id
-group by s.id, s.period;
+  select s.id
+       , s.period
+       , avg(measured_value)                       as sample_mean
+       , stddev_samp(measured_value)               as sample_stddev
+       , max(measured_value) - min(measured_value) as sample_range
+       , count(1)                                  as sample_size
+  from spc.measurements m
+       join spc.samples s on s.id = m.sample_id
+  group by s.id, s.period;
+
 comment on view spc.sample_statistics is $$
 The basis of statistical process control (SPC) is to batch periodic measurements into samples, and
 then to calculate information about them at the sample level, rather than the individual level. This
@@ -213,6 +222,7 @@ create view spc.limit_establishment_statistics as
   from spc.sample_statistics                ss
        join spc.limit_establishment_windows lew on ss.period <@ lew.period
   group by lew.id;
+
 comment on view spc.limit_establishment_statistics is $$
 Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines
 for each of the control charts. These are, simply put, the averages of the sample statistics within
@@ -231,14 +241,15 @@ $$;
 
 
 create view x_bar_r_limits as
-select limit_establishment_window_id
-     , grand_mean +
-       ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) * mean_range) as upper_control_limit
-     , grand_mean                                                                               as center_line
-     , grand_mean -
-       ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) *
-        mean_range)                                                                             as lower_control_limit
-from spc.limit_establishment_statistics;
+  select limit_establishment_window_id
+       , grand_mean +
+         ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) * mean_range) as upper_control_limit
+       , grand_mean                                                                               as center_line
+       , grand_mean -
+         ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) *
+          mean_range)                                                                             as lower_control_limit
+  from spc.limit_establishment_statistics;
+
 comment on view spc.x_bar_r_limits is $$
 For each limit establishment window, this view derives the x̄R upper control limit, center line
 and lower control limit. The x̄R (aka XbarR) limits are based on the average of samples for the
@@ -251,51 +262,54 @@ by hand.
 $$;
 
 create view x_bar_r_rules as
-select ss.id  as sample_id
-     , cw.id  as control_window_id
-     , lew.id as limit_establishment_window_id
-     , ss.period
-     , case
-         when sample_mean > upper_control_limit then 'out_of_control_upper'
-         when sample_mean < lower_control_limit then 'out_of_control_lower'
-         else 'in_control'
-       end    as shewart_control_status
-from spc.sample_statistics                ss
-     join spc.control_windows             cw on ss.period <@ cw.period
-     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-     join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id;
+  select ss.id  as sample_id
+       , cw.id  as control_window_id
+       , lew.id as limit_establishment_window_id
+       , ss.period
+       , case
+           when sample_mean > upper_control_limit then 'out_of_control_upper'
+           when sample_mean < lower_control_limit then 'out_of_control_lower'
+           else 'in_control'
+         end    as shewart_control_status
+  from spc.sample_statistics                ss
+       join spc.control_windows             cw on ss.period <@ cw.period
+       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+       join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id;
+
 comment on view spc.x_bar_r_rules is $$
 This view applies the limits derived in x_bar_r_limits to matching control windows, showing
 which sample averages were in-control and out-of-control according to the x̄R limits on x̄.
 $$;
 
 create view r_limits as
-select limit_establishment_window_id
-     , ((select upper_d4 from spc.scaling_factors where sample_size = mean_sample_size) *
-        mean_range)                                                                                   as upper_control_limit
-     , mean_range                                                                                     as center_line
-     , ((select upper_d3 from spc.scaling_factors where sample_size = mean_sample_size) *
-        mean_range)                                                                                   as lower_control_limit
-from spc.limit_establishment_statistics;
+  select limit_establishment_window_id
+       , ((select upper_d4 from spc.scaling_factors where sample_size = mean_sample_size) *
+          mean_range) as upper_control_limit
+       , mean_range   as center_line
+       , ((select upper_d3 from spc.scaling_factors where sample_size = mean_sample_size) *
+          mean_range) as lower_control_limit
+  from spc.limit_establishment_statistics;
+
 comment on view spc.r_limits is $$
 For each limit establishment window, this view derives the R̄ upper control limit, center line
 and lower control limit. The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
 $$;
 
 create view r_rules as
-select ss.id  as sample_id
-     , cw.id  as control_window_id
-     , lew.id as limit_establishment_window_id
-     , ss.period
-     , case
-         when sample_range > upper_control_limit then 'out_of_control_upper'
-         when sample_range < lower_control_limit then 'out_of_control_lower'
-         else 'in_control'
-       end    as shewart_control_status
-from spc.sample_statistics                ss
-     join spc.control_windows             cw on ss.period <@ cw.period
-     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-     join spc.r_limits on lew.id = r_limits.limit_establishment_window_id;
+  select ss.id  as sample_id
+       , cw.id  as control_window_id
+       , lew.id as limit_establishment_window_id
+       , ss.period
+       , case
+           when sample_range > upper_control_limit then 'out_of_control_upper'
+           when sample_range < lower_control_limit then 'out_of_control_lower'
+           else 'in_control'
+         end    as shewart_control_status
+  from spc.sample_statistics                ss
+       join spc.control_windows             cw on ss.period <@ cw.period
+       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+       join spc.r_limits on lew.id = r_limits.limit_establishment_window_id;
+
 comment on view spc.r_rules is $$
 This view applies the limits derived in r_limits to matching control windows, showing
 which sample ranges where in-control and out-of-control according the the R̄ limits on R.
@@ -304,13 +318,14 @@ s_rules instead.
 $$;
 
 create view x_bar_s_limits as
-select limit_establishment_window_id
-     , grand_mean + ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
-                     mean_stddev) as upper_control_limit
-     , grand_mean                 as center_line
-     , grand_mean - ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
-                     mean_stddev) as lower_control_limit
-from spc.limit_establishment_statistics;
+  select limit_establishment_window_id
+       , grand_mean + ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
+                       mean_stddev) as upper_control_limit
+       , grand_mean                 as center_line
+       , grand_mean - ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
+                       mean_stddev) as lower_control_limit
+  from spc.limit_establishment_statistics;
+
 comment on view spc.x_bar_s_limits is $$
 For each limit establishment window, this view derives the x̄s upper control limit, center line
 and lower control limit. The x̄s (aka XbarS) limits are based on the average of samples for the
@@ -327,49 +342,54 @@ tradition.
 $$;
 
 create view x_bar_s_rules as
-select ss.id  as sample_id
-     , cw.id  as control_window_id
-     , lew.id as limit_establishment_window_id
-     , ss.period
-     , case
-         when sample_mean > upper_control_limit then 'out_of_control_upper'
-         when sample_mean < lower_control_limit then 'out_of_control_lower'
-         else 'in_control'
-       end    as shewart_control_status
-from spc.sample_statistics                ss
-     join spc.control_windows             cw on ss.period <@ cw.period
-     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-     join spc.x_bar_s_limits on lew.id = x_bar_s_limits.limit_establishment_window_id;
+  select ss.id  as sample_id
+       , cw.id  as control_window_id
+       , lew.id as limit_establishment_window_id
+       , ss.period
+       , case
+           when sample_mean > upper_control_limit then 'out_of_control_upper'
+           when sample_mean < lower_control_limit then 'out_of_control_lower'
+           else 'in_control'
+         end    as shewart_control_status
+  from spc.sample_statistics                ss
+       join spc.control_windows             cw on ss.period <@ cw.period
+       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+       join spc.x_bar_s_limits on lew.id = x_bar_s_limits.limit_establishment_window_id;
+
 comment on view spc.x_bar_s_rules is $$
 This view applies the limits derived in x_bar_s_limits to matching control windows, showing
 which sample ranges are in-control and out-of-control according to the x̄s limits on s.
 $$;
 
 create view s_limits as
-select limit_establishment_window_id
-     , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as upper_control_limit
-     , mean_stddev                                                                               as center_line
-     , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as lower_control_limit
-from spc.limit_establishment_statistics;
+  select limit_establishment_window_id
+       , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) *
+          mean_stddev)                                                                             as upper_control_limit
+       , mean_stddev                                                                               as center_line
+       , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) *
+          mean_stddev)                                                                             as lower_control_limit
+  from spc.limit_establishment_statistics;
+
 comment on view spc.s_limits is $$
 For each limit establishment window, this view derives the s̄ upper control limit, center line
 and lower control limit. The s̄ limits are based on the standard deviations of samplesd.
 $$;
 
 create view s_rules as
-select ss.id  as sample_id
-     , cw.id  as control_window_id
-     , lew.id as limit_establishment_window_id
-     , ss.period
-     , case
-         when sample_stddev > upper_control_limit then 'out_of_control_upper'
-         when sample_stddev < lower_control_limit then 'out_of_control_lower'
-         else 'in_control'
-       end    as shewart_control_status
-from spc.sample_statistics                ss
-     join spc.control_windows             cw on ss.period <@ cw.period
-     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-     join spc.s_limits on lew.id = s_limits.limit_establishment_window_id;
+  select ss.id  as sample_id
+       , cw.id  as control_window_id
+       , lew.id as limit_establishment_window_id
+       , ss.period
+       , case
+           when sample_stddev > upper_control_limit then 'out_of_control_upper'
+           when sample_stddev < lower_control_limit then 'out_of_control_lower'
+           else 'in_control'
+         end    as shewart_control_status
+  from spc.sample_statistics                ss
+       join spc.control_windows             cw on ss.period <@ cw.period
+       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+       join spc.s_limits on lew.id = s_limits.limit_establishment_window_id;
+
 comment on view spc.s_rules is $$
 For view applies the limits derived in s_limits to matching control windows, showing which
 sample ranges were in-control and out-of-control according the s̄ limits on s. These signals

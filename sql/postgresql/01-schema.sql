@@ -141,6 +141,21 @@ select limit_establishment_window_id
         mean_range)                                                                                   as lower_control_limit
 from spc.limit_establishment_statistics;
 
+create view r_rules as
+select ss.id  as sample_id
+     , cw.id  as control_window_id
+     , lew.id as limit_establishment_window_id
+     , ss.period
+     , case
+         when sample_range > upper_control_limit then 'out_of_control_upper'
+         when sample_range < lower_control_limit then 'out_of_control_lower'
+         else 'in_control'
+       end    as shewart_control_status
+from spc.sample_statistics                ss
+     join spc.control_windows             cw on ss.period <@ cw.period
+     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+     join spc.r_limits on lew.id = r_limits.limit_establishment_window_id;
+
 create view x_bar_s_limits as
 select limit_establishment_window_id
      , grand_mean + ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
@@ -171,3 +186,18 @@ select limit_establishment_window_id
      , mean_stddev                                                                               as center_line
      , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as lower_control_limit
 from spc.limit_establishment_statistics;
+
+create view s_rules as
+select ss.id  as sample_id
+     , cw.id  as control_window_id
+     , lew.id as limit_establishment_window_id
+     , ss.period
+     , case
+         when sample_stddev > upper_control_limit then 'out_of_control_upper'
+         when sample_stddev < lower_control_limit then 'out_of_control_lower'
+         else 'in_control'
+       end    as shewart_control_status
+from spc.sample_statistics                ss
+     join spc.control_windows             cw on ss.period <@ cw.period
+     join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
+     join spc.s_limits on lew.id = s_limits.limit_establishment_window_id;

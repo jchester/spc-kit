@@ -118,19 +118,19 @@ select limit_establishment_window_id
 from spc.limit_establishment_statistics;
 
 create view x_bar_r_rules as
-select ss.id as sample_id
+select ss.id  as sample_id
      , cw.id  as control_window_id
      , lew.id as limit_establishment_window_id
      , ss.period
      , case
-         when sample_mean < upper_control_limit and sample_mean > lower_control_limit then 'in_control'
-         else 'out_of_control'
+         when sample_mean > upper_control_limit then 'out_of_control_upper'
+         when sample_mean < lower_control_limit then 'out_of_control_lower'
+         else 'in_control'
        end    as shewart_control_status
 from spc.sample_statistics                ss
      join spc.control_windows             cw on ss.period <@ cw.period
      join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-     join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id
-order by lower(ss.period);
+     join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id;
 
 create view r_limits as
 select limit_establishment_window_id

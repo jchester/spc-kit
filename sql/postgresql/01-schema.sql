@@ -6,6 +6,12 @@ create table spc.observed_systems (
 
   unique (name)
 );
+comment on table spc.observed_systems is $$
+This represents a single system under observation, which may have multiple associated
+streams of measurement samples via instruments. Example systems would include a widget
+manufacturing production line, or a website server. Each system may have many
+instruments.
+$$;
 
 create type spc.instrument_type as enum ('variable', 'attribute');
 
@@ -17,6 +23,10 @@ create table spc.instruments (
 
   unique (name, observed_system_id)
 );
+comment on table spc.instruments is $$
+Instruments are the sources of measurements. Each instrument belongs to one system.
+Examples of instruments include a widget diameter gauge or webpage time-to-first-byte.
+$$;
 
 create table spc.samples (
   id            bigserial primary key,
@@ -26,6 +36,13 @@ create table spc.samples (
   unique (period, instrument_id),
   exclude using gist (period with &&)
 );
+comment on table spc.samples is $$
+Samples are periodic occasions on which multiple measurements are collected from an
+instrument. Each sample belongs to one instrument but may have many measurements.
+
+Because measurement takes place over time, samples store a period in which measurements
+were taken.
+$$;
 
 create table spc.measurements (
   id             bigserial primary key,
@@ -35,6 +52,18 @@ create table spc.measurements (
 
   unique (taken_at, sample_id)
 );
+comment on table spc.measurements is $$
+A measurement represents a single value collected from a single instrument at a
+single point in time, as part of a sample. Each measurement belongs to a single
+sample.
+
+Measurements are assumed to take zero time, or to at least have a logically-assigned
+time at which they occurred. Hence they store a timestamp 'taken_at' to represent
+this time. Importantly, this timestamp should fit within the 'period' timestamp range
+stored on the parent sample. This constraint cannot be enforced within the database
+without writing a trigger, so it is ignored for now and needs to be enforced by
+application code.
+$$;
 
 create table spc.limit_establishment_windows (
   id            bigserial primary key,
@@ -44,6 +73,22 @@ create table spc.limit_establishment_windows (
 
   unique (period, instrument_id)
 );
+comment on table spc.limit_establishment_windows is $$
+Windows are essentially ranges of time during which samples are collected for a
+given instrument on a given system. The limit establishment window is the period of
+samples used to establish Shewart chart control limits. Typical guidance is that these
+windows should contain at least 20 to 25 samples.
+
+Limit establishment is also known as "Phase I" of control chart usage.
+
+The samples collected during limit establishment windows are used to calculate the
+limits applied in control windows.
+
+Importantly, all figures calculated using these windows are "trial limits". At the
+moment this project does not perform the full Phase I process of recursively eliminating
+out-of-control samples from the calculated set until all remaining values are in-control
+values. This is a future goal.
+$$;
 
 create table spc.control_windows (
   id                            bigserial primary key,
@@ -53,6 +98,14 @@ create table spc.control_windows (
 
   unique (period, limit_establishment_window_id)
 );
+comment on table spc.control_windows is $$
+Control windows are periods during which calculated limits are to be applied. Every
+control window has one limit establishment window to which it belongs and from which
+control limits can be calculated and applied to the control window.
+
+The constraint that control windows immediately follow their limit establishment window
+is not enforced by the database and will probably require a trigger.
+$$;
 
 -- https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php
 -- and Appendix VI of Montgomery
@@ -83,8 +136,20 @@ values
 , (22,    0.64,   0.167,  0.647,  0.9882,   1.0/0.9882,   0.534,  1.466,  0.528,    1.448,  3.819,     1.0/3.819,            0.72,       1.659,    5.979,       0.434,    1.566)
 , (23,    0.626,  0.162,  0.633,  0.9887,   1.0/0.9887,   0.545,  1.455,  0.539,    1.438,  3.858,     1.0/3.858,            0.716,      1.710,    6.006,       0.443,    1.557)
 , (24,    0.612,  0.157,  0.619,  0.9892,   1.0/0.9892,   0.555,  1.445,  0.549,    1.429,  3.895,     1.0/3.895,            0.712,      1.759,    6.031,       0.451,    1.548)
-, (25,    0.6,    0.153,  0.606,  0.9896,   1.0/0.9896,   0.565,  1.435,  0.559,    1.420,  3.931,     1.0/3.931,            0.708,      1.806,    6.056,       0.459,    1.541)
-;
+, (25,    0.6,    0.153,  0.606,  0.9896,   1.0/0.9896,   0.565,  1.435,  0.559,    1.420,  3.931,     1.0/3.931,            0.708,      1.806,    6.056,       0.459,    1.541);
+comment on view spc.scaling_factors is $$
+These are scaling factors used in calculations of control limits on a variety of charts, according
+to the sample size used. Some of these values are derived from other values and could be calculated
+at view creation time, but for simplicity pre-computed values are used. Other values (like c4) are
+derived from calculus equations that cannot be performed by the database and so must be sourced from
+existing lookup tables.
+
+Because this table only runs to 25 samples, that is the maximum sample size this schema can deal with.
+Ideally in future a program may be able to generate a much larger table for cases where very large
+samples can be obtained (eg. computer benchmarking).
+$$;
+
+-- Shewart chart statistics
 
 create view spc.sample_statistics as
 select s.id
@@ -96,6 +161,20 @@ select s.id
 from spc.measurements m
      join spc.samples s on s.id = m.sample_id
 group by s.id, s.period;
+comment on view spc.sample_statistics is $$
+The basis of statistical process control (SPC) is to batch periodic measurements into samples, and
+then to calculate information about them at the sample level, rather than the individual level. This
+allows SPC techniques to distinguish between variation that is due to in-sample effects versus
+between-sample effects.
+
+This view calculates the four foundational sample statistics that are used in SPC calculations.
+These are:
+
+* x̄, aka "X bar". The average of the measurements in the sample.
+* s. The sample standard deviation of the measurements in the sample.
+* R. The range of the measurements in the sample.
+* The sample size or count of the measurements in the sample.
+$$;
 
 create view spc.limit_establishment_statistics as
   select lew.id             as limit_establishment_window_id
@@ -106,6 +185,22 @@ create view spc.limit_establishment_statistics as
   from spc.sample_statistics                ss
        join spc.limit_establishment_windows lew on ss.period <@ lew.period
   group by lew.id;
+comment on view spc.limit_establishment_statistics is $$
+Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines
+for each of the control charts. These are, simply put, the averages of the sample statistics within
+the limit establishment window. These are:
+
+* ̿x, aka "X double bar" or "grand average/mean". The average of all sample x̄ values. Equals the average
+  of all measurements in the window if the sample sizes are equal.
+* s̄, aka "s bar". The average of the standard deviations of the samples.
+* R̄, aka "R bar". The average of the ranges of the samples.
+* The average sample size or average count of measurements in the samples. This is used as a join value
+  in subsequent views to look up records in scaling_factors.
+
+At the moment this code does not support variable sample sizes, so the average sample size should be
+identical to every sample size in the window.
+$$;
+
 
 create view x_bar_r_limits as
 select limit_establishment_window_id
@@ -116,6 +211,16 @@ select limit_establishment_window_id
        ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) *
         mean_range)                                                                             as lower_control_limit
 from spc.limit_establishment_statistics;
+comment on view spc.x_bar_r_limits is $$
+For each limit establishment window, this view derives the x̄R upper control limit, center line
+and lower control limit. The x̄R (aka XbarR) limits are based on the average of samples for the
+center line and sample ranges as its measurement of variability within each sample and across
+samples.
+
+Historically, x̄R limits have been typically used for samples where the sample size is 10 or less.
+Ranges were preferred as the measurement of sample variability because they are easy to calculate
+by hand.
+$$;
 
 create view x_bar_r_rules as
 select ss.id  as sample_id
@@ -131,6 +236,10 @@ from spc.sample_statistics                ss
      join spc.control_windows             cw on ss.period <@ cw.period
      join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
      join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id;
+comment on view spc.x_bar_r_rules is $$
+This view applies the limits derived in x_bar_r_limits to matching control windows, showing
+which sample averages were in-control and out-of-control according to the x̄R limits on x̄.
+$$;
 
 create view r_limits as
 select limit_establishment_window_id
@@ -140,6 +249,10 @@ select limit_establishment_window_id
      , ((select upper_d3 from spc.scaling_factors where sample_size = mean_sample_size) *
         mean_range)                                                                                   as lower_control_limit
 from spc.limit_establishment_statistics;
+comment on view spc.r_limits is $$
+For each limit establishment window, this view derives the R̄ upper control limit, center line
+and lower control limit. The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
+$$;
 
 create view r_rules as
 select ss.id  as sample_id
@@ -155,6 +268,12 @@ from spc.sample_statistics                ss
      join spc.control_windows             cw on ss.period <@ cw.period
      join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
      join spc.r_limits on lew.id = r_limits.limit_establishment_window_id;
+comment on view spc.r_rules is $$
+This view applies the limits derived in r_limits to matching control windows, showing
+which sample ranges where in-control and out-of-control according the the R̄ limits on R.
+These signals are useful up until sample size = 10; after that you should switch to using
+s_rules instead.
+$$;
 
 create view x_bar_s_limits as
 select limit_establishment_window_id
@@ -164,6 +283,20 @@ select limit_establishment_window_id
      , grand_mean - ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
                      mean_stddev) as lower_control_limit
 from spc.limit_establishment_statistics;
+comment on view spc.x_bar_s_limits is $$
+For each limit establishment window, this view derives the x̄s upper control limit, center line
+and lower control limit. The x̄s (aka XbarS) limits are based on the average of samples for the
+center line and sample standard deviations as its measurement of variability within each sample
+and across samples.
+
+Historically x̄s limits were not used often, because standard deviation is tedious to calculate
+by hand, meaning that the most popular choice was x̄R limits. However, as sample size increases,
+range becomes a less accurate reflection of variability in a sample, because it only accounts
+for the most extreme values and does not account for the centrality of mass in the sample.
+Standard deviation does not have this problem and so x̄s is usually recommended for sample
+sizes > 10. In principle nothing stops you from using x̄s for any sample size other than
+tradition.
+$$;
 
 create view x_bar_s_rules as
 select ss.id  as sample_id
@@ -179,6 +312,10 @@ from spc.sample_statistics                ss
      join spc.control_windows             cw on ss.period <@ cw.period
      join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
      join spc.x_bar_s_limits on lew.id = x_bar_s_limits.limit_establishment_window_id;
+comment on view spc.x_bar_s_rules is $$
+This view applies the limits derived in x_bar_s_limits to matching control windows, showing
+which sample ranges are in-control and out-of-control according to the x̄s limits on s.
+$$;
 
 create view s_limits as
 select limit_establishment_window_id
@@ -186,6 +323,10 @@ select limit_establishment_window_id
      , mean_stddev                                                                               as center_line
      , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) * mean_stddev) as lower_control_limit
 from spc.limit_establishment_statistics;
+comment on view spc.s_limits is $$
+For each limit establishment window, this view derives the s̄ upper control limit, center line
+and lower control limit. The s̄ limits are based on the standard deviations of samplesd.
+$$;
 
 create view s_rules as
 select ss.id  as sample_id
@@ -201,3 +342,8 @@ from spc.sample_statistics                ss
      join spc.control_windows             cw on ss.period <@ cw.period
      join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
      join spc.s_limits on lew.id = s_limits.limit_establishment_window_id;
+comment on view spc.s_rules is $$
+For view applies the limits derived in s_limits to matching control windows, showing which
+sample ranges were in-control and out-of-control according the s̄ limits on s. These signals
+are more effective than r_rules when sample size > 10.
+$$;

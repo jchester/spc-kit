@@ -372,7 +372,7 @@ create view s_limits as
 
 comment on view spc.s_limits is $$
 For each limit establishment window, this view derives the s̄ upper control limit, center line and lower control limit.
-The s̄ limits are based on the standard deviations of sampled.
+The s̄ limits are based on the standard deviations of samples.
 $$;
 
 create view s_rules as

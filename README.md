@@ -47,9 +47,12 @@ But as a summary:
       deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
     * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 6.27)
 
+Sample sizes are assumed to be equal throughout a window.
+
 ### What it cannot do
 
-Everything else. No sensitizing rules. No attribute charts. No XmR charts. No Cusum or EWMA. No Hotelling T². Etc.
+Everything else. Variable sample sizes. No sensitizing rules. No attribute charts. No XmR charts. No Cusum or EWMA. No
+Hotelling T². Etc.
 
 ### References
 

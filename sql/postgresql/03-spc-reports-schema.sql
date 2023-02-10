@@ -1,5 +1,18 @@
 create schema if not exists spc_reports;
 
+comment on schema spc_reports is $$
+This is where you read out the control status of individual samples, based on the application of Shewart rules. Control
+status can be one of three conditions:
+
+* in_control. There is nothing to do, the process is operating with common cause variability.
+* out_of_control_upper. The process sample has exceeded the upper control limit for the process. Investigation is
+  necessary to establish why the upper control limit has been exceeded.
+* out_of_control_lower. As with out_of_control_upper, except that the lower control limit has been breached.
+
+When using an ORM, you will typically join these views to the base tables in spc_data in order to attach control status
+about samples to the sample object.
+$$;
+
 create view spc_reports.x_bar_r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id

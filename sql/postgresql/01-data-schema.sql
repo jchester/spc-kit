@@ -1,5 +1,9 @@
 create schema if not exists spc_data;
 
+comment on schema spc_data is $$
+This schema is where you add your data. Just tables. When using ORM these will be your base objects.
+$$;
+
 create table spc_data.observed_systems (
   id   bigserial primary key,
   name text not null,

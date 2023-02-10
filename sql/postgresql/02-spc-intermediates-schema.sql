@@ -1,5 +1,10 @@
 create schema if not exists spc_intermediates;
 
+comment on schema spc_intermediates is $$
+This schema encapsulates a variety of intermediate calculations, taking data from spc_data and exposing calculated
+values that are used in spc_reports.
+$$;
+
 -- @formatter:off
 create view spc_intermediates.scaling_factors(sample_size, a, a2, a3, c4, c4_reciprocal, b3, b4, b5, b6, lower_d2, lower_d2_reciprocal, lower_d3, upper_d1, upper_d2, upper_d3, upper_d4) as
 values

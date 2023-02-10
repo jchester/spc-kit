@@ -9,6 +9,16 @@ control calculations _in SQL_. Why?
 But by all that's holy take note of the LICENSE, in which I disclaim all warranties.
 If you use this for something involving real consequences, that's on you.
 
+## Installation
+
+The SQL dialect used is unapologetically PostgreSQL, so you need that running first.
+
+Then apply the `sql/postgresql` files in alphanumeric order. They are prefixed with
+numbers for your convenience.
+
+You can optionally add sample data from the `data` directory. I mostly used these to
+check my calculations and rule queries.
+
 ### Usage
 
 A lot of the details of what's what and how it works lives in PostgreSQL comments.

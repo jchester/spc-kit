@@ -1,13 +1,13 @@
 -- Data taken from:
 --   Montgomery, Douglas. Introduction to Statistical Quality Control 8th EMEA edition.
 
-insert into spc.observed_systems (name)
+insert into spc_data.observed_systems (name)
 values ('Table 6.1 and Table 6.2');
 
-insert into spc.instruments (observed_system_id, name, type)
-values ((select id from spc.observed_systems where name = 'Table 6.1 and Table 6.2'), 'Flow Width', 'variable');
+insert into spc_data.instruments (observed_system_id, name, type)
+values ((select id from spc_data.observed_systems where name = 'Table 6.1 and Table 6.2'), 'Flow Width', 'variable');
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'Flow Width',
                'Table 6.1',
                '[2023-01-01 00:00:00,2023-01-02 00:00:00)'::tstzrange,
@@ -41,7 +41,7 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'Flow Width',
                'Table 6.2',
                '[2023-01-02 00:00:00,2023-01-03 00:00:00)'::tstzrange,
@@ -71,13 +71,13 @@ select spc.bulk_insert_example_data_measurements(
          );
 
 
-insert into spc.observed_systems (name)
+insert into spc_data.observed_systems (name)
 values ('Table 6.3');
 
-insert into spc.instruments (observed_system_id, name, type)
-values ((select id from spc.observed_systems where name = 'Table 6.3'), 'Engine Piston Diameter', 'variable');
+insert into spc_data.instruments (observed_system_id, name, type)
+values ((select id from spc_data.observed_systems where name = 'Table 6.3'), 'Engine Piston Diameter', 'variable');
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'Engine Piston Diameter',
                'Table 6.3',
                '[2023-02-01 00:00:00,2023-02-02 00:00:00)',

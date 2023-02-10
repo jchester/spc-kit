@@ -8,21 +8,21 @@
 -- In these scenarios we assume that the assignable causes of all the out-of-control signals in limit establishment can
 -- be found, so we add entries to the excluded_samples table.
 
-insert into spc.observed_systems (name)
+insert into spc_data.observed_systems (name)
 values ('Test System');
 
 -- @formatter:off
-insert into spc.instruments (observed_system_id, name, type)
-values ((select id from spc.observed_systems where name = 'Test System'), 'lew-in-control:cw-in-control', 'variable')
-     , ((select id from spc.observed_systems where name = 'Test System'), 'lew-in-control:cw-out-control', 'variable')
-     , ((select id from spc.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control', 'variable')
-     , ((select id from spc.observed_systems where name = 'Test System'), 'lew-out-control:cw-out-control', 'variable')
-     , ( (select id from spc.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions', 'variable');
+insert into spc_data.instruments (observed_system_id, name, type)
+values ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-in-control', 'variable')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-out-control', 'variable')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control', 'variable')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-out-control', 'variable')
+     , ( (select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions', 'variable');
 -- @formatter:on
 
 --   1. Limit establishment window (lew) in-control, control window (cw) in-control
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-in-control:cw-in-control',
                'lew-in-control',
                '[2023-04-01 00:00:00,2023-04-02 00:00:00)',
@@ -36,7 +36,7 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-in-control:cw-in-control',
                'cw-in-control',
                '[2023-04-02 00:00:00,2023-04-03 00:00:00)',
@@ -52,7 +52,7 @@ select spc.bulk_insert_example_data_measurements(
 
 --   2. Limit establishment window (lew) in-control, control window (cw) out-of-control
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-in-control:cw-out-control',
                'lew-in-control',
                '[2023-04-03 00:00:00,2023-04-04 00:00:00)',
@@ -66,7 +66,7 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-in-control:cw-out-control',
                'cw-out-control',
                '[2023-04-05 00:00:00,2023-04-06 00:00:00)',
@@ -81,7 +81,7 @@ select spc.bulk_insert_example_data_measurements(
 
 --   3. Limit establishment window (lew) out-of-control, control window (cw) in-control
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-in-control',
                'lew-out-control',
                '[2023-04-06 00:00:00,2023-04-07 00:00:00)',
@@ -99,7 +99,7 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-in-control',
                'cw-in-control',
                '[2023-04-07 00:00:00,2023-04-08 00:00:00)',
@@ -114,7 +114,7 @@ select spc.bulk_insert_example_data_measurements(
          );
 --   4. Limit establishment window (lew) out-of-control, control window (cw) out-of-control
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-out-control',
                'lew-out-control',
                '[2023-04-08 00:00:00,2023-04-09 00:00:00)',
@@ -132,7 +132,7 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-out-control',
                'cw-out-control',
                '[2023-04-09 00:00:00,2023-04-10 00:00:00)',
@@ -147,7 +147,7 @@ select spc.bulk_insert_example_data_measurements(
 
 --   5. Limit establishment window (lew) out-of-control points excluded, control window (cw) in-control
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-in-control:with-exclusions',
                'lew-out-control:with-exclusions',
                '[2023-04-10 00:00:00,2023-04-11 00:00:00)',
@@ -165,47 +165,47 @@ select spc.bulk_insert_example_data_measurements(
                  ]
          );
 
-update spc.samples
+update spc_data.samples
 set include_in_limit_calculations = false
   , annotation                    = 'X bar example data exclusion'
 where id in
       (select sample_id as reason_for_exclusion
-       from spc.x_bar_r_rules
+       from spc_reports.x_bar_r_rules
        where shewart_control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
-update spc.samples
+update spc_data.samples
 set include_in_limit_calculations = false
   , annotation                    = 'R example data exclusion'
 where id in
       (select sample_id as reason_for_exclusion
-       from spc.r_rules
+       from spc_reports.r_rules
        where shewart_control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
-update spc.samples
+update spc_data.samples
 set include_in_limit_calculations = false
   , annotation                    = 'X bar example data exclusion'
 where id in
       (select sample_id as reason_for_exclusion
-       from spc.x_bar_s_rules
+       from spc_reports.x_bar_s_rules
        where shewart_control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
-update spc.samples
+update spc_data.samples
 set include_in_limit_calculations = false
   , annotation                    = 'R example data exclusion'
 where id in
       (select sample_id as reason_for_exclusion
-       from spc.s_rules
+       from spc_reports.s_rules
        where shewart_control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
-select spc.bulk_insert_example_data_measurements(
+select spc_data.bulk_insert_example_data_measurements(
                'lew-out-control:cw-in-control:with-exclusions',
                'cw-in-control:with-exclusions',
                '[2023-04-11 00:00:00,2023-04-12 00:00:00)',

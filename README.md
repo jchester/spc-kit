@@ -8,3 +8,17 @@ control calculations _in SQL_. Why?
 
 But by all that's holy take note of the LICENSE, in which I disclaim all warranties.
 If you use this for something involving real consequences, that's on you.
+
+A lot of the details of what's what and how it works lives in PostgreSQL comments.
+
+### What it can do:
+
+* Report out-of-control samples on _variables_ using:
+    * x̄R (aka XbarR) limits
+    * R̄ (aka Rbar) limits
+    * x̄s (aka XbarS) limits
+    * s̄ (aka s) limits
+
+### What it cannot do:
+
+Everything else. No attribute charts. No XmR charts. No Cusum or EWMA. No Hotelling T². Etc.

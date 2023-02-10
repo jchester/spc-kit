@@ -97,45 +97,52 @@ timestamp range stored on the parent sample. This constraint cannot be enforced 
 trigger, so it is ignored for now and needs to be enforced by application code.
 $$;
 
-create table spc.limit_establishment_windows (
+create type spc.window_type as enum ('limit_establishment', 'control');
+
+create table spc.windows (
   id            bigserial primary key,
   instrument_id bigint references spc.instruments (id) not null,
+  type          spc.window_type                        not null,
   period        tstzrange                              not null,
   description   text,
 
   unique (period, instrument_id)
 );
 
-comment on table spc.limit_establishment_windows is $$
-Windows are essentially ranges of time during which samples are collected for a given instrument on a given system. The
-limit establishment window is the period of samples used to establish Shewart chart control limits. Typical guidance is
-that these windows should contain at least 20 to 25 samples.
+comment on table spc.windows is $$
+Windows are essentially ranges of time during which samples are collected for a given instrument on a given system.
+There are two window types: limit establishment windows and control wndows.
+
+Limit establishment windows are the period of samples used to establish Shewart chart control limits, which are then
+applied during a control window. Typical guidance is that limit establishment windows should contain at least 20 to 25
+samples.
 
 Limit establishment is also known as "Phase I" of control chart usage.
-
-The samples collected during limit establishment windows are used to calculate the limits applied in control windows.
 
 Importantly, all figures calculated using these windows are "trial limits". At the moment this project does not perform
 the full Phase I process of recursively eliminating out-of-control samples from the calculated set until all remaining
 values are in-control values. This is a future goal.
-$$;
 
-create table spc.control_windows (
-  id                            bigserial primary key,
-  limit_establishment_window_id bigint references spc.limit_establishment_windows (id) not null,
-  period                        tstzrange                                              not null,
-  description                   text,
-
-  unique (period, limit_establishment_window_id)
-);
-
-comment on table spc.control_windows is $$
 Control windows are periods during which calculated limits are to be applied. Every control window has one limit
 establishment window to which it belongs and from which control limits can be calculated and applied to the control
 window.
+$$;
 
-The constraint that control windows immediately follow their limit establishment window is not enforced by the database
-and will probably require a trigger.
+create table spc.window_relationships (
+  limit_establishment_window_id bigint references spc.windows not null,
+  control_window_id             bigint references spc.windows not null,
+
+  primary key (limit_establishment_window_id, control_window_id),
+  unique (control_window_id)
+);
+
+comment on table spc.window_relationships is $$
+A single limit establishment window may have zero to many control windows, but each control window may only have a
+single limit establishment window. Notably, limit establishment windows may be applied to themselves, allowing for
+out-of-control points in the limit establishment window to be identified.
+
+These needs are why the relationships are represented in a separate 1:many join table, rather than as separate tables
+or as foreign keys from the windows table into itself.
 $$;
 
 -- @formatter:off
@@ -209,14 +216,15 @@ This view calculates the four foundational sample statistics that are used in SP
 $$;
 
 create view spc.limit_establishment_statistics as
-  select lew.id             as limit_establishment_window_id
+  select w.id               as limit_establishment_window_id
        , avg(sample_mean)   as grand_mean
        , avg(sample_stddev) as mean_stddev
        , avg(sample_range)  as mean_range
        , avg(sample_size)   as mean_sample_size
-  from spc.sample_statistics                ss
-       join spc.limit_establishment_windows lew on ss.period <@ lew.period
-  group by lew.id;
+  from spc.sample_statistics ss
+       join spc.windows      w on ss.period <@ w.period
+  where w.type = 'limit_establishment'
+  group by w.id;
 
 comment on view spc.limit_establishment_statistics is $$
 Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines for each of the
@@ -255,19 +263,20 @@ as the measurement of sample variability because they are easy to calculate by h
 $$;
 
 create view x_bar_r_rules as
-  select ss.id  as sample_id
-       , cw.id  as control_window_id
-       , lew.id as limit_establishment_window_id
+  select ss.id        as sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
        , ss.period
        , case
            when sample_mean > upper_control_limit then 'out_of_control_upper'
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end    as shewart_control_status
-  from spc.sample_statistics                ss
-       join spc.control_windows             cw on ss.period <@ cw.period
-       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-       join spc.x_bar_r_limits on lew.id = x_bar_r_limits.limit_establishment_window_id;
+         end          as shewart_control_status
+  from spc.sample_statistics         ss
+       join spc.windows              control_w on ss.period <@ control_w.period
+       join spc.window_relationships wr on control_w.id = wr.control_window_id
+       join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id;
 
 comment on view spc.x_bar_r_rules is $$
 This view applies the limits derived in x_bar_r_limits to matching control windows, showing which sample averages were
@@ -289,19 +298,20 @@ The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
 $$;
 
 create view r_rules as
-  select ss.id  as sample_id
-       , cw.id  as control_window_id
-       , lew.id as limit_establishment_window_id
+  select ss.id        as sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
        , ss.period
        , case
            when sample_range > upper_control_limit then 'out_of_control_upper'
            when sample_range < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end    as shewart_control_status
-  from spc.sample_statistics                ss
-       join spc.control_windows             cw on ss.period <@ cw.period
-       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-       join spc.r_limits on lew.id = r_limits.limit_establishment_window_id;
+         end          as shewart_control_status
+  from spc.sample_statistics         ss
+       join spc.windows              control_w on ss.period <@ control_w.period
+       join spc.window_relationships wr on control_w.id = wr.control_window_id
+       join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc.r_limits on limits_w.id = r_limits.limit_establishment_window_id;
 
 comment on view spc.r_rules is $$
 This view applies the limits derived in r_limits to matching control windows, showing which sample ranges where
@@ -331,19 +341,20 @@ sizes > 10. In principle nothing stops you from using x̄s for any sample size o
 $$;
 
 create view x_bar_s_rules as
-  select ss.id  as sample_id
-       , cw.id  as control_window_id
-       , lew.id as limit_establishment_window_id
+  select ss.id        as sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
        , ss.period
        , case
            when sample_mean > upper_control_limit then 'out_of_control_upper'
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end    as shewart_control_status
-  from spc.sample_statistics                ss
-       join spc.control_windows             cw on ss.period <@ cw.period
-       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-       join spc.x_bar_s_limits on lew.id = x_bar_s_limits.limit_establishment_window_id;
+         end          as shewart_control_status
+  from spc.sample_statistics         ss
+       join spc.windows              control_w on ss.period <@ control_w.period
+       join spc.window_relationships wr on control_w.id = wr.control_window_id
+       join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id;
 
 comment on view spc.x_bar_s_rules is $$
 This view applies the limits derived in x_bar_s_limits to matching control windows, showing
@@ -352,7 +363,7 @@ $$;
 
 create view s_limits as
   select limit_establishment_window_id
-       , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) * 
+       , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) *
           mean_stddev) as upper_control_limit
        , mean_stddev   as center_line
        , ((select b3 from spc.scaling_factors where sample_size = mean_sample_size) *
@@ -365,19 +376,20 @@ The s̄ limits are based on the standard deviations of sampled.
 $$;
 
 create view s_rules as
-  select ss.id  as sample_id
-       , cw.id  as control_window_id
-       , lew.id as limit_establishment_window_id
+  select ss.id        as sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
        , ss.period
        , case
            when sample_stddev > upper_control_limit then 'out_of_control_upper'
            when sample_stddev < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end    as shewart_control_status
-  from spc.sample_statistics                ss
-       join spc.control_windows             cw on ss.period <@ cw.period
-       join spc.limit_establishment_windows lew on lew.id = cw.limit_establishment_window_id
-       join spc.s_limits on lew.id = s_limits.limit_establishment_window_id;
+         end          as shewart_control_status
+  from spc.sample_statistics         ss
+       join spc.windows              control_w on ss.period <@ control_w.period
+       join spc.window_relationships wr on control_w.id = wr.control_window_id
+       join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc.s_limits on limits_w.id = s_limits.limit_establishment_window_id;
 
 comment on view spc.s_rules is $$
 For view applies the limits derived in s_limits to matching control windows, showing which sample ranges were in-control

@@ -2,7 +2,7 @@ create or replace function spc.bulk_insert_example_data_measurements(
   p_instrument_name     text,
   p_control_window_desc text,
   p_window_period       tstzrange,
-  p_window_type         text,
+  p_window_type         spc.window_type,
   p_measurements        decimal[][]
 )
   returns void
@@ -11,6 +11,7 @@ $$
 declare
   v_instrument_queried_id         bigint;
   v_limit_establishment_window_id bigint;
+  v_control_window_id             bigint;
   v_sample_period                 tstzrange;
   v_measurement_period            timestamptz;
   v_sample_inserted_id            bigint;
@@ -21,17 +22,25 @@ begin
 
   case p_window_type
     when 'limit_establishment' then
-      insert into spc.limit_establishment_windows (instrument_id, period, description)
-      values (v_instrument_queried_id, p_window_period, p_control_window_desc);
+      insert into spc.windows (instrument_id, period, type, description)
+      values (v_instrument_queried_id, p_window_period, p_window_type, p_control_window_desc)
+      returning id into v_limit_establishment_window_id;
+
+      -- allow limit establishment windows to be applied to themselves
+      insert into spc.window_relationships (limit_establishment_window_id, control_window_id) values (v_limit_establishment_window_id, v_limit_establishment_window_id);
     when 'control' then
-      select lew.id
-      from spc.limit_establishment_windows lew
-           join spc.instruments            i on i.id = lew.instrument_id
+      select w.id
+      from spc.windows          w
+           join spc.instruments i on i.id = w.instrument_id
+      where w.type = 'limit_establishment'
       into v_limit_establishment_window_id;
 
-      insert into spc.control_windows (limit_establishment_window_id, period, description)
-      values (v_limit_establishment_window_id, p_window_period, p_control_window_desc)
-      returning id into v_limit_establishment_window_id;
+      insert into spc.windows (instrument_id, period, type, description)
+      values (v_instrument_queried_id, p_window_period, p_window_type, p_control_window_desc)
+      returning id into v_control_window_id;
+
+      insert into spc.window_relationships(limit_establishment_window_id, control_window_id)
+      values (v_limit_establishment_window_id, v_control_window_id);
   end case;
 
   select tstzrange(lower(p_window_period), lower(p_window_period) + interval '1 minute')
@@ -56,6 +65,7 @@ begin
   end loop;
 end
 $$ language plpgsql;
+
 comment on function spc.bulk_insert_example_data_measurements is $$
 This function is used to quickly load data tables in the data/ directory.
 

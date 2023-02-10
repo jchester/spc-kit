@@ -267,7 +267,7 @@ At the moment this code does not support variable sample sizes, so the average s
 sample size in the window.
 $$;
 
-create view x_bar_r_limits as
+create view spc.x_bar_r_limits as
   select limit_establishment_window_id
        , grand_mean +
          ((select a2 from spc.scaling_factors where sample_size = mean_sample_size) * mean_range) as upper_control_limit
@@ -286,7 +286,7 @@ Historically, x̄R limits have been typically used for samples where the sample 
 as the measurement of sample variability because they are easy to calculate by hand.
 $$;
 
-create view x_bar_r_rules as
+create view spc.x_bar_r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
@@ -308,7 +308,7 @@ This view applies the limits derived in x_bar_r_limits to matching control windo
 in-control and out-of-control according to the x̄R limits on x̄.
 $$;
 
-create view r_limits as
+create view spc.r_limits as
   select limit_establishment_window_id
        , ((select upper_d4 from spc.scaling_factors where sample_size = mean_sample_size) *
           mean_range) as upper_control_limit
@@ -322,7 +322,7 @@ For each limit establishment window, this view derives the R̄ upper control lim
 The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
 $$;
 
-create view r_rules as
+create view spc.r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
@@ -345,7 +345,7 @@ in-control and out-of-control according the the R̄ limits on R. These signals a
 that you should switch to using s_rules instead.
 $$;
 
-create view x_bar_s_limits as
+create view spc.x_bar_s_limits as
   select limit_establishment_window_id
        , grand_mean + ((select a3 from spc.scaling_factors where sample_size = mean_sample_size) *
                        mean_stddev) as upper_control_limit
@@ -366,7 +366,7 @@ mass in the sample. Standard deviation does not have this problem and so x̄s is
 sizes > 10. In principle nothing stops you from using x̄s for any sample size other than tradition.
 $$;
 
-create view x_bar_s_rules as
+create view spc.x_bar_s_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
@@ -388,7 +388,7 @@ This view applies the limits derived in x_bar_s_limits to matching control windo
 which sample ranges are in-control and out-of-control according to the x̄s limits on s.
 $$;
 
-create view s_limits as
+create view spc.s_limits as
   select limit_establishment_window_id
        , ((select b4 from spc.scaling_factors where sample_size = mean_sample_size) *
           mean_stddev) as upper_control_limit
@@ -402,7 +402,7 @@ For each limit establishment window, this view derives the s̄ upper control lim
 The s̄ limits are based on the standard deviations of samples.
 $$;
 
-create view s_rules as
+create view spc.s_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id

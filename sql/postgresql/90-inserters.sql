@@ -1,9 +1,9 @@
 create or replace function spc.bulk_insert_example_data_measurements(
-  p_instrument_name     text,
-  p_control_window_desc text,
-  p_window_period       tstzrange,
-  p_window_type         spc.window_type,
-  p_measurements        decimal[][]
+  p_instrument_name text,
+  p_window_desc     text,
+  p_window_period   tstzrange,
+  p_window_type     spc.window_type,
+  p_measurements    decimal[][]
 )
   returns void
 as
@@ -23,11 +23,12 @@ begin
   case p_window_type
     when 'limit_establishment' then
       insert into spc.windows (instrument_id, period, type, description)
-      values (v_instrument_queried_id, p_window_period, p_window_type, p_control_window_desc)
+      values (v_instrument_queried_id, p_window_period, p_window_type, p_window_desc)
       returning id into v_limit_establishment_window_id;
 
       -- allow limit establishment windows to be applied to themselves
-      insert into spc.window_relationships (limit_establishment_window_id, control_window_id) values (v_limit_establishment_window_id, v_limit_establishment_window_id);
+      insert into spc.window_relationships (limit_establishment_window_id, control_window_id)
+      values (v_limit_establishment_window_id, v_limit_establishment_window_id);
     when 'control' then
       select w.id
       from spc.windows          w
@@ -36,7 +37,7 @@ begin
       into v_limit_establishment_window_id;
 
       insert into spc.windows (instrument_id, period, type, description)
-      values (v_instrument_queried_id, p_window_period, p_window_type, p_control_window_desc)
+      values (v_instrument_queried_id, p_window_period, p_window_type, p_window_desc)
       returning id into v_control_window_id;
 
       insert into spc.window_relationships(limit_establishment_window_id, control_window_id)

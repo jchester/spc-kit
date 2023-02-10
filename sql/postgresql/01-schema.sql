@@ -62,10 +62,11 @@ widget diameter gauge or webpage time-to-first-byte.
 $$;
 
 create table spc.samples (
-  id            bigserial primary key,
-  instrument_id bigint references spc.instruments (id) not null,
-  period        tstzrange                              not null,
-  annotation    text,
+  id                            bigserial primary key,
+  instrument_id                 bigint references spc.instruments (id) not null,
+  period                        tstzrange                              not null,
+  include_in_limit_calculations bool default true                      not null,
+  annotation                    text,
 
   unique (period, instrument_id),
   exclude using gist (period with &&)
@@ -76,6 +77,28 @@ Samples are periodic occasions on which multiple measurements are collected from
 one instrument but may have many measurements.
 
 Because measurement takes place over time, samples store a period in which measurements were taken.
+
+An annotation field is included so that analysts and operators can add freeform notes on particular samples. This would
+mostly be useful in marking up out-of-control samples with any discovered assignable cause(s).
+
+During the limit establishment (aka Phase I) process (see "windows" below), the idea is to:
+
+1. Calculate limits for the limit establishment window from the preliminary samples
+2. Identify out-of-control points in the window.
+3. Investigate to identify assignable causes for each out-of-control point.
+4. As causes are identified, exclude the sample from the window and recalculate limits.
+5. This process repeats until either there are no out-of-control samples, or until no further assignable causes can be
+   found for remaining out-of-control points.
+
+The 'include_in_limit_calculations' field is for tracking which samples are to be included or excluded from calculations
+by the above process.
+
+When excluding samples, the assignable cause discovered should be noted in 'annotation', so that future analysts and
+operators can understand what causes have previously been discovered.
+
+Points that have been excluded are no longer included in calculations of limits. This is intended to ensure that the
+calculated limits fit closely around the common cause variation, rather than including common cause variation and
+assignable cause variation.
 $$;
 
 create table spc.measurements (
@@ -194,6 +217,7 @@ $$;
 create view spc.sample_statistics as
   select s.id
        , s.period
+       , s.include_in_limit_calculations
        , avg(measured_value)                       as sample_mean
        , stddev_samp(measured_value)               as sample_stddev
        , max(measured_value) - min(measured_value) as sample_range
@@ -224,6 +248,7 @@ create view spc.limit_establishment_statistics as
   from spc.sample_statistics ss
        join spc.windows      w on ss.period <@ w.period
   where w.type = 'limit_establishment'
+    and ss.include_in_limit_calculations
   group by w.id;
 
 comment on view spc.limit_establishment_statistics is $$
@@ -241,7 +266,6 @@ These are:
 At the moment this code does not support variable sample sizes, so the average sample size should be identical to every
 sample size in the window.
 $$;
-
 
 create view x_bar_r_limits as
   select limit_establishment_window_id
@@ -276,7 +300,8 @@ create view x_bar_r_rules as
        join spc.windows              control_w on ss.period <@ control_w.period
        join spc.window_relationships wr on control_w.id = wr.control_window_id
        join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
-       join spc.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id;
+       join spc.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
 
 comment on view spc.x_bar_r_rules is $$
 This view applies the limits derived in x_bar_r_limits to matching control windows, showing which sample averages were
@@ -311,7 +336,8 @@ create view r_rules as
        join spc.windows              control_w on ss.period <@ control_w.period
        join spc.window_relationships wr on control_w.id = wr.control_window_id
        join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
-       join spc.r_limits on limits_w.id = r_limits.limit_establishment_window_id;
+       join spc.r_limits on limits_w.id = r_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
 
 comment on view spc.r_rules is $$
 This view applies the limits derived in r_limits to matching control windows, showing which sample ranges where
@@ -354,7 +380,8 @@ create view x_bar_s_rules as
        join spc.windows              control_w on ss.period <@ control_w.period
        join spc.window_relationships wr on control_w.id = wr.control_window_id
        join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
-       join spc.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id;
+       join spc.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
 
 comment on view spc.x_bar_s_rules is $$
 This view applies the limits derived in x_bar_s_limits to matching control windows, showing
@@ -389,7 +416,8 @@ create view s_rules as
        join spc.windows              control_w on ss.period <@ control_w.period
        join spc.window_relationships wr on control_w.id = wr.control_window_id
        join spc.windows              limits_w on limits_w.id = wr.limit_establishment_window_id
-       join spc.s_limits on limits_w.id = s_limits.limit_establishment_window_id;
+       join spc.s_limits on limits_w.id = s_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
 
 comment on view spc.s_rules is $$
 For view applies the limits derived in s_limits to matching control windows, showing which sample ranges were in-control

@@ -34,6 +34,7 @@ begin
       from spc.windows          w
            join spc.instruments i on i.id = w.instrument_id
       where w.type = 'limit_establishment'
+      and i.id = v_instrument_queried_id
       into v_limit_establishment_window_id;
 
       insert into spc.windows (instrument_id, period, type, description)

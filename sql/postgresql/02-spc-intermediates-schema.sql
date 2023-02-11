@@ -83,7 +83,7 @@ create view spc_intermediates.limit_establishment_statistics as
        , avg(sample_range)  as mean_range
        , avg(sample_size)   as mean_sample_size
   from spc_intermediates.sample_statistics ss
-       join spc_data.windows      w on ss.period <@ w.period
+       join spc_data.windows               w on ss.period <@ w.period
   where w.type = 'limit_establishment'
     and ss.include_in_limit_calculations
   group by w.id;
@@ -107,11 +107,12 @@ $$;
 create view spc_intermediates.x_bar_r_limits as
   select limit_establishment_window_id
        , grand_mean +
-         ((select a2 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) * mean_range) as upper_control_limit
-       , grand_mean                                                                               as center_line
+         ((select a2 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
+          mean_range) as upper_control_limit
+       , grand_mean   as center_line
        , grand_mean -
          ((select a2 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_range)                                                                             as lower_control_limit
+          mean_range) as lower_control_limit
   from spc_intermediates.limit_establishment_statistics;
 
 comment on view spc_intermediates.x_bar_r_limits is $$

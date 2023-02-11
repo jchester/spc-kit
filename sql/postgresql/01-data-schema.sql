@@ -22,7 +22,7 @@ create type spc_data.instrument_type as enum ('variable', 'attribute');
 create table spc_data.instruments (
   id                 bigserial primary key,
   observed_system_id bigint references spc_data.observed_systems (id) not null,
-  name               text                                        not null,
+  name               text                                             not null,
   type               spc_data.instrument_type                         not null,
 
   unique (name, observed_system_id)
@@ -36,8 +36,8 @@ $$;
 create table spc_data.samples (
   id                            bigserial primary key,
   instrument_id                 bigint references spc_data.instruments (id) not null,
-  period                        tstzrange                              not null,
-  include_in_limit_calculations bool default true                      not null,
+  period                        tstzrange                                   not null,
+  include_in_limit_calculations bool default true                           not null,
   annotation                    text,
 
   unique (period, instrument_id),
@@ -76,8 +76,8 @@ $$;
 create table spc_data.measurements (
   id             bigserial primary key,
   sample_id      bigint references spc_data.samples (id) not null,
-  taken_at       timestamptz                        not null,
-  measured_value decimal                            not null,
+  taken_at       timestamptz                             not null,
+  measured_value decimal                                 not null,
 
   unique (taken_at, sample_id)
 );
@@ -98,7 +98,7 @@ create table spc_data.windows (
   id            bigserial primary key,
   instrument_id bigint references spc_data.instruments (id) not null,
   type          spc_data.window_type                        not null,
-  period        tstzrange                              not null,
+  period        tstzrange                                   not null,
   description   text,
 
   unique (period, instrument_id)

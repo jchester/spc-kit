@@ -19,7 +19,7 @@ numbers for your convenience.
 You can optionally add sample data from the `data` directory. I mostly used these to
 check my calculations and rule queries.
 
-### Usage
+## Usage
 
 A lot of the details of what's what and how it works lives in PostgreSQL comments.
 But as a summary:
@@ -37,7 +37,7 @@ But as a summary:
 3. Read back rules applied to samples from `spc_reports`.
 3. Ignore `spc_intermediates`, unless you want to understand the calculations from end to end.
 
-### What it can do
+## What it can do
 
 * Report out-of-control samples on _variables_ using:
     * x̄R (aka XbarR) limits. These detect out-of-control sample averages, based on the variability of ranges of samples. 
@@ -53,12 +53,12 @@ But as a summary:
 
 Sample sizes are assumed to be equal throughout a window.
 
-### What it cannot do
+## What it cannot do
 
 Everything else. Variable sample sizes. No sensitizing rules. No attribute charts. No XmR charts. No Cusum or EWMA. No
 Hotelling T². Etc.
 
-### References
+## References
 
 * Montgomery, Douglas. _Introduction to Statistical Quality Control_, 8th EMEA Ed.
 * Wheeler, Donald J and Chambers, David S. _Understanding Statistical Process Control_, 3rd Ed.

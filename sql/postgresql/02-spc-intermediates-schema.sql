@@ -178,9 +178,9 @@ create view spc_intermediates.fraction_conforming as
   select id
        , sample_id
        , performed_at
-       , conformant_count + non_conformant_count                                           as sample_size
        , cast(conformant_count as decimal) / (conformant_count + non_conformant_count)     as fraction_conforming
        , cast(non_conformant_count as decimal) / (conformant_count + non_conformant_count) as fraction_non_conforming
+       , conformant_count + non_conformant_count                                           as sample_size
   from spc_data.whole_unit_conformance_inspections;
 
 create view spc_intermediates.fraction_conforming_sample_statistics as

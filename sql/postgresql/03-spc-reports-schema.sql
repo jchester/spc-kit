@@ -24,9 +24,9 @@ create view spc_reports.x_bar_r_rules as
            else 'in_control'
          end          as shewart_control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows               control_w on ss.period <@ control_w.period
-       join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
-       join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.windows                           control_w on ss.period <@ control_w.period
+       join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
+       join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -46,9 +46,9 @@ create view spc_reports.r_rules as
            else 'in_control'
          end          as shewart_control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows               control_w on ss.period <@ control_w.period
-       join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
-       join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.windows                           control_w on ss.period <@ control_w.period
+       join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
+       join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.r_limits on limits_w.id = r_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -69,9 +69,9 @@ create view spc_reports.x_bar_s_rules as
            else 'in_control'
          end          as shewart_control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows               control_w on ss.period <@ control_w.period
-       join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
-       join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.windows                           control_w on ss.period <@ control_w.period
+       join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
+       join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -91,13 +91,14 @@ create view spc_reports.s_rules as
            else 'in_control'
          end          as shewart_control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows               control_w on ss.period <@ control_w.period
-       join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
-       join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.windows                           control_w on ss.period <@ control_w.period
+       join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
+       join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.s_limits on limits_w.id = s_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
 comment on view spc_reports.s_rules is $$
-For view applies the limits derived in s_limits to matching control windows, showing which sample ranges were in-control
-and out-of-control according the s̄ limits on s. These signals are more effective than r_rules when sample size > 10.
+This view applies the limits derived in s_limits to matching control windows, showing which sample ranges were
+in-control and out-of-control according the s̄ limits on s. These signals are more effective than r_rules when sample
+size > 10.
 $$;

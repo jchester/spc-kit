@@ -22,7 +22,7 @@ create view spc_reports.x_bar_r_rules as
            when sample_mean > upper_control_limit then 'out_of_control_upper'
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as shewart_control_status
+         end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -44,7 +44,7 @@ create view spc_reports.r_rules as
            when sample_range > upper_control_limit then 'out_of_control_upper'
            when sample_range < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as shewart_control_status
+         end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -67,7 +67,7 @@ create view spc_reports.x_bar_s_rules as
            when sample_mean > upper_control_limit then 'out_of_control_upper'
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as shewart_control_status
+         end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -89,7 +89,7 @@ create view spc_reports.s_rules as
            when sample_stddev > upper_control_limit then 'out_of_control_upper'
            when sample_stddev < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as shewart_control_status
+         end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -112,7 +112,7 @@ create view spc_reports.p_conformant_rules as
            when mean_fraction_conforming > upper_control_limit then 'out_of_control_upper'
            when mean_fraction_conforming < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as p_control_status
+         end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
@@ -138,7 +138,7 @@ create view spc_reports.p_non_conformant_rules as
            when mean_fraction_non_conforming > upper_control_limit then 'out_of_control_upper'
            when mean_fraction_non_conforming < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as p_control_status
+         end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id

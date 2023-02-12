@@ -171,7 +171,7 @@ set include_in_limit_calculations = false
 where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.x_bar_r_rules
-       where shewart_control_status != 'in_control'
+       where control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
@@ -181,7 +181,7 @@ set include_in_limit_calculations = false
 where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.r_rules
-       where shewart_control_status != 'in_control'
+       where control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
@@ -191,7 +191,7 @@ set include_in_limit_calculations = false
 where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.x_bar_s_rules
-       where shewart_control_status != 'in_control'
+       where control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 
@@ -201,7 +201,7 @@ set include_in_limit_calculations = false
 where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.s_rules
-       where shewart_control_status != 'in_control'
+       where control_status != 'in_control'
        order by lower(period) desc
        limit 2);
 

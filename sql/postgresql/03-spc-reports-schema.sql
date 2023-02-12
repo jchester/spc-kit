@@ -23,7 +23,7 @@ create view spc_reports.x_bar_r_rules as
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
          end          as shewart_control_status
-  from spc_intermediates.sample_statistics ss
+  from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows               control_w on ss.period <@ control_w.period
        join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
        join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
@@ -45,7 +45,7 @@ create view spc_reports.r_rules as
            when sample_range < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
          end          as shewart_control_status
-  from spc_intermediates.sample_statistics ss
+  from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows               control_w on ss.period <@ control_w.period
        join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
        join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
@@ -68,7 +68,7 @@ create view spc_reports.x_bar_s_rules as
            when sample_mean < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
          end          as shewart_control_status
-  from spc_intermediates.sample_statistics ss
+  from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows               control_w on ss.period <@ control_w.period
        join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
        join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id
@@ -90,7 +90,7 @@ create view spc_reports.s_rules as
            when sample_stddev < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
          end          as shewart_control_status
-  from spc_intermediates.sample_statistics ss
+  from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows               control_w on ss.period <@ control_w.period
        join spc_data.window_relationships  wr on control_w.id = wr.control_window_id
        join spc_data.windows               limits_w on limits_w.id = wr.limit_establishment_window_id

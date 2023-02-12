@@ -92,6 +92,32 @@ timestamp range stored on the parent sample. This constraint cannot be enforced 
 trigger, so it is ignored for now and needs to be enforced by application code.
 $$;
 
+create table spc_data.whole_unit_conformance_inspections (
+  id                   bigserial primary key,
+  sample_id            bigint references spc_data.samples (id) not null,
+  performed_at         timestamptz                             not null,
+  conformant_count     int                                     not null,
+  non_conformant_count int                                     not null,
+
+  unique (performed_at, sample_id)
+);
+
+comment on table spc_data.whole_unit_conformance_inspections is $$
+An item conformance inspection happens when a single unit or item is inspected by an instrument and classified as being
+either conformant (aka passing, accepted, fallout, etc) or non-conformant (aka failed, defective, broken, rejected,
+yield etc) at a single point in time, as part of a sample of items. A count is kept of conformant and non-conformant
+units in the sample.
+
+Item conformance data is used in fraction of non-conforming items charts (aka p charts; the inversion is called a yield
+chart) and count of non-conforming items charts (aka np charts). Note that the data stored here is that the item was
+accepted or rejected as whole. No specific data is kept about individual defects or non-conformities that led to
+rejection; see individual_conformance_inspections for that kind of data.
+
+As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp. It
+should fit within the 'period' range stored on the parent sample. This constraint is not enforced by the database and
+must be enforced in application code.
+$$;
+
 create type spc_data.window_type as enum ('limit_establishment', 'control');
 
 create table spc_data.windows (

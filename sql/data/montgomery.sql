@@ -110,3 +110,48 @@ select spc_data.bulk_insert_example_data_measurements(
                  array [73.982, 73.984, 73.995, 74.017, 74.013]
                  ]
          );
+
+insert into spc_data.observed_systems (name)
+values ('Table 7.1');
+
+insert into spc_data.instruments (observed_system_id, name, type)
+values ((select id from spc_data.observed_systems where name = 'Table 7.1'), 'Orange Juice Inspection', 'attribute');
+
+select spc_data.bulk_insert_example_data_whole_item_conformities(
+               'Engine Piston Diameter',
+               'Table 7.1',
+               '[2023-05-01 00:00:00,2023-05-02 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [38, 12],
+                 array [35, 15],
+                 array [42, 8],
+                 array [40, 10],
+                 array [46, 4],
+                 array [43, 7],
+                 array [34, 16],
+                 array [41, 9],
+                 array [36, 14],
+                 array [40, 10],
+                 array [45, 5],
+                 array [44, 6],
+                 array [33, 17],
+                 array [38, 12],
+                 array [28, 22],
+                 array [42, 8],
+                 array [40, 10],
+                 array [45, 5],
+                 array [37, 13],
+                 array [39, 11],
+                 array [30, 20],
+                 array [32, 18],
+                 array [26, 24],
+                 array [35, 15],
+                 array [41, 9],
+                 array [38, 12],
+                 array [43, 7],
+                 array [37, 13],
+                 array [41, 9],
+                 array [44, 6]
+                 ]
+         );

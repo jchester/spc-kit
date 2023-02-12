@@ -74,6 +74,9 @@ This view calculates the four foundational sample statistics that are used in SP
 * s. The sample standard deviation of the measurements in the sample.
 * R. The range of the measurements in the sample.
 * The sample size or count of the measurements in the sample.
+
+Note that this data is used for variable data only. For attribute data, see the views used for calculating fraction
+conformant & non-conformant.
 $$;
 
 create view spc_intermediates.measurement_limit_establishment_statistics as
@@ -174,6 +177,8 @@ For each limit establishment window, this view derives the s̄ upper control lim
 The s̄ limits are based on the standard deviations of samples.
 $$;
 
+-- p charts
+
 create view spc_intermediates.fraction_conforming as
   select id
        , sample_id
@@ -182,6 +187,14 @@ create view spc_intermediates.fraction_conforming as
        , cast(non_conformant_count as decimal) / (conformant_count + non_conformant_count) as fraction_non_conforming
        , conformant_count + non_conformant_count                                           as sample_size
   from spc_data.whole_unit_conformance_inspections;
+
+comment on view spc_intermediates.fraction_conforming is $$
+We take the raw data representing the counts of conforming and non-conforming items in a given sample, and convert them
+into fractions (along with calculating the sample size).
+
+It's these fractions that are the controlled values. Note that this is a quite different idea from controlling values
+derived from measurements. See the comment on spc_data.whole_unit_conformance_inspections for further discussion.
+$$;
 
 create view spc_intermediates.fraction_conforming_sample_statistics as
   select fc.sample_id
@@ -194,6 +207,10 @@ create view spc_intermediates.fraction_conforming_sample_statistics as
        join spc_data.samples                 s on fc.sample_id = s.id
   group by fc.sample_id, s.period, s.include_in_limit_calculations;
 
+comment on view spc_intermediates.fraction_conforming_sample_statistics is $$
+Here we convert fraction conformant/non-conformant values into means for each sample.
+$$;
+
 create view spc_intermediates.conformant_limit_establishment_statistics as
   select w.id                              as limit_establishment_window_id
        , avg(mean_fraction_conforming)     as grand_mean_conforming
@@ -205,6 +222,16 @@ create view spc_intermediates.conformant_limit_establishment_statistics as
     and fcss.include_in_limit_calculations
   group by w.id;
 
+comment on view spc_intermediates.conformant_limit_establishment_statistics is $$
+Once we have calculated statistics for each sample, the next step is to derive the center line for each of the control
+charts, taking values from limit establishment windows. The center lines are simply the grand mean, the mean of means
+for samples in the window.
+
+In fraction conforming/non-conforming charts were are only interested in the fractional values. There's no equivalent to
+the R or s charts used with measurement data. That is: we don't chart the variability of the samples, because every
+sample has been reduced to a single number, being the fraction.
+$$;
+
 create view spc_intermediates.p_limits_conformant as
   select limit_establishment_window_id
        , grand_mean_conforming + (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
@@ -214,6 +241,15 @@ create view spc_intermediates.p_limits_conformant as
                                             mean_sample_size))) as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
+comment on view spc_intermediates.p_limits_conformant is $$
+For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
+limit for fraction conforming (aka a yield chart). The limits are based on a function of the grand mean of fractions
+conforming.
+
+This chart is not very commonly used; it is more traditional to use the fraction non-conforming for control. This is
+included mostly for completeness.
+$$;
+
 create view spc_intermediates.p_limits_non_conformant as
   select limit_establishment_window_id
        , grand_mean_non_conforming + (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
@@ -221,4 +257,12 @@ create view spc_intermediates.p_limits_non_conformant as
        , grand_mean_non_conforming                                  as center_line
        , grand_mean_non_conforming - (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
                                                 mean_sample_size))) as lower_control_limit
-  from spc_intermediates.conformant_limit_establishment_statistics
+  from spc_intermediates.conformant_limit_establishment_statistics;
+
+comment on view spc_intermediates.p_limits_non_conformant is $$
+For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
+limit for fraction non-conforming (aka a fallout chart). The limits are based on a function of the grand mean of
+fractions non-conforming.
+
+When people refer to p charts, this is usually what they are thinking of.
+$$;

@@ -45,7 +45,11 @@ But as a summary:
     * R̄ (aka Rbar) limits. These detect out-of-control sample ranges. (See: Montgomery §6.2.1, Eqn 6.5)
     * x̄s (aka XbarS) limits. These detect out-of-control sample averages, based on the variability of the standard
       deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
-    * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 6.27)
+    * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 
+      6.27)
+* Report out-of-control samples on _attributes_ using:
+    * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
+      Montgomery §7.2, Eqn 7.8)
 
 Sample sizes are assumed to be equal throughout a window.
 

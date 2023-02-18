@@ -266,3 +266,40 @@ fractions non-conforming.
 
 When people refer to p charts, this is usually what they are thinking of.
 $$;
+
+-- np charts
+
+create view spc_intermediates.np_limits_conformant as
+  select limit_establishment_window_id
+       , (grand_mean_conforming * mean_sample_size) +
+         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_control_limit
+       , grand_mean_conforming * mean_sample_size                                                 as center_line
+       , (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as lower_control_limit
+  from spc_intermediates.conformant_limit_establishment_statistics;
+
+comment on view spc_intermediates.np_limits_conformant is $$
+For each limit establishment window, this view derives the np chart (number conforming) upper control limit, center line
+and lower control limit. Note that the p chart and np chart can disagree on whether a sample is in-control or not,
+because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
+
+This is the conforming version of an np chart, rarely used.
+$$;
+
+create view spc_intermediates.np_limits_non_conformant as
+  select limit_establishment_window_id
+       , (grand_mean_non_conforming * mean_sample_size) +
+         (3 * (sqrt((grand_mean_non_conforming * mean_sample_size)
+           * (1.0 - grand_mean_non_conforming))))        as upper_control_limit
+       , grand_mean_non_conforming * mean_sample_size    as center_line
+       , (grand_mean_non_conforming * mean_sample_size) -
+         (3 * (sqrt((grand_mean_non_conforming * mean_sample_size) *
+                    (1.0 - grand_mean_non_conforming)))) as lower_control_limit
+  from spc_intermediates.conformant_limit_establishment_statistics;
+
+comment on view spc_intermediates.np_limits_non_conformant is $$
+For each limit establishment window, this view derives the np chart (number non-conforming) upper control limit, center
+line and lower control limit. Note that the p chart and np chart can disagree whether a sample is in-control or not,
+because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
+
+When people refer to np charts, this is usually what they are thinking of.
+$$;

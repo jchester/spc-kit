@@ -240,10 +240,10 @@ $$;
 create view spc_intermediates.p_limits_conformant as
   select limit_establishment_window_id
        , grand_mean_conforming + (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                            mean_sample_size))) as upper_control_limit
-       , grand_mean_conforming                                  as center_line
-       , grand_mean_conforming - (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                            mean_sample_size))) as lower_control_limit
+                                            mean_sample_size)))                as upper_control_limit
+       , grand_mean_conforming                                                 as center_line
+       , greatest(0.0, grand_mean_conforming - (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
+                                                          mean_sample_size)))) as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.p_limits_conformant is $$
@@ -260,8 +260,9 @@ create view spc_intermediates.p_limits_non_conformant as
        , grand_mean_non_conforming + (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
                                                 mean_sample_size))) as upper_control_limit
        , grand_mean_non_conforming                                  as center_line
-       , grand_mean_non_conforming - (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
-                                                mean_sample_size))) as lower_control_limit
+       , greatest(0.0, grand_mean_non_conforming -
+                       (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
+                                  mean_sample_size))))              as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.p_limits_non_conformant is $$
@@ -277,9 +278,10 @@ $$;
 create view spc_intermediates.np_limits_conformant as
   select limit_establishment_window_id
        , (grand_mean_conforming * mean_sample_size) +
-         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_control_limit
-       , grand_mean_conforming * mean_sample_size                                                 as center_line
-       , (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as lower_control_limit
+         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming))))                as upper_control_limit
+       , grand_mean_conforming * mean_sample_size                                                                as center_line
+       , greatest(0.0, (3 * (sqrt((grand_mean_conforming * mean_sample_size) *
+                                  (1.0 - grand_mean_conforming)))))                                              as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.np_limits_conformant is $$
@@ -294,11 +296,11 @@ create view spc_intermediates.np_limits_non_conformant as
   select limit_establishment_window_id
        , (grand_mean_non_conforming * mean_sample_size) +
          (3 * (sqrt((grand_mean_non_conforming * mean_sample_size)
-           * (1.0 - grand_mean_non_conforming))))        as upper_control_limit
-       , grand_mean_non_conforming * mean_sample_size    as center_line
-       , (grand_mean_non_conforming * mean_sample_size) -
-         (3 * (sqrt((grand_mean_non_conforming * mean_sample_size) *
-                    (1.0 - grand_mean_non_conforming)))) as lower_control_limit
+           * (1.0 - grand_mean_non_conforming))))                       as upper_control_limit
+       , grand_mean_non_conforming * mean_sample_size                   as center_line
+       , greatest(0.0, (grand_mean_non_conforming * mean_sample_size) -
+                       (3 * (sqrt((grand_mean_non_conforming * mean_sample_size) *
+                                  (1.0 - grand_mean_non_conforming))))) as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.np_limits_non_conformant is $$
@@ -327,7 +329,7 @@ create view spc_intermediates.conformities_limit_establishment_statistics as
   select w.id                  as limit_establishment_window_id
        , avg(non_conformities) as mean_non_conformities
   from spc_intermediates.non_conformities_sample_statistics css
-       join spc_data.windows                            w on css.period <@ w.period
+       join spc_data.windows                                w on css.period <@ w.period
   where w.type = 'limit_establishment'
     and css.include_in_limit_calculations
   group by w.id;
@@ -339,9 +341,9 @@ $$;
 
 create view spc_intermediates.c_limits as
   select limit_establishment_window_id
-       , mean_non_conformities + (3 * sqrt(mean_non_conformities)) as upper_control_limit
-       , mean_non_conformities                                     as center_line
-       , mean_non_conformities - (3 * sqrt(mean_non_conformities)) as lower_control_limit
+       , mean_non_conformities + (3 * sqrt(mean_non_conformities))                as upper_control_limit
+       , mean_non_conformities                                                    as center_line
+       , greatest(0.0, mean_non_conformities - (3 * sqrt(mean_non_conformities))) as lower_control_limit
   from spc_intermediates.conformities_limit_establishment_statistics;
 
 comment on view spc_intermediates.c_limits is $$

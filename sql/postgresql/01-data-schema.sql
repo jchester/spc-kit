@@ -103,8 +103,8 @@ create table spc_data.whole_unit_conformance_inspections (
 
 comment on table spc_data.whole_unit_conformance_inspections is $$
 An item conformance inspection happens when a single unit or item is inspected by an instrument and classified as being
-either conformant (aka passing, accepted, fallout, etc) or non-conformant (aka failed, defective, broken, rejected,
-yield etc) at a single point in time, as part of a sample of items.
+either conformant (aka passing, accepted, yield, etc) or non-conformant (aka failed, defective, broken, rejected,
+fallout etc) at a single point in time, as part of a sample of items.
 
 Item conformance data is used in fraction of non-conforming items charts (aka p charts; the inversion is called a yield
 chart) and count of non-conforming items charts (aka np charts). Note that the data stored here is that the item was

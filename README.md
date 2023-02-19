@@ -51,7 +51,7 @@ But as a summary:
     * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
       Montgomery §7.2, Eqn 7.8)
     * np limits, available in both conformant and non-conformant flavors. (See: Montgomery §7.2.1, Eqn 7.13)
-    * c charts. (See: Montgomery §7.3.1, Eqn 7.17)
+    * c limits. (See: Montgomery §7.3.1, Eqn 7.17)
 
 Sample sizes are assumed to be equal throughout a window.
 

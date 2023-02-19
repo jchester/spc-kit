@@ -118,7 +118,7 @@ insert into spc_data.instruments (observed_system_id, name, type)
 values ((select id from spc_data.observed_systems where name = 'Table 7.1'), 'Orange Juice Inspection', 'attribute');
 
 select spc_data.bulk_insert_example_data_whole_item_conformities(
-               'Engine Piston Diameter',
+               'Orange Juice Inspection',
                'Table 7.1',
                '[2023-05-01 00:00:00,2023-05-02 00:00:00)',
                'limit_establishment',

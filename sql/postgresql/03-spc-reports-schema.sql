@@ -175,7 +175,7 @@ comment on view spc_reports.np_conformant_rules is $$
 This view applies the limits derived in np_limits_conformant to matching control windows, showing which sample counts
 conforming were in-control and out-of-control according to the limits on the count conforming.
 
-This is a non-tradtional application, the typical approach is to set rules on fraction non-conforming. This is included
+This is a non-traditional application, the typical approach is to set rules on fraction non-conforming. This is included
 for completeness.
 $$;
 

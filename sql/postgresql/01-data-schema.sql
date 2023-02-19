@@ -157,7 +157,7 @@ create table spc_data.windows (
 
 comment on table spc_data.windows is $$
 Windows are essentially ranges of time during which samples are collected for a given instrument on a given system.
-There are two window types: limit establishment windows and control wndows.
+There are two window types: limit establishment windows and control windows.
 
 Limit establishment windows are the period of samples used to establish Shewart chart control limits, which are then
 applied during a control window. Typical guidance is that limit establishment windows should contain at least 20 to 25

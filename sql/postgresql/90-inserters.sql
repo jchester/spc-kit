@@ -130,11 +130,21 @@ begin
 
     select timestamptz(lower(v_sample_period)) into v_measurement_period;
 
-    insert into spc_data.whole_unit_conformance_inspections(sample_id, performed_at, conformant_count, non_conformant_count)
-    values (v_sample_inserted_id, v_measurement_period, v_sample[1], v_sample[2]);
+    for i in 1..v_sample[1] loop
+      insert into spc_data.whole_unit_conformance_inspections(sample_id, performed_at, conformant)
+      values (v_sample_inserted_id, v_measurement_period, true);
 
-    select timestamptz(v_measurement_period + interval '1 second')
-    into v_measurement_period;
+      select timestamptz(v_measurement_period + interval '1 second')
+      into v_measurement_period;
+    end loop;
+
+    for i in 1..v_sample[2] loop
+      insert into spc_data.whole_unit_conformance_inspections(sample_id, performed_at, conformant)
+      values (v_sample_inserted_id, v_measurement_period, false);
+
+      select timestamptz(v_measurement_period + interval '1 second')
+      into v_measurement_period;
+    end loop;
 
     select tstzrange(upper(v_sample_period), upper(v_sample_period) + interval '1 minute') into v_sample_period;
   end loop;

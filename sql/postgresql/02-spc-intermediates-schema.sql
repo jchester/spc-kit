@@ -180,13 +180,18 @@ $$;
 -- p charts
 
 create view spc_intermediates.fraction_conforming as
-  select id
-       , sample_id
-       , performed_at
+  with counts as (select sample_id
+                       , count(1) filter ( where conformant = true )  as conformant_count
+                       , count(1) filter ( where conformant = false ) as non_conformant_count
+                  from spc_data.whole_unit_conformance_inspections
+                       join spc_data.samples s on s.id = whole_unit_conformance_inspections.sample_id
+                  group by sample_id)
+
+  select sample_id
        , cast(conformant_count as decimal) / (conformant_count + non_conformant_count)     as fraction_conforming
        , cast(non_conformant_count as decimal) / (conformant_count + non_conformant_count) as fraction_non_conforming
        , conformant_count + non_conformant_count                                           as sample_size
-  from spc_data.whole_unit_conformance_inspections;
+  from counts;
 
 comment on view spc_intermediates.fraction_conforming is $$
 We take the raw data representing the counts of conforming and non-conforming items in a given sample, and convert them

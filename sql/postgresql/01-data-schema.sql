@@ -116,6 +116,33 @@ should fit within the 'period' range stored on the parent sample. This constrain
 must be enforced in application code.
 $$;
 
+create table spc_data.per_unit_non_conformities_inspections (
+  id               bigserial primary key,
+  sample_id        bigint references spc_data.samples (id) not null,
+  performed_at     timestamptz                             not null,
+  non_conformities int                                     not null,
+
+  unique (performed_at, sample_id)
+);
+
+comment on table spc_data.per_unit_non_conformities_inspections is $$
+An item conformities inspection happens when a set of multiple inspections is applied to a single unit. The unit does
+not pass/fail as a whole, instead the count of conformities (aka passes, acceptables, successes) and non-conformities
+(aka failures, defects, bugs, mistakes, errors) is kept for each unit.
+
+This means that conformities/non-conformities inspections carry more fine-grained information than accepting or
+rejecting an entire unit by itself, as is done in whole_unit_conformance_inspections. Importantly, an item may have
+non-*conformities* but not be non-*conformant* as a whole. That is, sometimes we allow slightly imperfect items to be
+released. In such cases it is still useful to track non-conformities.
+
+This data is used in the chart for counts for non-conformities (aka c charts) and average non-conformities over a range
+(aka area of opportunity, span, interval, batch size, group size) of inspections on multiple items (aka u charts).
+
+As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp. It
+should fit within the 'period' range stored on the parent sample. This constraint is not enforced by the database and
+must be enforced in application code.
+$$;
+
 create type spc_data.window_type as enum ('limit_establishment', 'control');
 
 create table spc_data.windows (

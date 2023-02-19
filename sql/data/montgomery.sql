@@ -155,3 +155,24 @@ select spc_data.bulk_insert_example_data_whole_item_conformities(
                  array [44, 6]
                  ]
          );
+
+insert into spc_data.observed_systems (name)
+values ('Table 7.8');
+
+insert into spc_data.instruments (observed_system_id, name, type)
+values ((select id from spc_data.observed_systems where name = 'Table 7.8'), 'Printed Circuit Boards', 'attribute');
+
+select spc_data.bulk_insert_example_data_per_unit_non_conformities(
+               'Printed Circuit Boards',
+               'Table 7.8',
+               '[2023-05-03 00:00:00,2023-05-04 00:00:00)',
+               'limit_establishment',
+               array [
+                 21, 24, 16, 12, 15,
+                 5, 28, 20, 31, 25,
+                 20, 24, 16, 19, 10,
+                 17, 13, 22, 18, 39,
+                 30, 24, 16, 19, 17,
+                 15
+                 ]
+         )

@@ -202,3 +202,26 @@ comment on view spc_reports.np_non_conformant_rules is $$
 This view applies the limits derived in np_limits_non_conformant to matching control windows, showing which sample
 counts non-conforming were in-control and out-of-control according to the limits on the counts non-conforming.
 $$;
+
+create view spc_reports.c_rules as
+  select ncss.sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
+       , ncss.period
+       , case
+           when (non_conformities) > upper_control_limit then 'out_of_control_upper'
+           when (non_conformities) < lower_control_limit then 'out_of_control_lower'
+           else 'in_control'
+         end          as control_status
+  from spc_intermediates.non_conformities_sample_statistics ncss
+       join spc_data.windows                            control_w on ncss.period <@ control_w.period
+       join spc_data.window_relationships               wr on control_w.id = wr.control_window_id
+       join spc_data.windows                            limits_w
+            on limits_w.id = wr.limit_establishment_window_id
+       join spc_intermediates.c_limits on limits_w.id = c_limits.limit_establishment_window_id
+  where ncss.include_in_limit_calculations;
+
+comment on view spc_reports.c_rules is $$
+This view applies the limits derived in c_limits to the matching control windows, showing which sample non-conformity
+counts were in-control and out-of-control according to the limits.
+$$;

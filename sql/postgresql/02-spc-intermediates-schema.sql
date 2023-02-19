@@ -308,3 +308,44 @@ because the limits are calculated as decimals but samples are composed of an int
 
 When people refer to np charts, this is usually what they are thinking of.
 $$;
+
+-- c charts
+
+create view spc_intermediates.non_conformities_sample_statistics as
+  select punci.sample_id
+       , s.period
+       , s.include_in_limit_calculations
+       , punci.non_conformities
+  from spc_data.per_unit_non_conformities_inspections punci
+       join spc_data.samples                          s on punci.sample_id = s.id;
+
+comment on view spc_intermediates.non_conformities_sample_statistics is $$
+This table joins values for downstream processing.
+$$;
+
+create view spc_intermediates.conformities_limit_establishment_statistics as
+  select w.id                  as limit_establishment_window_id
+       , avg(non_conformities) as mean_non_conformities
+  from spc_intermediates.non_conformities_sample_statistics css
+       join spc_data.windows                            w on css.period <@ w.period
+  where w.type = 'limit_establishment'
+    and css.include_in_limit_calculations
+  group by w.id;
+
+comment on view spc_intermediates.non_conformities_sample_statistics is $$
+Here we convert non-conformity counts from individual statistics in a limit establishment window into the mean that will
+be used in c_limits.
+$$;
+
+create view spc_intermediates.c_limits as
+  select limit_establishment_window_id
+       , mean_non_conformities + (3 * sqrt(mean_non_conformities)) as upper_control_limit
+       , mean_non_conformities                                     as center_line
+       , mean_non_conformities - (3 * sqrt(mean_non_conformities)) as lower_control_limit
+  from spc_intermediates.conformities_limit_establishment_statistics;
+
+comment on view spc_intermediates.c_limits is $$
+Here we calculate the center line, upper control limit and lower control limit for a count of non-conformities chart
+(aka c charts). Note that calculation is made for non-conformities only, no calculation is made for conformities. This
+is because the assumed distribution for c charts is a Poisson distribution, which is asymmetrical.
+$$;

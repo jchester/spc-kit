@@ -57,8 +57,8 @@ Sample sizes are assumed to be equal throughout a window.
 
 ## What it cannot do
 
-Everything else. Variable sample sizes. No sensitizing rules. No XmR charts. No u charts. No Cusum or EWMA. No Hotelling
-T². Etc.
+Everything else. No variable sample sizes. No sensitizing rules. No XmR charts. No u charts. No Cusum or EWMA. No
+Hotelling T². Etc.
 
 ## References
 

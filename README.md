@@ -57,8 +57,10 @@ Sample sizes are assumed to be equal throughout a window.
 
 ## What it cannot do
 
-Everything else. No variable sample sizes. No sensitizing rules. No XmR charts. No u charts. No Cusum or EWMA. No
-Hotelling T². Etc.
+Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
+
+In particular I don't plan to implement the XmR chart. Its role is better filled by Cusum and EWMA, and it is highly
+sensitive to the normality assumption. (See: Montgomery pp254-256)
 
 ## References
 

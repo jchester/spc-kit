@@ -4,8 +4,8 @@
 insert into spc_data.observed_systems (name)
 values ('Table 6.1 and Table 6.2');
 
-insert into spc_data.instruments (observed_system_id, name, type)
-values ((select id from spc_data.observed_systems where name = 'Table 6.1 and Table 6.2'), 'Flow Width', 'variable');
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Table 6.1 and Table 6.2'), 'Flow Width');
 
 select spc_data.bulk_insert_example_data_measurements(
                'Flow Width',
@@ -74,8 +74,8 @@ select spc_data.bulk_insert_example_data_measurements(
 insert into spc_data.observed_systems (name)
 values ('Table 6.3');
 
-insert into spc_data.instruments (observed_system_id, name, type)
-values ((select id from spc_data.observed_systems where name = 'Table 6.3'), 'Engine Piston Diameter', 'variable');
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Table 6.3'), 'Engine Piston Diameter');
 
 select spc_data.bulk_insert_example_data_measurements(
                'Engine Piston Diameter',
@@ -114,8 +114,8 @@ select spc_data.bulk_insert_example_data_measurements(
 insert into spc_data.observed_systems (name)
 values ('Table 7.1');
 
-insert into spc_data.instruments (observed_system_id, name, type)
-values ((select id from spc_data.observed_systems where name = 'Table 7.1'), 'Orange Juice Inspection', 'attribute');
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Table 7.1'), 'Orange Juice Inspection');
 
 select spc_data.bulk_insert_example_data_whole_item_conformities(
                'Orange Juice Inspection',
@@ -159,8 +159,8 @@ select spc_data.bulk_insert_example_data_whole_item_conformities(
 insert into spc_data.observed_systems (name)
 values ('Table 7.8');
 
-insert into spc_data.instruments (observed_system_id, name, type)
-values ((select id from spc_data.observed_systems where name = 'Table 7.8'), 'Printed Circuit Boards', 'attribute');
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Table 7.8'), 'Printed Circuit Boards');
 
 select spc_data.bulk_insert_example_data_per_unit_non_conformities(
                'Printed Circuit Boards',

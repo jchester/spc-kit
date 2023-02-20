@@ -17,13 +17,10 @@ instruments. Example systems would include a widget manufacturing production lin
 have many instruments.
 $$;
 
-create type spc_data.instrument_type as enum ('variable', 'attribute');
-
 create table spc_data.instruments (
   id                 bigserial primary key,
   observed_system_id bigint references spc_data.observed_systems (id) not null,
   name               text                                             not null,
-  type               spc_data.instrument_type                         not null,
 
   unique (name, observed_system_id)
 );

@@ -12,12 +12,12 @@ insert into spc_data.observed_systems (name)
 values ('Test System');
 
 -- @formatter:off
-insert into spc_data.instruments (observed_system_id, name, type)
-values ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-in-control', 'variable')
-     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-out-control', 'variable')
-     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control', 'variable')
-     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-out-control', 'variable')
-     , ( (select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions', 'variable');
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-out-control')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-out-control')
+     , ( (select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions');
 -- @formatter:on
 
 --   1. Limit establishment window (lew) in-control, control window (cw) in-control

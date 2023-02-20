@@ -56,7 +56,7 @@ begin
     select timestamptz(lower(v_sample_period)) into v_measurement_period;
 
     foreach v_measurement in array v_sample loop
-      insert into spc_data.measurements(sample_id, taken_at, measured_value)
+      insert into spc_data.measurements(sample_id, performed_at, measured_value)
       values (v_sample_inserted_id, v_measurement_period, v_measurement);
 
       select timestamptz(v_measurement_period + interval '1 second')

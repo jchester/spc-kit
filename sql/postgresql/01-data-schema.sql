@@ -73,10 +73,10 @@ $$;
 create table spc_data.measurements (
   id             bigserial primary key,
   sample_id      bigint references spc_data.samples (id) not null,
-  taken_at       timestamptz                             not null,
+  performed_at       timestamptz                             not null,
   measured_value decimal                                 not null,
 
-  unique (taken_at, sample_id)
+  unique (performed_at, sample_id)
 );
 
 comment on table spc_data.measurements is $$
@@ -84,7 +84,7 @@ A measurement represents a single value collected from a single instrument at a 
 sample. Each measurement belongs to a single sample.
 
 Measurements are assumed to take zero time, or to at least have a logically-assigned time at which they occurred. Hence
-they store a timestamp 'taken_at' to represent this time. Importantly, this timestamp should fit within the 'period'
+they store a timestamp 'performed_at' to represent this time. Importantly, this timestamp should fit within the 'period'
 timestamp range stored on the parent sample. This constraint cannot be enforced within the database without writing a
 trigger, so it is ignored for now and needs to be enforced by application code.
 $$;

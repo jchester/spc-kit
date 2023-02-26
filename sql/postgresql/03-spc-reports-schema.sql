@@ -214,9 +214,9 @@ create view spc_reports.c_rules as
            else 'in_control'
          end          as control_status
   from spc_intermediates.non_conformities_sample_statistics ncss
-       join spc_data.windows                            control_w on ncss.period <@ control_w.period
-       join spc_data.window_relationships               wr on control_w.id = wr.control_window_id
-       join spc_data.windows                            limits_w
+       join spc_data.windows                                control_w on ncss.period <@ control_w.period
+       join spc_data.window_relationships                   wr on control_w.id = wr.control_window_id
+       join spc_data.windows                                limits_w
             on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.c_limits on limits_w.id = c_limits.limit_establishment_window_id
   where ncss.include_in_limit_calculations;
@@ -224,4 +224,31 @@ create view spc_reports.c_rules as
 comment on view spc_reports.c_rules is $$
 This view applies the limits derived in c_limits to the matching control windows, showing which sample non-conformity
 counts were in-control and out-of-control according to the limits.
+$$;
+
+create view spc_reports.xmr_x_rules as
+  select immr.sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
+       , immr.period
+       , case
+           when measured_value > upper_natural_process_limit then 'out_of_control_upper'
+           when measured_value < lower_natural_process_limit then 'out_of_control_lower'
+           else 'in_control'
+         end          as control_status
+  from spc_intermediates.individual_measurements_and_moving_ranges immr
+       join spc_data.windows                                       control_w on immr.period <@ control_w.period
+       join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
+       join spc_data.windows                                       limits_w
+            on limits_w.id = wr.limit_establishment_window_id
+       join spc_intermediates.xmr_x_limits on limits_w.id = xmr_x_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
+
+comment on view spc_reports.xmr_x_rules is $$
+This view applies the limits derived in xmr_x_limits to the matching control windows, showing which individual
+measurements were in-control and out-of-control according to the natural process limits.
+
+This rule is more sensitive to shifts in the mean than an ordinary Shewart chart that groups together measurements into
+samples, but on the other hand it is more vulnerable to departures from normality in the data. Montgomery recommends
+Cusum and EWMA charts over the chart for individual values.
 $$;

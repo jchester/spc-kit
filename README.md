@@ -47,6 +47,8 @@ But as a summary:
       deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
     * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 
       6.27)
+    * XmR limits. These are applied to samples with a single measurement and track measurement-to-measurement changes in
+      means and ranges. Sensitive to deviation from normality. (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
 * Report out-of-control samples on _attributes_ using:
     * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
       Montgomery §7.2, Eqn 7.8)
@@ -58,9 +60,6 @@ Sample sizes are assumed to be equal throughout a window.
 ## What it cannot do
 
 Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
-
-In particular I don't plan to implement the XmR chart. Its role is better filled by Cusum and EWMA, and it is highly
-sensitive to the normality assumption. (See: Montgomery pp254-256)
 
 ## References
 

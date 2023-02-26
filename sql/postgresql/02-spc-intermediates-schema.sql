@@ -278,10 +278,10 @@ $$;
 create view spc_intermediates.np_limits_conformant as
   select limit_establishment_window_id
        , (grand_mean_conforming * mean_sample_size) +
-         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming))))                as upper_control_limit
-       , grand_mean_conforming * mean_sample_size                                                                as center_line
+         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_control_limit
+       , grand_mean_conforming * mean_sample_size                                                 as center_line
        , greatest(0.0, (3 * (sqrt((grand_mean_conforming * mean_sample_size) *
-                                  (1.0 - grand_mean_conforming)))))                                              as lower_control_limit
+                                  (1.0 - grand_mean_conforming)))))                               as lower_control_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.np_limits_conformant is $$
@@ -350,4 +350,63 @@ comment on view spc_intermediates.c_limits is $$
 Here we calculate the center line, upper control limit and lower control limit for a count of non-conformities chart
 (aka c charts). Note that calculation is made for non-conformities only, no calculation is made for conformities. This
 is because the assumed distribution for c charts is a Poisson distribution, which is asymmetrical.
+$$;
+
+-- XmR charts
+
+create view spc_intermediates.individual_measurements_and_moving_ranges as
+  select w.id                                                               as window_id
+       , s.id                                                               as sample_id
+       , w.type                                                             as window_type
+       , s.period
+       , s.include_in_limit_calculations
+       , measured_value
+       , abs(measured_value -
+             lag(measured_value, 1) over (partition by w.id order by m.id)) as moving_range
+  from spc_data.measurements m
+       join spc_data.samples s on s.id = m.sample_id
+       join spc_data.windows w on s.period <@ w.period;
+
+comment on view spc_intermediates.individual_measurements_and_moving_ranges is $$
+This view joins measurements and moving ranges with sample and window information, intended for downstream processing
+into chart for individual values and moving ranges (aka XmR charts). A moving range is the difference between two
+successive measurements, achieved with the lag() window function.
+
+This view has an important difference from its peers for things like sample statistics, or fractions and counts of
+non-conforming / non-conformities. Because the sample size is 1, it does not make sense to perform statistical summaries
+on a per-sample basis. Instead this view collects sample *and* window data, because single-measurement samples will need
+to be summarized on a window-by-window basis.
+$$;
+
+create view spc_intermediates.individual_measurement_and_moving_range_statistics as
+  select window_id           as limit_establishment_window_id
+       , avg(measured_value) as mean_measured_value
+       , avg(moving_range)   as mean_moving_range
+  from spc_intermediates.individual_measurements_and_moving_ranges immr
+       join spc_data.windows                                       w on w.id = immr.window_id
+  where window_type = 'limit_establishment'
+    and include_in_limit_calculations
+  group by window_id;
+
+comment on view spc_intermediates.individual_measurement_and_moving_range_statistics is $$
+Converts the basic sample/window figures from individual_measurements_and_moving_ranges into summary averages for each
+of the measurement value and the moving range.
+$$;
+
+create view spc_intermediates.xmr_x_limits as
+  select limit_establishment_window_id
+       , mean_measured_value + (3 * (mean_moving_range / (select lower_d2
+                                                          from spc_intermediates.scaling_factors
+                                                          where sample_size = 2))) as upper_natural_process_limit
+       , mean_measured_value                                                       as center_line
+       , mean_measured_value - (3 * (mean_moving_range / (select lower_d2
+                                                          from spc_intermediates.scaling_factors
+                                                          where sample_size = 2))) as lower_natural_process_limit
+  from spc_intermediates.individual_measurement_and_moving_range_statistics;
+
+comment on view spc_intermediates.xmr_x_limits is $$
+Here we calculate the center line, upper natural process limit (UNPL) and lower natural process limit (LNPL). Note the
+change in nomenclature - these are not control limits in the sense used in other Shewart charts, because data is not
+grouped into samples with multiple measurements. Instead the limits are calculated over entire windows of data, meaning
+that all variation is captured in its original natural form.
 $$;

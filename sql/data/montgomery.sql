@@ -175,4 +175,73 @@ select spc_data.bulk_insert_example_data_per_unit_non_conformities(
                  30, 24, 16, 19, 17,
                  15
                  ]
-         )
+         );
+
+-- XmR charts
+
+insert into spc_data.observed_systems (name)
+values ('Table 6.6 and 6.7');
+
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Table 6.6 and 6.7'), 'Mortgage Loan Cost');
+
+select spc_data.bulk_insert_example_data_measurements(
+               'Mortgage Loan Cost',
+               'Table 6.6',
+               '[2023-05-06 00:00:00,2023-05-07 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [310],
+                 array [288],
+                 array [297],
+                 array [298],
+                 array [307],
+                 array [303],
+                 array [294],
+                 array [297],
+                 array [308],
+                 array [306],
+                 array [294],
+                 array [299],
+                 array [297],
+                 array [299],
+                 array [314],
+                 array [295],
+                 array [293],
+                 array [306],
+                 array [301],
+                 array [304]
+
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+               'Mortgage Loan Cost',
+               'Table 6.7',
+               '[2023-05-07 00:00:00,2023-05-08 00:00:00)',
+               'control',
+               array [
+                 array [305],
+                 array [282],
+                 array [305],
+                 array [296],
+                 array [314],
+                 array [295],
+                 array [287],
+                 array [301],
+                 array [298],
+                 array [311],
+                 array [310],
+                 array [292],
+                 array [305],
+                 array [299],
+                 array [304],
+                 array [310],
+                 array [304],
+                 array [305],
+                 array [333],
+                 array [328]
+
+                 ]
+         );
+

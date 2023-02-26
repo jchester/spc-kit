@@ -25,6 +25,31 @@ apply in a modern context.
 
 See "References" for some more detailed reading.
 
+## What it can do
+
+* Report out-of-control samples on _variables_ using:
+    * x̄R (aka XbarR) limits. These detect out-of-control sample averages, based on the variability of ranges of samples. 
+      (See: Montgomery §6.2.1, Eqn 6.4)
+    * R̄ (aka Rbar) limits. These detect out-of-control sample ranges. (See: Montgomery §6.2.1, Eqn 6.5)
+    * x̄s (aka XbarS) limits. These detect out-of-control sample averages, based on the variability of the standard
+      deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
+    * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 
+      6.27)
+    * Limits for individual measurements (aka XmR). These are applied to samples with a single measurement and track
+      measurement-to-measurement changes in means (X) and moving ranges (mR). Sensitive to departure from normality.
+      (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
+* Report out-of-control samples on _attributes_ using:
+    * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
+      Montgomery §7.2, Eqn 7.8)
+    * np limits, available in both conformant and non-conformant flavors. (See: Montgomery §7.2.1, Eqn 7.13)
+    * c limits. (See: Montgomery §7.3.1, Eqn 7.17)
+
+Sample sizes are assumed to be equal throughout a window.
+
+## What it cannot do
+
+Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
+
 ## Installation
 
 The SQL dialect used is unapologetically PostgreSQL, so you need that running first.
@@ -50,31 +75,6 @@ A lot of the details of what's what and how it works lives in PostgreSQL comment
   the next limit establishment window.
 3. Read back rules applied to samples from `spc_reports`.
 3. Ignore `spc_intermediates`, unless you want to understand the calculations from end to end.
-
-## What it can do
-
-* Report out-of-control samples on _variables_ using:
-    * x̄R (aka XbarR) limits. These detect out-of-control sample averages, based on the variability of ranges of samples. 
-      (See: Montgomery §6.2.1, Eqn 6.4)
-    * R̄ (aka Rbar) limits. These detect out-of-control sample ranges. (See: Montgomery §6.2.1, Eqn 6.5)
-    * x̄s (aka XbarS) limits. These detect out-of-control sample averages, based on the variability of the standard
-      deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
-    * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 
-      6.27)
-    * Limits for individual measurements (aka XmR). These are applied to samples with a single measurement and track
-      measurement-to-measurement changes in means (X) and moving ranges (mR). Sensitive to departure from normality.
-      (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
-* Report out-of-control samples on _attributes_ using:
-    * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
-      Montgomery §7.2, Eqn 7.8)
-    * np limits, available in both conformant and non-conformant flavors. (See: Montgomery §7.2.1, Eqn 7.13)
-    * c limits. (See: Montgomery §7.3.1, Eqn 7.17)
-
-Sample sizes are assumed to be equal throughout a window.
-
-## What it cannot do
-
-Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
 
 ## References
 

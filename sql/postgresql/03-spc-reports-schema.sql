@@ -252,3 +252,28 @@ This rule is more sensitive to shifts in the mean than an ordinary Shewart chart
 samples, but on the other hand it is more vulnerable to departures from normality in the data. Montgomery recommends
 Cusum and EWMA charts over the chart for individual values.
 $$;
+
+create view spc_reports.xmr_mr_rules as
+  select immr.sample_id
+       , control_w.id as control_window_id
+       , limits_w.id  as limit_establishment_window_id
+       , immr.period
+       , case
+           when moving_range > upper_range_limit then 'out_of_control_upper'
+           else 'in_control'
+         end          as control_status
+  from spc_intermediates.individual_measurements_and_moving_ranges immr
+       join spc_data.windows                                       control_w on immr.period <@ control_w.period
+       join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
+       join spc_data.windows                                       limits_w
+            on limits_w.id = wr.limit_establishment_window_id
+       join spc_intermediates.xmr_mr_limits on limits_w.id = xmr_mr_limits.limit_establishment_window_id
+  where include_in_limit_calculations;
+
+comment on view spc_reports.xmr_mr_rules is $$
+This view applies the limits derived in xmr_mr_limits to the matching control windows, showing which moving ranges were
+in-control and out-of-control according to the upper range limit.
+
+As with the individual value rule in xmr_x_rules, this rule is more sensitive to shifts in moving range but also more
+vulnerable to departures from normality in the data.
+$$;

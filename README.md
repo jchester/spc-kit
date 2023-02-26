@@ -47,8 +47,9 @@ But as a summary:
       deviation of samples. (See: Montgomery §6.3, Eqn 6.28)
     * s̄ (aka Sbar) limits. These detect out-of-control sample standard deviations. (See: Montgomery §6.3, Eqns 6.25 & 
       6.27)
-    * XmR limits. These are applied to samples with a single measurement and track measurement-to-measurement changes in
-      means and ranges. Sensitive to deviation from normality. (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
+    * Limits for individual measurements (aka XmR). These are applied to samples with a single measurement and track
+      measurement-to-measurement changes in means (X) and moving ranges (mR). Sensitive to departure from normality.
+      (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
 * Report out-of-control samples on _attributes_ using:
     * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
       Montgomery §7.2, Eqn 7.8)

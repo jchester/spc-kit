@@ -1,13 +1,12 @@
 # SPC Kit
 
-Very much a work-in-progress, but here's the basic idea: perform statistical process
-control calculations _in SQL_. Why?
+Very much a work-in-progress, but here's the basic idea: perform statistical process control calculations _in SQL_. Why?
 
 1. The database is closest to the data and will be the fastest place to manipulate it.
 2. SQL is a lingua franca that any language and framework can interoperate with easily.
 
-But by all that's holy take note of the LICENSE, in which I disclaim all warranties.
-If you use this for something involving real consequences, that's on you.
+But by all that's holy take note of the LICENSE, in which I disclaim all warranties. If you use this for something
+involving real consequences, that's on you.
 
 ### What the heck is statistical process control?
 
@@ -30,16 +29,14 @@ See "References" for some more detailed reading.
 
 The SQL dialect used is unapologetically PostgreSQL, so you need that running first.
 
-Then apply the `sql/postgresql` files in alphanumeric order. They are prefixed with
-numbers for your convenience.
+Then apply the `sql/postgresql` files in alphanumeric order. They are prefixed with numbers for your convenience.
 
-You can optionally add sample data from the `data` directory. I mostly used these to
-check my calculations and rule queries.
+You can optionally add sample data from the `data` directory. I mostly used these to check my calculations and rule
+queries.
 
 ## Usage
 
-A lot of the details of what's what and how it works lives in PostgreSQL comments.
-But as a summary:
+A lot of the details of what's what and how it works lives in PostgreSQL comments. But as a summary:
 
 1. Add your data to tables in `spc_data`.
   * Create entries in observed_systems for each system you wish to observe.
@@ -47,8 +44,8 @@ But as a summary:
   * Create samples under each instrument for each sampling period.
   * Create measurements under each sample. The number of measurements for each sample must be the same.
 2. Then establish your limits.
-  * Identify which time periods are your limit establishment windows - the samples you will
-    use to calculate limits for subsequent control. Add to data.
+  * Identify which time periods are your limit establishment windows - the samples you will use to calculate limits for
+    subsequent control. Add to data.
   * Add control windows that immediately follow a limit establishment window and finish before
   the next limit establishment window.
 3. Read back rules applied to samples from `spc_reports`.

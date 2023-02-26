@@ -9,6 +9,23 @@ control calculations _in SQL_. Why?
 But by all that's holy take note of the LICENSE, in which I disclaim all warranties.
 If you use this for something involving real consequences, that's on you.
 
+### What the heck is statistical process control?
+
+The short version is:
+
+* A process shows two kinds of variability
+  1. Common or ordinary variability, which can be seen all the time and is statistically predictable.
+  2. Special or assignable variability, which is out of the ordinary.
+* You can use some simple rules to detect the special/assignable events, so you can investigate what is going wrong.
+* You can use some simple rules to compare common variability to your target performance, so you can figure out whether
+  improvement is necessary (and afterwards whether you've managed to improve things).
+
+Because statistical process control is based on simple data and simple rules, it doesn't require a PhD to apply
+successfully. Folks were doing this stuff by hand in the 50s without fuss. Turning it into SQL makes it even easier to
+apply in a modern context.
+
+See "References" for some more detailed reading.
+
 ## Installation
 
 The SQL dialect used is unapologetically PostgreSQL, so you need that running first.
@@ -63,6 +80,8 @@ Sample sizes are assumed to be equal throughout a window.
 Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
 
 ## References
+
+Listed in suggested order of priority.
 
 * Stjernlöf, C. ["Statistical Process Control: A Practitioner's Guide"](https://two-wrongs.com/statistical-process-control-a-practitioners-guide.html),
   _Two Wrongs_. 

@@ -64,5 +64,7 @@ sensitive to the normality assumption. (See: Montgomery pp254-256)
 
 ## References
 
-* Montgomery, Douglas. _Introduction to Statistical Quality Control_, 8th EMEA Ed.
+* Stjernlöf, C. ["Statistical Process Control: A Practitioner's Guide"](https://two-wrongs.com/statistical-process-control-a-practitioners-guide.html),
+  _Two Wrongs_. 
+* Montgomery, Douglas C. _Introduction to Statistical Quality Control_, 8th EMEA Ed.
 * Wheeler, Donald J and Chambers, David S. _Understanding Statistical Process Control_, 3rd Ed.

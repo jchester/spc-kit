@@ -322,7 +322,7 @@ create view spc_intermediates.non_conformities_sample_statistics as
        join spc_data.samples                          s on punci.sample_id = s.id;
 
 comment on view spc_intermediates.non_conformities_sample_statistics is $$
-This table joins values for downstream processing.
+This view joins values for downstream processing.
 $$;
 
 create view spc_intermediates.conformities_limit_establishment_statistics as

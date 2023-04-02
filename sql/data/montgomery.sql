@@ -211,7 +211,6 @@ select spc_data.bulk_insert_example_data_measurements(
                  array [306],
                  array [301],
                  array [304]
-
                  ]
          );
 
@@ -241,7 +240,5 @@ select spc_data.bulk_insert_example_data_measurements(
                  array [305],
                  array [333],
                  array [328]
-
                  ]
          );
-

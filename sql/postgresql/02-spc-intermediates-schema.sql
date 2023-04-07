@@ -427,3 +427,66 @@ There is no "lower range limit". This is because the formula for such a limit wo
 range by the upper_d4 constant, which is zero when sample size = 2. Hence it is always zero. This should make sense,
 since the smallest possible value of subtracting two values is zero (when the values are equal).
 $$;
+
+-- Exponentially Weighted Moving Average (EWMA)
+
+create or replace function spc_intermediates.ewma_step(
+    last_avg           decimal
+  , measurement        decimal
+  , weighting          decimal
+  , target_mean        decimal
+) returns decimal immutable language plpgsql as
+$$
+begin
+  if last_avg is null then
+    return weighting * measurement + (1.0 - weighting) * target_mean;
+  else
+    return weighting * measurement + (1.0 - weighting) * last_avg;
+  end if;
+end;
+$$;
+
+create or replace aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
+  sfunc = spc_intermediates.ewma_step,
+  stype = decimal
+);
+
+create view spc_intermediates.individual_measurements as
+  select w.id                                                               as window_id
+       , s.id                                                               as sample_id
+       , w.type                                                             as window_type
+       , row_number() over (partition by w.id order by s.id)                as sample_number_in_window
+       , s.period
+       , s.include_in_limit_calculations
+       , measured_value
+       , spc_intermediates.ewma(m.measured_value, 0.1, 10.0)
+            over (partition by w.id order by m.id)                          as ewma
+  from spc_data.measurements m
+       join spc_data.samples s on s.id = m.sample_id
+       join spc_data.windows w on s.period <@ w.period;
+
+create view spc_intermediates.individual_measurement_statistics as
+    select window_id                   as limit_establishment_window_id
+         , avg(measured_value)         as mean_measured_value
+         , stddev_samp(measured_value) as std_dev_measured_value
+    from spc_intermediates.individual_measurements im
+         join spc_data.windows                                       w on w.id = im.window_id
+    where window_type = 'limit_establishment'
+      and include_in_limit_calculations
+    group by window_id;
+
+create view spc_intermediates.ewma_limits as
+  select limit_establishment_window_id
+       , sample_id
+       , sample_number_in_window
+       , mean_measured_value + (2.7 * std_dev_measured_value) *
+              sqrt(
+                ((0.1 / (2 - 0.1)) *
+                 (1 - (1 - 0.1) ^ (2 * sample_number_in_window)))) as upper_limit
+       , mean_measured_value                           as center_line
+       , mean_measured_value - (2.7 * std_dev_measured_value) *
+              sqrt(
+                ((0.1 / (2 - 0.1)) *
+                 (1 - (1 - 0.1) ^ (2 * sample_number_in_window)))) as lower_limit
+  from spc_intermediates.individual_measurements im
+      join spc_intermediates.individual_measurement_statistics ims on im.window_id = ims.limit_establishment_window_id

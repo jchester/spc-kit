@@ -242,3 +242,60 @@ select spc_data.bulk_insert_example_data_measurements(
                  array [328]
                  ]
          );
+
+-- EWMA charts
+
+insert into spc_data.observed_systems (name)
+values ('Tables 9.1 and 9.10');
+
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'Tables 9.1 and 9.10'),
+        'Normal Distribution With Shifting Mean');
+
+select spc_data.bulk_insert_example_data_measurements(
+  'Normal Distribution With Shifting Mean',
+  'Table 9.1 and Table 9.10, observations 1-20, drawn from μ = 10, σ = 1',
+  '[2023-05-09 00:00:00,2023-05-10 00:00:00)',
+  'limit_establishment',
+  array[
+                 array[9.45],
+                 array[7.99],
+                 array[9.29],
+                 array[11.66],
+                 array[12.16],
+                 array[10.18],
+                 array[8.04],
+                 array[11.46],
+                 array[9.2],
+                 array[10.34],
+                 array[9.03],
+                 array[11.47],
+                 array[10.51],
+                 array[9.4],
+                 array[10.08],
+                 array[9.37],
+                 array[10.62],
+                 array[10.31],
+                 array[8.52],
+                 array[10.84]
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+  'Normal Distribution With Shifting Mean',
+  'Table 9.1 and Table 9.10, observations 21-30, drawn from μ = 11, σ = 1',
+  '[2023-05-11 00:00:00,2023-05-12 00:00:00)',
+  'control',
+  array[
+                 array[10.9],
+                 array[9.33],
+                 array[12.29],
+                 array[11.5],
+                 array[10.6],
+                 array[11.08],
+                 array[10.38],
+                 array[11.62],
+                 array[11.31],
+                 array[10.52]
+                 ]
+         );

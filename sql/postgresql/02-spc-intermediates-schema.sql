@@ -420,8 +420,8 @@ create view spc_intermediates.xmr_mr_limits as
 
 comment on view spc_intermediates.xmr_mr_limits is $$
 Here we calculate the center line and upper range limit (URL) of the moving range (URL is the nomenclature from Wheeler
-& Chamers, Montgomery calls it an upper control limit). As with xmr_x_limits, the data is calculated over a whole window
-of data rather than grouped by samples.
+& Chambers, Montgomery calls it an upper control limit). As with xmr_x_limits, the data is calculated over a whole
+window of data rather than grouped by samples.
 
 There is no "lower range limit". This is because the formula for such a limit would require multiplying the mean moving
 range by the upper_d4 constant, which is zero when sample size = 2. Hence it is always zero. This should make sense,

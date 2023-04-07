@@ -17,7 +17,7 @@ values ((select id from spc_data.observed_systems where name = 'Test System'), '
      , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-in-control:cw-out-control')
      , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control')
      , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-out-control')
-     , ( (select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions');
+     , ((select id from spc_data.observed_systems where name = 'Test System'), 'lew-out-control:cw-in-control:with-exclusions');
 -- @formatter:on
 
 --   1. Limit establishment window (lew) in-control, control window (cw) in-control

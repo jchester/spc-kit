@@ -584,4 +584,6 @@ std dev to itself or to another window).
 
 When the IDs are not the same, the function carries the final EWMA of the limit establishment window into the first EWMA
 of the control window.
+
+Upper limit is based on Montgomery formula 9.25, lower limit on formula 9.26.
 $$;

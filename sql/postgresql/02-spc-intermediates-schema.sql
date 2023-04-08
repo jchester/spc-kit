@@ -511,7 +511,7 @@ begin
     v_target_mean = v_mean_measured_value;
   else
     select spc_intermediates.ewma(im.measured_value, p_weighting, v_mean_measured_value)
-    over (partition by im.window_id order by im.sample_number_in_window)
+           over (partition by im.window_id order by im.sample_number_in_window)
     from spc_intermediates.individual_measurements im
     where im.window_id = p_control_window_id
     order by 1
@@ -529,14 +529,14 @@ begin
          , wms.include_in_limit_calculations
          , wms.measured_value
          , spc_intermediates.ewma(wms.measured_value, p_weighting, v_target_mean)
-           over (partition by wms.window_id order by wms.measurement_id)               as ewma
+           over (partition by wms.window_id order by wms.measurement_id)                       as ewma
          , v_target_mean + (2.7 * v_std_dev_measured_value) *
-                           sqrt(((0.1 / (2 - 0.1)) *
-                                 (1 - (1 - 0.1) ^ (2 * wms.sample_number_in_window)))) as upper_limit
-         , v_target_mean                                                               as center_line
+                           sqrt(((p_weighting / (2 - p_weighting)) *
+                                 (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as upper_limit
+         , v_target_mean                                                                       as center_line
          , v_target_mean - (2.7 * v_std_dev_measured_value) *
-                           sqrt(((0.1 / (2 - 0.1)) *
-                                 (1 - (1 - 0.1) ^ (2 * wms.sample_number_in_window)))) as lower_limit
+                           sqrt(((p_weighting / (2 - p_weighting)) *
+                                 (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
     from spc_intermediates.individual_measurements wms;
 end;
 $$;

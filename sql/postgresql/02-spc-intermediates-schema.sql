@@ -514,7 +514,7 @@ begin
     over (partition by im.window_id order by im.sample_number_in_window)
     from spc_intermediates.individual_measurements im
     where im.window_id = p_control_window_id
-    order by 1 asc
+    order by 1
     limit 1
     into v_target_mean;
   end if;

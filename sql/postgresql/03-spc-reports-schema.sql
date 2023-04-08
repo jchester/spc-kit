@@ -279,19 +279,23 @@ vulnerable to departures from normality in the data.
 $$;
 
 create view spc_reports.ewma_rules as
-  select im.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , im.period
+  with window_rels as (select control_w.id     as control_window_id
+                            , limits_w.id      as limit_establishment_window_id
+                            , control_w.period as period
+                       from spc_data.windows                   control_w
+                            join spc_data.window_relationships wr on control_w.id = wr.control_window_id
+                            join spc_data.windows              limits_w
+                                 on limits_w.id = wr.limit_establishment_window_id)
+  select eim.sample_id
+       , control_window_id
+       , limit_establishment_window_id
+       , eim.period
        , case
-           when ewma > upper_limit then 'out_of_control_upper'
-           when ewma < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end          as control_status
-  from spc_intermediates.individual_measurements im
-       join spc_data.windows                                       control_w on im.period <@ control_w.period
-       join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
-       join spc_data.windows                                       limits_w
-            on limits_w.id = wr.limit_establishment_window_id
-       join spc_intermediates.ewma_limits on limits_w.id = ewma_limits.limit_establishment_window_id and ewma_limits.sample_number_in_window = im.sample_number_in_window
-  where include_in_limit_calculations;
+             when ewma > upper_limit then 'out_of_control_upper'
+             when ewma < lower_limit then 'out_of_control_lower'
+             else 'in_control'
+         end as control_status
+  from window_rels
+       join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
+            on eim.period <@ window_rels.period
+  where eim.include_in_limit_calculations;

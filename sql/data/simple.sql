@@ -222,3 +222,165 @@ select spc_data.bulk_insert_example_data_measurements(
                  array [1, 2, 3]
                  ]
          );
+
+------------------------------------------------------------------
+-- EWMA charts
+------------------------------------------------------------------
+
+insert into spc_data.observed_systems (name)
+values ('EWMA Test System');
+
+-- @formatter:off
+insert into spc_data.instruments (observed_system_id, name)
+values ((select id from spc_data.observed_systems where name = 'EWMA Test System'), 'ewma:lew-in-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'EWMA Test System'), 'ewma:lew-in-control:cw-out-control')
+     , ((select id from spc_data.observed_systems where name = 'EWMA Test System'), 'ewma:lew-out-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'EWMA Test System'), 'ewma:lew-out-control:cw-out-control')
+     , ((select id from spc_data.observed_systems where name = 'EWMA Test System'), 'ewma:lew-out-control:cw-in-control:with-exclusions');
+-- @formatter:on
+
+--   1. Limit establishment window (lew) in-control, control window (cw) in-control
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-in-control:cw-in-control',
+               'ewma:lew-in-control',
+               '[2023-04-12 00:00:00,2023-04-13 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11]
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-in-control:cw-in-control',
+               'ewma:cw-in-control',
+               '[2023-04-14 00:00:00,2023-04-15 00:00:00)',
+               'control',
+               array [
+                 array [9.5],
+                 array [10],
+                 array [10.5],
+                 array [10],
+                 array [9.5]
+                 ]
+         );
+
+--   2. Limit establishment window (lew) in-control, control window (cw) out-of-control
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-in-control:cw-out-control',
+               'ewma:lew-in-control',
+               '[2023-04-15 00:00:00,2023-04-16 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11]
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-in-control:cw-out-control',
+               'ewma:cw-out-control',
+               '[2023-04-17 00:00:00,2023-04-18 00:00:00)',
+               'control',
+               array [
+                 array [1],
+                 array [100]
+                 ]
+         );
+
+--   3. Limit establishment window (lew) out-of-control, control window (cw) in-control
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-out-control:cw-in-control',
+               'ewma:lew-out-control',
+               '[2023-04-19 00:00:00,2023-04-20 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [0],
+                 array [0], -- EWMA out-of-control lower
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [20],
+                 array [20],
+                 array [20], -- EWMA out-of-control upper
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11]
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-out-control:cw-in-control',
+               'ewma:cw-in-control',
+               '[2023-04-21 00:00:00,2023-04-22 00:00:00)',
+               'control',
+               array [
+                 array [9.5],
+                 array [10],
+                 array [10.5],
+                 array [10],
+                 array [9.5]
+                 ]
+         );
+
+--   4. Limit establishment window (lew) out-of-control, control window (cw) out-of-control
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-out-control:cw-out-control',
+               'ewma:lew-out-control',
+               '[2023-04-23 00:00:00,2023-04-24 00:00:00)',
+               'limit_establishment',
+               array [
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [3],  -- EWMA out-of-control lower
+                 array [3],  -- EWMA out-of-control lower
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [17],
+                 array [17],
+                 array [17], -- EWMA out-of-control upper
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11],
+                 array [9], array [10], array [11]
+                 ]
+         );
+
+select spc_data.bulk_insert_example_data_measurements(
+               'ewma:lew-out-control:cw-out-control',
+               'ewma:cw-out-control',
+               '[2023-04-25 00:00:00,2023-04-26 00:00:00)',
+               'control',
+               array [
+                 array [0], -- EWMA out-of-control lower
+                 array [30] -- EWMA out-of-control upper
+                 ]
+         );

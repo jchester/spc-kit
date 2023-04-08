@@ -494,7 +494,7 @@ returns table (
   center_line                   decimal,
   lower_limit                   decimal
 )
-language plpgsql as
+immutable language plpgsql as
 $$
 declare
   v_mean_measured_value    decimal;

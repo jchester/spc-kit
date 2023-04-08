@@ -430,7 +430,7 @@ $$;
 
 -- Exponentially Weighted Moving Average (EWMA)
 
-create or replace function spc_intermediates.ewma_step(
+create function spc_intermediates.ewma_step(
     last_avg           decimal
   , measurement        decimal
   , weighting          decimal
@@ -446,7 +446,7 @@ begin
 end;
 $$;
 
-create or replace aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
+create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
   sfunc = spc_intermediates.ewma_step,
   stype = decimal
 );
@@ -475,7 +475,7 @@ create view spc_intermediates.individual_measurement_statistics as
       and include_in_limit_calculations
     group by w.id;
 
-create or replace function spc_intermediates.ewma_individual_measurements(
+create function spc_intermediates.ewma_individual_measurements(
   p_limit_establishment_window_id bigint
 , p_control_window_id             bigint
 , p_weighting                     decimal

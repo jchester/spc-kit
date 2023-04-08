@@ -299,3 +299,9 @@ create view spc_reports.ewma_rules as
        join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
             on eim.period <@ window_rels.period
   where eim.include_in_limit_calculations;
+
+comment on view spc_reports.ewma_rules is $$
+For each measurement and EWMA value, this rule applies the per-measurement limits to determine if a EWMA value is
+in-control or out-of-control. Note that unlike conventional Shewart charts, the limits for each measurement vary
+according to the value of the measurement and values of previous measurements, represented by the EWMA.
+$$;

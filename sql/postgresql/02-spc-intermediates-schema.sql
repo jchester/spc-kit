@@ -446,12 +446,35 @@ begin
 end;
 $$;
 
+comment on function spc_intermediates.ewma_step is $$
+Calculating an exponentially-weighted moving average (EWMA; aka Simple Exponential Smoothing) works as a recurrence
+relationship. It can be defined as an iterative function where each execution takes as an input the value of the
+previous execution.
+
+This is the function that gets called iteratively.
+
+* `last_avg` represents the output of the previous execution. If it is nil, the `target_mean` value is substituted.
+* `measurement` represents the value of the current measurement, used to update the EWMA.
+* `weighting` represents the fraction by which the `last_avg` is applied with the `measurement` to create a new average.
+  Put another way, it is the speed at which older values become ignored in updating the average. High values of
+  `weighting` cause older values to be ignored quickly, making the function more responsive to more recent values. Low
+  values of `weighting` cause the influence of older values to linger longer, meaning the function takes longer to
+  respond to shifts but is less sensitive to noise. In literature this parameter is called λ (typical of SPC literature)
+  or α (typical of data science / forecasting literature).
+* `target_mean` is the declared mean of the data.
+$$;
+
 create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
   sfunc = spc_intermediates.ewma_step,
   stype = decimal
 );
 
-create view spc_intermediates.individual_measurements as
+comment on aggregate spc_intermediates.ewma(decimal, decimal, decimal) is $$
+The `ewma` aggregate is what wraps up `ewma_step` into an iterative loop. This means it can be used as an aggregate in
+the same way as inbuilt aggregates like `sum` or `avg`.
+$$;
+
+create view spc_intermediates.individual_measurements_ewma as
   select w.id                                                as window_id
        , s.id                                                as sample_id
        , m.id                                                as measurement_id
@@ -464,7 +487,14 @@ create view spc_intermediates.individual_measurements as
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.period <@ w.period;
 
-create view spc_intermediates.individual_measurement_statistics as
+comment on view spc_intermediates.individual_measurements_ewma is $$
+This prepares the underlying windows, samples and measurements for transformation into EWMAs and control limits. An
+important distinction from similar views like `individual_measurements_and_moving_ranges` is the calculation of
+`sample_number_in_window`. This value is used as an input for calculating the amount by which each particular
+measurement is weighted (see Montgomery formulae 9.25 and 9.26, where it is the value 'i').
+$$;
+
+create view spc_intermediates.individual_measurement_statistics_ewma as
     select w.id                        as limit_establishment_window_id
          , avg(measured_value)         as mean_measured_value
          , stddev_samp(measured_value) as std_dev_measured_value
@@ -474,6 +504,12 @@ create view spc_intermediates.individual_measurement_statistics as
     where w.type = 'limit_establishment'
       and include_in_limit_calculations
     group by w.id;
+
+comment on view spc_intermediates.individual_measurement_statistics_ewma is $$
+This view calculates the mean and standard deviation of control windows. The mean is used as a target_mean and the
+standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26, where
+it is the value 'σ').
+$$;
 
 create function spc_intermediates.ewma_individual_measurements(
   p_limit_establishment_window_id bigint
@@ -504,16 +540,16 @@ begin
   select mean_measured_value
        , std_dev_measured_value
   into v_mean_measured_value, v_std_dev_measured_value
-  from spc_intermediates.individual_measurement_statistics
+  from spc_intermediates.individual_measurement_statistics_ewma
   where limit_establishment_window_id = p_limit_establishment_window_id;
 
   if p_limit_establishment_window_id = p_control_window_id then
     v_target_mean = v_mean_measured_value;
   else
-    select spc_intermediates.ewma(im.measured_value, p_weighting, v_mean_measured_value)
-           over (partition by im.window_id order by im.sample_number_in_window)
-    from spc_intermediates.individual_measurements im
-    where im.window_id = p_control_window_id
+    select spc_intermediates.ewma(ime.measured_value, p_weighting, v_mean_measured_value)
+           over (partition by ime.window_id order by ime.sample_number_in_window)
+    from spc_intermediates.individual_measurements_ewma ime
+    where ime.window_id = p_control_window_id
     order by 1
     limit 1
     into v_target_mean;
@@ -537,7 +573,15 @@ begin
          , v_target_mean - (2.7 * v_std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
-    from spc_intermediates.individual_measurements wms;
+    from spc_intermediates.individual_measurements_ewma wms;
 end;
 $$;
 
+comment on function spc_intermediates.ewma_individual_measurements(bigint, bigint, decimal) is $$
+This is the core of the EWMA calculation process. It is implemented as a function because the behavior varies according
+to whether the control window is also the limit establishment window (ie, whether you are applying a window's mean and
+std dev to itself or to another window).
+
+When the IDs are not the same, the function carries the final EWMA of the limit establishment window into the first EWMA
+of the control window.
+$$;

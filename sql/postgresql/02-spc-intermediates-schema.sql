@@ -452,41 +452,92 @@ create or replace aggregate spc_intermediates.ewma(measurement decimal, weightin
 );
 
 create view spc_intermediates.individual_measurements as
-  select w.id                                                               as window_id
-       , s.id                                                               as sample_id
-       , w.type                                                             as window_type
-       , row_number() over (partition by w.id order by s.id)                as sample_number_in_window
+  select w.id                                                as window_id
+       , s.id                                                as sample_id
+       , m.id                                                as measurement_id
+       , w.type                                              as window_type
+       , row_number() over (partition by w.id order by s.id) as sample_number_in_window
        , s.period
        , s.include_in_limit_calculations
-       , measured_value
-       , spc_intermediates.ewma(m.measured_value, 0.1, 10.0)
-            over (partition by w.id order by m.id)                          as ewma
+       , m.measured_value
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.period <@ w.period;
 
 create view spc_intermediates.individual_measurement_statistics as
-    select window_id                   as limit_establishment_window_id
+    select w.id                        as limit_establishment_window_id
          , avg(measured_value)         as mean_measured_value
          , stddev_samp(measured_value) as std_dev_measured_value
-    from spc_intermediates.individual_measurements im
-         join spc_data.windows                                       w on w.id = im.window_id
-    where window_type = 'limit_establishment'
+    from spc_data.measurements m
+       join spc_data.samples s on s.id = m.sample_id
+       join spc_data.windows w on s.period <@ w.period
+    where w.type = 'limit_establishment'
       and include_in_limit_calculations
-    group by window_id;
+    group by w.id;
 
-create view spc_intermediates.ewma_limits as
-  select limit_establishment_window_id
-       , sample_id
-       , sample_number_in_window
-       , mean_measured_value + (2.7 * std_dev_measured_value) *
-              sqrt(
-                ((0.1 / (2 - 0.1)) *
-                 (1 - (1 - 0.1) ^ (2 * sample_number_in_window)))) as upper_limit
-       , mean_measured_value                           as center_line
-       , mean_measured_value - (2.7 * std_dev_measured_value) *
-              sqrt(
-                ((0.1 / (2 - 0.1)) *
-                 (1 - (1 - 0.1) ^ (2 * sample_number_in_window)))) as lower_limit
-  from spc_intermediates.individual_measurements im
-      join spc_intermediates.individual_measurement_statistics ims on im.window_id = ims.limit_establishment_window_id
+create or replace function spc_intermediates.ewma_individual_measurements(
+  p_limit_establishment_window_id bigint
+, p_control_window_id             bigint
+, p_weighting                     decimal
+)
+returns table (
+  window_id                     bigint,
+  sample_id                     bigint,
+  measurement_id                bigint,
+  window_type                   spc_data.window_type,
+  sample_number_in_window       bigint,
+  period                        tstzrange,
+  include_in_limit_calculations bool,
+  measured_value                decimal,
+  ewma                          decimal,
+  upper_limit                   decimal,
+  center_line                   decimal,
+  lower_limit                   decimal
+)
+language plpgsql as
+$$
+declare
+  v_mean_measured_value    decimal;
+  v_std_dev_measured_value decimal;
+  v_target_mean            decimal;
+begin
+  select mean_measured_value
+       , std_dev_measured_value
+  into v_mean_measured_value, v_std_dev_measured_value
+  from spc_intermediates.individual_measurement_statistics
+  where limit_establishment_window_id = p_limit_establishment_window_id;
+
+  if p_limit_establishment_window_id = p_control_window_id then
+    v_target_mean = v_mean_measured_value;
+  else
+    select spc_intermediates.ewma(im.measured_value, p_weighting, v_mean_measured_value)
+    over (partition by im.window_id order by im.sample_number_in_window)
+    from spc_intermediates.individual_measurements im
+    where im.window_id = p_control_window_id
+    order by 1 asc
+    limit 1
+    into v_target_mean;
+  end if;
+
+  return query
+    select wms.window_id
+         , wms.sample_id
+         , wms.measurement_id
+         , wms.window_type
+         , wms.sample_number_in_window
+         , wms.period
+         , wms.include_in_limit_calculations
+         , wms.measured_value
+         , spc_intermediates.ewma(wms.measured_value, p_weighting, v_target_mean)
+           over (partition by wms.window_id order by wms.measurement_id)               as ewma
+         , v_target_mean + (2.7 * v_std_dev_measured_value) *
+                           sqrt(((0.1 / (2 - 0.1)) *
+                                 (1 - (1 - 0.1) ^ (2 * wms.sample_number_in_window)))) as upper_limit
+         , v_target_mean                                                               as center_line
+         , v_target_mean - (2.7 * v_std_dev_measured_value) *
+                           sqrt(((0.1 / (2 - 0.1)) *
+                                 (1 - (1 - 0.1) ^ (2 * wms.sample_number_in_window)))) as lower_limit
+    from spc_intermediates.individual_measurements wms;
+end;
+$$;
+

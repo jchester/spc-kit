@@ -37,8 +37,7 @@ create table spc_data.samples (
   include_in_limit_calculations bool default true                           not null,
   annotation                    text,
 
-  unique (period, instrument_id),
-  exclude using gist (period with &&)
+  unique (period, instrument_id)
 );
 
 comment on table spc_data.samples is $$

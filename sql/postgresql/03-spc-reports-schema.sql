@@ -13,6 +13,23 @@ When using an ORM, you will typically join these views to the base tables in spc
 about samples to the sample object.
 $$;
 
+-- Run charts
+
+create view spc_reports.runs as
+  select
+     m.id as measurement_id
+    , s.id as sample_id
+    , i.id as instrument_id
+    , w.id as window_id
+    , performed_at
+    , measured_value
+  from spc_data.measurements m
+      join spc_data.samples s on s.id = m.sample_id
+      join spc_data.instruments i on i.id = s.instrument_id
+      join spc_data.windows w on s.period <@ w.period;
+
+-- Shewhart charts
+
 create view spc_reports.x_bar_r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
@@ -276,4 +293,32 @@ in-control and out-of-control according to the upper range limit.
 
 As with the individual value rule in xmr_x_rules, this rule is more sensitive to shifts in moving range but also more
 vulnerable to departures from normality in the data.
+$$;
+
+create view spc_reports.ewma_rules as
+  with window_rels as (select control_w.id     as control_window_id
+                            , limits_w.id      as limit_establishment_window_id
+                            , control_w.period as period
+                       from spc_data.windows                   control_w
+                            join spc_data.window_relationships wr on control_w.id = wr.control_window_id
+                            join spc_data.windows              limits_w
+                                 on limits_w.id = wr.limit_establishment_window_id)
+  select eim.sample_id
+       , control_window_id
+       , limit_establishment_window_id
+       , eim.period
+       , case
+             when ewma > upper_limit then 'out_of_control_upper'
+             when ewma < lower_limit then 'out_of_control_lower'
+             else 'in_control'
+         end as control_status
+  from window_rels
+       join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
+            on eim.period <@ window_rels.period
+  where eim.include_in_limit_calculations;
+
+comment on view spc_reports.ewma_rules is $$
+For each measurement and EWMA value, this rule applies the per-measurement limits to determine if a EWMA value is
+in-control or out-of-control. Note that unlike conventional Shewart charts, the limits for each measurement vary
+according to the value of the measurement and values of previous measurements, represented by the EWMA.
 $$;

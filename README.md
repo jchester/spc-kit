@@ -38,6 +38,8 @@ See "References" for some more detailed reading.
     * Limits for individual measurements (aka XmR). These are applied to samples with a single measurement and track
       measurement-to-measurement changes in means (X) and moving ranges (mR). Sensitive to departure from normality.
       (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
+    * Limits for Exponentially-Weighted Moving Averages (EWMA). These track shifts in the mean. Useful adjunct to the
+      usual Shewhart charts.
 * Report out-of-control samples on _attributes_ using:
     * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
       Montgomery §7.2, Eqn 7.8)
@@ -48,7 +50,7 @@ Sample sizes are assumed to be equal throughout a window.
 
 ## What it cannot do
 
-Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum or EWMA. No Hotelling T². Etc.
+Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum. No Hotelling T². Etc.
 
 ## Installation
 

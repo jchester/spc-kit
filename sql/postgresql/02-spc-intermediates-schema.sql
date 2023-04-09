@@ -49,7 +49,7 @@ Appendix VI of Montgomery.
 $$;
 -- @formatter:on
 
--- Shewart chart statistics
+-- Shewhart chart statistics
 
 create view spc_intermediates.measurement_sample_statistics as
   select s.id
@@ -406,7 +406,7 @@ create view spc_intermediates.xmr_x_limits as
 
 comment on view spc_intermediates.xmr_x_limits is $$
 Here we calculate the center line, upper natural process limit (UNPL) and lower natural process limit (LNPL). Note the
-change in nomenclature - these are not control limits in the sense used in other Shewart charts, because data is not
+change in nomenclature - these are not control limits in the sense used in other Shewhart charts, because data is not
 grouped into samples with multiple measurements. Instead the limits are calculated over entire windows of data, meaning
 that all variation is captured in its original natural form.
 $$;

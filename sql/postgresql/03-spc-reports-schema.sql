@@ -1,7 +1,7 @@
 create schema if not exists spc_reports;
 
 comment on schema spc_reports is $$
-This is where you read out the control status of individual samples, based on the application of Shewart rules. Control
+This is where you read out the control status of individual samples, based on the application of Shewhart rules. Control
 status can be one of three conditions:
 
 * in_control. There is nothing to do, the process is operating with common cause variability.
@@ -265,7 +265,7 @@ comment on view spc_reports.xmr_x_rules is $$
 This view applies the limits derived in xmr_x_limits to the matching control windows, showing which individual
 measurements were in-control and out-of-control according to the natural process limits.
 
-This rule is more sensitive to shifts in the mean than an ordinary Shewart chart that groups together measurements into
+This rule is more sensitive to shifts in the mean than an ordinary Shewhart chart that groups together measurements into
 samples, but on the other hand it is more vulnerable to departures from normality in the data. Montgomery recommends
 Cusum and EWMA charts over the chart for individual values.
 $$;
@@ -319,6 +319,6 @@ create view spc_reports.ewma_rules as
 
 comment on view spc_reports.ewma_rules is $$
 For each measurement and EWMA value, this rule applies the per-measurement limits to determine if a EWMA value is
-in-control or out-of-control. Note that unlike conventional Shewart charts, the limits for each measurement vary
+in-control or out-of-control. Note that unlike conventional Shewhart charts, the limits for each measurement vary
 according to the value of the measurement and values of previous measurements, represented by the EWMA.
 $$;

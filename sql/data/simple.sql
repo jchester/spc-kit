@@ -9,26 +9,26 @@
 -- be found, so we add entries to the excluded_samples table.
 
 ------------------------------------------------------------------
--- Shewart XbarR charts
+-- Shewhart XbarR charts
 ------------------------------------------------------------------
 
 insert into spc_data.observed_systems (name)
-values ('Shewart Test System');
+values ('Shewhart Test System');
 
 -- @formatter:off
 insert into spc_data.instruments (observed_system_id, name)
-values ((select id from spc_data.observed_systems where name = 'Shewart Test System'), 'shewart:lew-in-control:cw-in-control')
-     , ((select id from spc_data.observed_systems where name = 'Shewart Test System'), 'shewart:lew-in-control:cw-out-control')
-     , ((select id from spc_data.observed_systems where name = 'Shewart Test System'), 'shewart:lew-out-control:cw-in-control')
-     , ((select id from spc_data.observed_systems where name = 'Shewart Test System'), 'shewart:lew-out-control:cw-out-control')
-     , ((select id from spc_data.observed_systems where name = 'Shewart Test System'), 'shewart:lew-out-control:cw-in-control:with-exclusions');
+values ((select id from spc_data.observed_systems where name = 'Shewhart Test System'), 'shewhart:lew-in-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'Shewhart Test System'), 'shewhart:lew-in-control:cw-out-control')
+     , ((select id from spc_data.observed_systems where name = 'Shewhart Test System'), 'shewhart:lew-out-control:cw-in-control')
+     , ((select id from spc_data.observed_systems where name = 'Shewhart Test System'), 'shewhart:lew-out-control:cw-out-control')
+     , ((select id from spc_data.observed_systems where name = 'Shewhart Test System'), 'shewhart:lew-out-control:cw-in-control:with-exclusions');
 -- @formatter:on
 
 --   1. Limit establishment window (lew) in-control, control window (cw) in-control
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-in-control:cw-in-control',
-               'shewart:lew-in-control',
+               'shewhart:lew-in-control:cw-in-control',
+               'shewhart:lew-in-control',
                '[2023-04-01 00:00:00,2023-04-02 00:00:00)',
                'limit_establishment',
                array [
@@ -41,8 +41,8 @@ select spc_data.bulk_insert_example_data_measurements(
          );
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-in-control:cw-in-control',
-               'shewart:cw-in-control',
+               'shewhart:lew-in-control:cw-in-control',
+               'shewhart:cw-in-control',
                '[2023-04-02 00:00:00,2023-04-03 00:00:00)',
                'control',
                array [
@@ -57,8 +57,8 @@ select spc_data.bulk_insert_example_data_measurements(
 --   2. Limit establishment window (lew) in-control, control window (cw) out-of-control
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-in-control:cw-out-control',
-               'shewart:lew-in-control',
+               'shewhart:lew-in-control:cw-out-control',
+               'shewhart:lew-in-control',
                '[2023-04-03 00:00:00,2023-04-04 00:00:00)',
                'limit_establishment',
                array [
@@ -71,8 +71,8 @@ select spc_data.bulk_insert_example_data_measurements(
          );
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-in-control:cw-out-control',
-               'shewart:cw-out-control',
+               'shewhart:lew-in-control:cw-out-control',
+               'shewhart:cw-out-control',
                '[2023-04-05 00:00:00,2023-04-06 00:00:00)',
                'control',
                array [
@@ -86,7 +86,7 @@ select spc_data.bulk_insert_example_data_measurements(
 --   3. Limit establishment window (lew) out-of-control, control window (cw) in-control
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-in-control',
+               'shewhart:lew-out-control:cw-in-control',
                'lew-out-control',
                '[2023-04-06 00:00:00,2023-04-07 00:00:00)',
                'limit_establishment',
@@ -104,8 +104,8 @@ select spc_data.bulk_insert_example_data_measurements(
          );
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-in-control',
-               'shewart:cw-in-control',
+               'shewhart:lew-out-control:cw-in-control',
+               'shewhart:cw-in-control',
                '[2023-04-07 00:00:00,2023-04-08 00:00:00)',
                'control',
                array [
@@ -119,7 +119,7 @@ select spc_data.bulk_insert_example_data_measurements(
 --   4. Limit establishment window (lew) out-of-control, control window (cw) out-of-control
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-out-control',
+               'shewhart:lew-out-control:cw-out-control',
                'lew-out-control',
                '[2023-04-08 00:00:00,2023-04-09 00:00:00)',
                'limit_establishment',
@@ -137,8 +137,8 @@ select spc_data.bulk_insert_example_data_measurements(
          );
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-out-control',
-               'shewart:cw-out-control',
+               'shewhart:lew-out-control:cw-out-control',
+               'shewhart:cw-out-control',
                '[2023-04-09 00:00:00,2023-04-10 00:00:00)',
                'control',
                array [
@@ -152,8 +152,8 @@ select spc_data.bulk_insert_example_data_measurements(
 --   5. Limit establishment window (lew) out-of-control points excluded, control window (cw) in-control
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-in-control:with-exclusions',
-               'shewart:lew-out-control:with-exclusions',
+               'shewhart:lew-out-control:cw-in-control:with-exclusions',
+               'shewhart:lew-out-control:with-exclusions',
                '[2023-04-10 00:00:00,2023-04-11 00:00:00)',
                'limit_establishment',
                array [
@@ -210,8 +210,8 @@ where id in
        limit 2);
 
 select spc_data.bulk_insert_example_data_measurements(
-               'shewart:lew-out-control:cw-in-control:with-exclusions',
-               'shewart:cw-in-control:with-exclusions',
+               'shewhart:lew-out-control:cw-in-control:with-exclusions',
+               'shewhart:cw-in-control:with-exclusions',
                '[2023-04-11 00:00:00,2023-04-12 00:00:00)',
                'control',
                array [

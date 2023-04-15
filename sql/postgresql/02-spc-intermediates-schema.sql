@@ -54,6 +54,7 @@ $$;
 create view spc_intermediates.measurement_sample_statistics as
   select s.id
        , s.period
+       , s.instrument_id
        , s.include_in_limit_calculations
        , avg(measured_value)                       as sample_mean
        , stddev_samp(measured_value)               as sample_stddev
@@ -217,13 +218,14 @@ $$;
 create view spc_intermediates.fraction_conforming_sample_statistics as
   select fc.sample_id
        , s.period
+       , s.instrument_id
        , s.include_in_limit_calculations
        , avg(fraction_conforming)     as mean_fraction_conforming
        , avg(fraction_non_conforming) as mean_fraction_non_conforming
        , sum(sample_size)             as sample_size
   from spc_intermediates.fraction_conforming fc
        join spc_data.samples                 s on fc.sample_id = s.id
-  group by fc.sample_id, s.period, s.include_in_limit_calculations;
+  group by fc.sample_id, s.period, s.instrument_id, s.include_in_limit_calculations;
 
 comment on view spc_intermediates.fraction_conforming_sample_statistics is $$
 Here we convert fraction conformant/non-conformant values into means for each sample.
@@ -329,6 +331,7 @@ $$;
 create view spc_intermediates.non_conformities_sample_statistics as
   select punci.sample_id
        , s.period
+       , s.instrument_id
        , s.include_in_limit_calculations
        , punci.non_conformities
   from spc_data.per_unit_non_conformities_inspections punci
@@ -370,6 +373,7 @@ $$;
 create view spc_intermediates.individual_measurements_and_moving_ranges as
   select w.id                                                               as window_id
        , s.id                                                               as sample_id
+       , s.instrument_id                                                    as instrument_id
        , w.type                                                             as window_type
        , s.period
        , s.include_in_limit_calculations
@@ -378,7 +382,7 @@ create view spc_intermediates.individual_measurements_and_moving_ranges as
              lag(measured_value, 1) over (partition by w.id order by m.id)) as moving_range
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period;
+       join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
 
 comment on view spc_intermediates.individual_measurements_and_moving_ranges is $$
 This view joins measurements and moving ranges with sample and window information, intended for downstream processing
@@ -491,6 +495,7 @@ create view spc_intermediates.individual_measurements_ewma as
   select w.id                                                as window_id
        , s.id                                                as sample_id
        , m.id                                                as measurement_id
+       , s.instrument_id                                     as instrument_id
        , w.type                                              as window_type
        , row_number() over (partition by w.id order by s.id) as sample_number_in_window
        , s.period
@@ -498,7 +503,7 @@ create view spc_intermediates.individual_measurements_ewma as
        , m.measured_value
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period;
+       join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
 
 comment on view spc_intermediates.individual_measurements_ewma is $$
 This prepares the underlying windows, samples and measurements for transformation into EWMAs and control limits. An
@@ -513,7 +518,7 @@ create view spc_intermediates.individual_measurement_statistics_ewma as
          , stddev_samp(measured_value) as std_dev_measured_value
     from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period
+       join spc_data.windows w on s.period <@ w.period and s.instrument_id = w.instrument_id
     where w.type = 'limit_establishment'
       and include_in_limit_calculations
     group by w.id;
@@ -533,6 +538,7 @@ returns table (
   window_id                     bigint,
   sample_id                     bigint,
   measurement_id                bigint,
+  instrument_id                 bigint,
   window_type                   spc_data.window_type,
   sample_number_in_window       bigint,
   period                        tstzrange,
@@ -572,6 +578,7 @@ begin
     select wms.window_id
          , wms.sample_id
          , wms.measurement_id
+         , wms.instrument_id
          , wms.window_type
          , wms.sample_number_in_window
          , wms.period
@@ -586,7 +593,8 @@ begin
          , v_target_mean - (2.7 * v_std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
-    from spc_intermediates.individual_measurements_ewma wms;
+    from spc_intermediates.individual_measurements_ewma wms
+    where wms.window_id in (p_limit_establishment_window_id, p_control_window_id);
 end;
 $$;
 

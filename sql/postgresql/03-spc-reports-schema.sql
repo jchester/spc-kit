@@ -43,6 +43,7 @@ create view spc_reports.x_bar_r_rules as
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
+                                                          and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id
@@ -69,6 +70,7 @@ create view spc_reports.r_rules as
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
+                                                          and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.r_limits on limits_w.id = r_limits.limit_establishment_window_id
@@ -96,6 +98,7 @@ create view spc_reports.x_bar_s_rules as
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
+                                                          and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id
@@ -122,6 +125,7 @@ create view spc_reports.s_rules as
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
+                                                          and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
        join spc_intermediates.s_limits on limits_w.id = s_limits.limit_establishment_window_id
@@ -148,6 +152,7 @@ create view spc_reports.p_conformant_rules as
          end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
+                                                                  and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -174,6 +179,7 @@ create view spc_reports.p_non_conformant_rules as
          end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
+                                                                  and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -198,6 +204,7 @@ create view spc_reports.np_conformant_rules as
          end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
+                                                                  and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -224,6 +231,7 @@ create view spc_reports.np_non_conformant_rules as
          end          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
+                                                                  and ss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -248,6 +256,7 @@ create view spc_reports.c_rules as
          end          as control_status
   from spc_intermediates.non_conformities_sample_statistics ncss
        join spc_data.windows                                control_w on ncss.period <@ control_w.period
+                                                                and ncss.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                   wr on control_w.id = wr.control_window_id
        join spc_data.windows                                limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -263,6 +272,7 @@ create view spc_reports.xmr_x_rules as
   select immr.sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
+       , immr.instrument_id
        , immr.period
        , case
            when measured_value > upper_natural_process_limit then 'out_of_control_upper'
@@ -271,6 +281,7 @@ create view spc_reports.xmr_x_rules as
          end          as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.period <@ control_w.period
+                                                                      and immr.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
        join spc_data.windows                                       limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -297,6 +308,7 @@ create view spc_reports.xmr_mr_rules as
          end          as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.period <@ control_w.period
+                                                                        and immr.instrument_id = control_w.instrument_id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
        join spc_data.windows                                       limits_w
             on limits_w.id = wr.limit_establishment_window_id
@@ -315,6 +327,7 @@ create view spc_reports.ewma_rules as
   with window_rels as (select control_w.id     as control_window_id
                             , limits_w.id      as limit_establishment_window_id
                             , control_w.period as period
+                            , control_w.instrument_id
                        from spc_data.windows                   control_w
                             join spc_data.window_relationships wr on control_w.id = wr.control_window_id
                             join spc_data.windows              limits_w
@@ -322,6 +335,7 @@ create view spc_reports.ewma_rules as
   select eim.sample_id
        , control_window_id
        , limit_establishment_window_id
+       , eim.instrument_id
        , eim.period
        , case
              when ewma > upper_limit then 'out_of_control_upper'
@@ -330,7 +344,7 @@ create view spc_reports.ewma_rules as
          end as control_status
   from window_rels
        join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
-            on eim.period <@ window_rels.period
+            on eim.period <@ window_rels.period and eim.instrument_id = window_rels.instrument_id
   where eim.include_in_limit_calculations;
 
 comment on view spc_reports.ewma_rules is $$

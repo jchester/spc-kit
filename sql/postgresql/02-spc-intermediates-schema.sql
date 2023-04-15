@@ -125,6 +125,9 @@ of variability within each sample and across samples.
 
 Historically, x̄R limits have been typically used for samples where the sample size is 10 or less. Ranges were preferred
 as the measurement of sample variability because they are easy to calculate by hand.
+
+x̄R limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
+upper and lower control limits will be null.
 $$;
 
 
@@ -140,6 +143,9 @@ create view spc_intermediates.r_limits as
 comment on view spc_intermediates.r_limits is $$
 For each limit establishment window, this view derives the R̄ upper control limit, center line and lower control limit.
 The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
+
+̄̄R̄ limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
+upper and lower control limits will be null.
 $$;
 
 create view spc_intermediates.x_bar_s_limits as
@@ -160,7 +166,11 @@ Historically x̄s limits were not used often, because standard deviation is tedi
 most popular choice was x̄R limits. However, as sample size increases, range becomes a less accurate reflection of
 variability in a sample, because it only accounts for the most extreme values and does not account for the centrality of
 mass in the sample. Standard deviation does not have this problem and so x̄s is usually recommended when sample
-sizes > 10. In principle nothing stops you from using x̄s for any sample size other than tradition.
+sizes > 10. In principle nothing stops you from using x̄s for any sample size other than tradition (except when sample
+size = 1).
+
+x̄s limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case the
+upper and lower control limits will be null.
 $$;
 
 create view spc_intermediates.s_limits as
@@ -175,6 +185,9 @@ create view spc_intermediates.s_limits as
 comment on view spc_intermediates.s_limits is $$
 For each limit establishment window, this view derives the s̄ upper control limit, center line and lower control limit.
 The s̄ limits are based on the standard deviations of samples.
+
+s̄ limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case the
+upper and lower control limits will be null.
 $$;
 
 -- p charts

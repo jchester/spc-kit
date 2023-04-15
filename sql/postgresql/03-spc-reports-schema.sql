@@ -50,6 +50,9 @@ create view spc_reports.x_bar_r_rules as
 comment on view spc_reports.x_bar_r_rules is $$
 This view applies the limits derived in x_bar_r_limits to matching control windows, showing which sample averages were
 in-control and out-of-control according to the x̄R limits on x̄.
+
+x̄R rules are meaningless when sample size = 1 because there is no range when the sample size is 1. When sample size is
+1, use xmr_x_rules instead.
 $$;
 
 create view spc_reports.r_rules as
@@ -73,6 +76,9 @@ comment on view spc_reports.r_rules is $$
 This view applies the limits derived in r_limits to matching control windows, showing which sample ranges where
 in-control and out-of-control according the the R̄ limits on R. These signals are useful up until sample size = 10; after
 that you should switch to using s_rules instead.
+
+̄̄R̄ rules are meaningless when sample size = 1 because there is no range when the sample size is 1. When sample size is
+1, use xmr_mr_rules instead.
 $$;
 
 create view spc_reports.x_bar_s_rules as
@@ -93,8 +99,11 @@ create view spc_reports.x_bar_s_rules as
   where include_in_limit_calculations;
 
 comment on view spc_reports.x_bar_s_rules is $$
-This view applies the limits derived in x_bar_s_limits to matching control windows, showing
-which sample ranges are in-control and out-of-control according to the x̄s limits on s.
+This view applies the limits derived in x_bar_s_limits to matching control windows, showing which sample ranges are
+in-control and out-of-control according to the x̄s limits on s.
+
+x̄s rules are meaningless when sample size = 1 because there is no deviation when the sample size is 1. When sample size
+is 1, use xmr_x_rules instead.
 $$;
 
 create view spc_reports.s_rules as
@@ -118,6 +127,9 @@ comment on view spc_reports.s_rules is $$
 This view applies the limits derived in s_limits to matching control windows, showing which sample ranges were
 in-control and out-of-control according the s̄ limits on s. These signals are more effective than r_rules when sample
 size > 10.
+
+̄S rules are meaningless when sample size = 1 because there is no range when the sample size is 1. When sample size is 1,
+use xmr_mr_rules instead.
 $$;
 
 create view spc_reports.p_conformant_rules as

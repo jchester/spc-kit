@@ -337,6 +337,10 @@ create view spc_reports.ewma_rules as
        , limit_establishment_window_id
        , eim.instrument_id
        , eim.period
+       , eim.performed_at
+       , ewma as controlled_value
+       , lower_limit
+       , upper_limit
        , case
              when ewma > upper_limit then 'out_of_control_upper'
              when ewma < lower_limit then 'out_of_control_lower'

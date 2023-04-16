@@ -499,6 +499,7 @@ create view spc_intermediates.individual_measurements_ewma as
        , w.type                                              as window_type
        , row_number() over (partition by w.id order by s.id) as sample_number_in_window
        , s.period
+       , m.performed_at
        , s.include_in_limit_calculations
        , m.measured_value
   from spc_data.measurements m
@@ -542,6 +543,7 @@ returns table (
   window_type                   spc_data.window_type,
   sample_number_in_window       bigint,
   period                        tstzrange,
+  performed_at                  timestamptz,
   include_in_limit_calculations bool,
   measured_value                decimal,
   ewma                          decimal,
@@ -582,6 +584,7 @@ begin
          , wms.window_type
          , wms.sample_number_in_window
          , wms.period
+         , wms.performed_at
          , wms.include_in_limit_calculations
          , wms.measured_value
          , spc_intermediates.ewma(wms.measured_value, p_weighting, v_target_mean)

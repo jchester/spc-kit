@@ -13,21 +13,6 @@ When using an ORM, you will typically join these views to the base tables in spc
 about samples to the sample object.
 $$;
 
--- Run charts
-
-create view spc_reports.runs as
-  select
-     m.id as measurement_id
-    , s.id as sample_id
-    , i.id as instrument_id
-    , w.id as window_id
-    , performed_at
-    , measured_value
-  from spc_data.measurements m
-      join spc_data.samples s on s.id = m.sample_id
-      join spc_data.instruments i on i.id = s.instrument_id
-      join spc_data.windows w on s.period <@ w.period;
-
 -- Shewhart charts
 
 create view spc_reports.x_bar_r_rules as

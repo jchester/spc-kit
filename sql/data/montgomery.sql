@@ -10,7 +10,7 @@ values ((select id from spc_data.observed_systems where name = 'Table 6.1 and Ta
 select spc_data.bulk_insert_example_data_measurements(
                'Flow Width',
                'Table 6.1',
-               '[2023-01-01 00:00:00,2023-01-02 00:00:00)'::tstzrange,
+               '[2023-01-01 00:00:00,2023-01-01 00:25:00)'::tstzrange,
                'limit_establishment',
                array [
                  array [1.3235, 1.4128, 1.6744, 1.4573, 1.6914],
@@ -44,7 +44,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'Flow Width',
                'Table 6.2',
-               '[2023-01-02 00:00:00,2023-01-03 00:00:00)'::tstzrange,
+               '[2023-01-01 00:25:00,2023-01-01 01:00:00)'::tstzrange,
                'control',
                array [
                  array [1.4483, 1.5458, 1.4538, 1.4303, 1.6206],
@@ -80,7 +80,7 @@ values ((select id from spc_data.observed_systems where name = 'Table 6.3'), 'En
 select spc_data.bulk_insert_example_data_measurements(
                'Engine Piston Diameter',
                'Table 6.3',
-               '[2023-02-01 00:00:00,2023-02-02 00:00:00)',
+               '[2023-02-01 00:00:00,2023-02-02 00:25:00)',
                'limit_establishment',
                array [
                  array [74.030, 74.002, 74.019, 73.992, 74.008],
@@ -188,7 +188,7 @@ values ((select id from spc_data.observed_systems where name = 'Table 6.6 and 6.
 select spc_data.bulk_insert_example_data_measurements(
                'Mortgage Loan Cost',
                'Table 6.6',
-               '[2023-05-06 00:00:00,2023-05-07 00:00:00)',
+               '[2023-05-06 00:00:00,2023-05-06 00:20:00)',
                'limit_establishment',
                array [
                  array [310],
@@ -217,7 +217,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'Mortgage Loan Cost',
                'Table 6.7',
-               '[2023-05-07 00:00:00,2023-05-08 00:00:00)',
+               '[2023-05-06 00:20:00,2023-05-07 00:00:00)',
                'control',
                array [
                  array [305],
@@ -255,7 +255,7 @@ values ((select id from spc_data.observed_systems where name = 'Tables 9.1 and 9
 select spc_data.bulk_insert_example_data_measurements(
   'Normal Distribution With Shifting Mean',
   'Table 9.1 and Table 9.10, observations 1-20, drawn from μ = 10, σ = 1',
-  '[2023-05-09 00:00:00,2023-05-10 00:00:00)',
+  '[2023-05-09 00:00:00,2023-05-09 00:20:00)',
   'limit_establishment',
   array[
                  array[9.45],
@@ -284,7 +284,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
   'Normal Distribution With Shifting Mean',
   'Table 9.1 and Table 9.10, observations 21-30, drawn from μ = 11, σ = 1',
-  '[2023-05-11 00:00:00,2023-05-12 00:00:00)',
+  '[2023-05-09 00:20:00,2023-05-09 00:31:00)',
   'control',
   array[
                  array[10.9],

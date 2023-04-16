@@ -19,6 +19,7 @@ create view spc_reports.x_bar_r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , sample_mean  as controlled_value
        , lower_control_limit
@@ -49,6 +50,7 @@ create view spc_reports.r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , sample_range as controlled_value
        , lower_control_limit
@@ -80,6 +82,7 @@ create view spc_reports.x_bar_s_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , sample_mean  as controlled_value
        , lower_control_limit
@@ -110,6 +113,7 @@ create view spc_reports.s_rules as
   select ss.id         as sample_id
        , control_w.id  as control_window_id
        , limits_w.id   as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , sample_stddev as controlled_value
        , lower_control_limit
@@ -141,6 +145,7 @@ create view spc_reports.p_conformant_rules as
   select ss.sample_id
        , control_w.id             as control_window_id
        , limits_w.id              as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , mean_fraction_conforming as controlled_value
        , lower_control_limit
@@ -171,6 +176,7 @@ create view spc_reports.p_non_conformant_rules as
   select ss.sample_id
        , control_w.id                 as control_window_id
        , limits_w.id                  as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , mean_fraction_non_conforming as controlled_value
        , lower_control_limit
@@ -199,6 +205,7 @@ create view spc_reports.np_conformant_rules as
   select ss.sample_id
        , control_w.id                           as control_window_id
        , limits_w.id                            as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , mean_fraction_conforming * sample_size as controlled_value
        , lower_control_limit
@@ -229,6 +236,7 @@ create view spc_reports.np_non_conformant_rules as
   select ss.sample_id
        , control_w.id                               as control_window_id
        , limits_w.id                                as limit_establishment_window_id
+       , ss.instrument_id
        , ss.period
        , mean_fraction_non_conforming * sample_size as controlled_value
        , lower_control_limit
@@ -257,6 +265,7 @@ create view spc_reports.c_rules as
   select ncss.sample_id
        , control_w.id     as control_window_id
        , limits_w.id      as limit_establishment_window_id
+       , ncss.instrument_id
        , ncss.period
        , non_conformities as controlled_value
        , lower_control_limit
@@ -316,6 +325,7 @@ create view spc_reports.xmr_mr_rules as
   select immr.sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
+       , immr.instrument_id
        , immr.period
        , moving_range as controlled_value
        , upper_range_limit

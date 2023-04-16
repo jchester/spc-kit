@@ -376,6 +376,7 @@ create view spc_intermediates.individual_measurements_and_moving_ranges as
        , s.instrument_id                                                    as instrument_id
        , w.type                                                             as window_type
        , s.period
+       , m.performed_at
        , s.include_in_limit_calculations
        , measured_value
        , abs(measured_value -

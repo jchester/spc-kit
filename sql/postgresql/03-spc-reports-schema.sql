@@ -295,6 +295,7 @@ create view spc_reports.xmr_x_rules as
        , limits_w.id    as limit_establishment_window_id
        , immr.instrument_id
        , immr.period
+       , immr.performed_at
        , measured_value as controlled_value
        , lower_natural_process_limit
        , upper_natural_process_limit
@@ -327,6 +328,7 @@ create view spc_reports.xmr_mr_rules as
        , limits_w.id  as limit_establishment_window_id
        , immr.instrument_id
        , immr.period
+       , immr.performed_at
        , moving_range as controlled_value
        , upper_range_limit
        , case

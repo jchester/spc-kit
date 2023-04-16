@@ -22,12 +22,12 @@ create view spc_reports.x_bar_r_rules as
        , ss.instrument_id
        , ss.period
        , sample_mean  as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when upper_control_limit is null and lower_control_limit is null then 'na'
-           when sample_mean > upper_control_limit then 'out_of_control_upper'
-           when sample_mean < lower_control_limit then 'out_of_control_lower'
+           when upper_limit is null and lower_limit is null then 'na'
+           when sample_mean > upper_limit then 'out_of_control_upper'
+           when sample_mean < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
@@ -53,12 +53,12 @@ create view spc_reports.r_rules as
        , ss.instrument_id
        , ss.period
        , sample_range as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when upper_control_limit is null and lower_control_limit is null then 'na'
-           when sample_range > upper_control_limit then 'out_of_control_upper'
-           when sample_range < lower_control_limit then 'out_of_control_lower'
+           when upper_limit is null and lower_limit is null then 'na'
+           when sample_range > upper_limit then 'out_of_control_upper'
+           when sample_range < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
@@ -85,12 +85,12 @@ create view spc_reports.x_bar_s_rules as
        , ss.instrument_id
        , ss.period
        , sample_mean  as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when upper_control_limit is null and lower_control_limit is null then 'na'
-           when sample_mean > upper_control_limit then 'out_of_control_upper'
-           when sample_mean < lower_control_limit then 'out_of_control_lower'
+           when upper_limit is null and lower_limit is null then 'na'
+           when sample_mean > upper_limit then 'out_of_control_upper'
+           when sample_mean < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
@@ -116,12 +116,12 @@ create view spc_reports.s_rules as
        , ss.instrument_id
        , ss.period
        , sample_stddev as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when upper_control_limit is null and lower_control_limit is null then 'na'
-           when sample_stddev > upper_control_limit then 'out_of_control_upper'
-           when sample_stddev < lower_control_limit then 'out_of_control_lower'
+           when upper_limit is null and lower_limit is null then 'na'
+           when sample_stddev > upper_limit then 'out_of_control_upper'
+           when sample_stddev < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end           as control_status
   from spc_intermediates.measurement_sample_statistics ss
@@ -148,11 +148,11 @@ create view spc_reports.p_conformant_rules as
        , ss.instrument_id
        , ss.period
        , mean_fraction_conforming as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when mean_fraction_conforming > upper_control_limit then 'out_of_control_upper'
-           when mean_fraction_conforming < lower_control_limit then 'out_of_control_lower'
+           when mean_fraction_conforming > upper_limit then 'out_of_control_upper'
+           when mean_fraction_conforming < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end                      as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
@@ -179,11 +179,11 @@ create view spc_reports.p_non_conformant_rules as
        , ss.instrument_id
        , ss.period
        , mean_fraction_non_conforming as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when mean_fraction_non_conforming > upper_control_limit then 'out_of_control_upper'
-           when mean_fraction_non_conforming < lower_control_limit then 'out_of_control_lower'
+           when mean_fraction_non_conforming > upper_limit then 'out_of_control_upper'
+           when mean_fraction_non_conforming < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end                          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
@@ -208,11 +208,11 @@ create view spc_reports.np_conformant_rules as
        , ss.instrument_id
        , ss.period
        , mean_fraction_conforming * sample_size as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when (mean_fraction_conforming * sample_size) > upper_control_limit then 'out_of_control_upper'
-           when (mean_fraction_conforming * sample_size) < lower_control_limit then 'out_of_control_lower'
+           when (mean_fraction_conforming * sample_size) > upper_limit then 'out_of_control_upper'
+           when (mean_fraction_conforming * sample_size) < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end                                    as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
@@ -239,11 +239,11 @@ create view spc_reports.np_non_conformant_rules as
        , ss.instrument_id
        , ss.period
        , mean_fraction_non_conforming * sample_size as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when (mean_fraction_non_conforming * sample_size) > upper_control_limit then 'out_of_control_upper'
-           when (mean_fraction_non_conforming * sample_size) < lower_control_limit then 'out_of_control_lower'
+           when (mean_fraction_non_conforming * sample_size) > upper_limit then 'out_of_control_upper'
+           when (mean_fraction_non_conforming * sample_size) < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end                                        as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
@@ -268,11 +268,11 @@ create view spc_reports.c_rules as
        , ncss.instrument_id
        , ncss.period
        , non_conformities as controlled_value
-       , lower_control_limit
-       , upper_control_limit
+       , lower_limit
+       , upper_limit
        , case
-           when (non_conformities) > upper_control_limit then 'out_of_control_upper'
-           when (non_conformities) < lower_control_limit then 'out_of_control_lower'
+           when (non_conformities) > upper_limit then 'out_of_control_upper'
+           when (non_conformities) < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end              as control_status
   from spc_intermediates.non_conformities_sample_statistics ncss
@@ -297,11 +297,11 @@ create view spc_reports.xmr_x_rules as
        , immr.period
        , immr.performed_at
        , measured_value as controlled_value
-       , lower_natural_process_limit
-       , upper_natural_process_limit
+       , lower_limit
+       , upper_limit
        , case
-           when measured_value > upper_natural_process_limit then 'out_of_control_upper'
-           when measured_value < lower_natural_process_limit then 'out_of_control_lower'
+           when measured_value > upper_limit then 'out_of_control_upper'
+           when measured_value < lower_limit then 'out_of_control_lower'
            else 'in_control'
          end            as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
@@ -330,9 +330,9 @@ create view spc_reports.xmr_mr_rules as
        , immr.period
        , immr.performed_at
        , moving_range as controlled_value
-       , upper_range_limit
+       , upper_limit
        , case
-           when moving_range > upper_range_limit then 'out_of_control_upper'
+           when moving_range > upper_limit then 'out_of_control_upper'
            else 'in_control'
          end          as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr

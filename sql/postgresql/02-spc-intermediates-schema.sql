@@ -112,11 +112,11 @@ create view spc_intermediates.x_bar_r_limits as
   select limit_establishment_window_id
        , grand_mean +
          ((select a2 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_range) as upper_control_limit
+          mean_range) as upper_limit
        , grand_mean   as center_line
        , grand_mean -
          ((select a2 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_range) as lower_control_limit
+          mean_range) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
 comment on view spc_intermediates.x_bar_r_limits is $$
@@ -135,10 +135,10 @@ $$;
 create view spc_intermediates.r_limits as
   select limit_establishment_window_id
        , ((select upper_d4 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_range) as upper_control_limit
+          mean_range) as upper_limit
        , mean_range   as center_line
        , ((select upper_d3 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_range) as lower_control_limit
+          mean_range) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
 comment on view spc_intermediates.r_limits is $$
@@ -152,10 +152,10 @@ $$;
 create view spc_intermediates.x_bar_s_limits as
   select limit_establishment_window_id
        , grand_mean + ((select a3 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-                       mean_stddev) as upper_control_limit
+                       mean_stddev) as upper_limit
        , grand_mean                 as center_line
        , grand_mean - ((select a3 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-                       mean_stddev) as lower_control_limit
+                       mean_stddev) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
 comment on view spc_intermediates.x_bar_s_limits is $$
@@ -177,10 +177,10 @@ $$;
 create view spc_intermediates.s_limits as
   select limit_establishment_window_id
        , ((select b4 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_stddev) as upper_control_limit
+          mean_stddev) as upper_limit
        , mean_stddev   as center_line
        , ((select b3 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
-          mean_stddev) as lower_control_limit
+          mean_stddev) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
 comment on view spc_intermediates.s_limits is $$
@@ -255,10 +255,10 @@ $$;
 create view spc_intermediates.p_limits_conformant as
   select limit_establishment_window_id
        , grand_mean_conforming + (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                            mean_sample_size)))                as upper_control_limit
+                                            mean_sample_size)))                as upper_limit
        , grand_mean_conforming                                                 as center_line
        , greatest(0.0, grand_mean_conforming - (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                                          mean_sample_size)))) as lower_control_limit
+                                                          mean_sample_size)))) as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.p_limits_conformant is $$
@@ -273,11 +273,11 @@ $$;
 create view spc_intermediates.p_limits_non_conformant as
   select limit_establishment_window_id
        , grand_mean_non_conforming + (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
-                                                mean_sample_size))) as upper_control_limit
+                                                mean_sample_size))) as upper_limit
        , grand_mean_non_conforming                                  as center_line
        , greatest(0.0, grand_mean_non_conforming -
                        (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
-                                  mean_sample_size))))              as lower_control_limit
+                                  mean_sample_size))))              as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.p_limits_non_conformant is $$
@@ -293,10 +293,10 @@ $$;
 create view spc_intermediates.np_limits_conformant as
   select limit_establishment_window_id
        , (grand_mean_conforming * mean_sample_size) +
-         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_control_limit
+         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_limit
        , grand_mean_conforming * mean_sample_size                                                 as center_line
        , greatest(0.0, (3 * (sqrt((grand_mean_conforming * mean_sample_size) *
-                                  (1.0 - grand_mean_conforming)))))                               as lower_control_limit
+                                  (1.0 - grand_mean_conforming)))))                               as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.np_limits_conformant is $$
@@ -311,11 +311,11 @@ create view spc_intermediates.np_limits_non_conformant as
   select limit_establishment_window_id
        , (grand_mean_non_conforming * mean_sample_size) +
          (3 * (sqrt((grand_mean_non_conforming * mean_sample_size)
-           * (1.0 - grand_mean_non_conforming))))                       as upper_control_limit
+           * (1.0 - grand_mean_non_conforming))))                       as upper_limit
        , grand_mean_non_conforming * mean_sample_size                   as center_line
        , greatest(0.0, (grand_mean_non_conforming * mean_sample_size) -
                        (3 * (sqrt((grand_mean_non_conforming * mean_sample_size) *
-                                  (1.0 - grand_mean_non_conforming))))) as lower_control_limit
+                                  (1.0 - grand_mean_non_conforming))))) as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 comment on view spc_intermediates.np_limits_non_conformant is $$
@@ -357,9 +357,9 @@ $$;
 
 create view spc_intermediates.c_limits as
   select limit_establishment_window_id
-       , mean_non_conformities + (3 * sqrt(mean_non_conformities))                as upper_control_limit
+       , mean_non_conformities + (3 * sqrt(mean_non_conformities))                as upper_limit
        , mean_non_conformities                                                    as center_line
-       , greatest(0.0, mean_non_conformities - (3 * sqrt(mean_non_conformities))) as lower_control_limit
+       , greatest(0.0, mean_non_conformities - (3 * sqrt(mean_non_conformities))) as lower_limit
   from spc_intermediates.conformities_limit_establishment_statistics;
 
 comment on view spc_intermediates.c_limits is $$
@@ -415,11 +415,11 @@ create view spc_intermediates.xmr_x_limits as
   select limit_establishment_window_id
        , mean_measured_value + (3 * (mean_moving_range / (select lower_d2
                                                           from spc_intermediates.scaling_factors
-                                                          where sample_size = 2))) as upper_natural_process_limit
+                                                          where sample_size = 2))) as upper_limit
        , mean_measured_value                                                       as center_line
        , mean_measured_value - (3 * (mean_moving_range / (select lower_d2
                                                           from spc_intermediates.scaling_factors
-                                                          where sample_size = 2))) as lower_natural_process_limit
+                                                          where sample_size = 2))) as lower_limit
   from spc_intermediates.individual_measurement_and_moving_range_statistics;
 
 comment on view spc_intermediates.xmr_x_limits is $$
@@ -432,7 +432,7 @@ $$;
 create view spc_intermediates.xmr_mr_limits as
   select limit_establishment_window_id
        , mean_moving_range *
-         (select upper_d4 from spc_intermediates.scaling_factors where sample_size = 2) as upper_range_limit
+         (select upper_d4 from spc_intermediates.scaling_factors where sample_size = 2) as upper_limit
        , mean_moving_range                                                              as center_line
   from spc_intermediates.individual_measurement_and_moving_range_statistics;
 

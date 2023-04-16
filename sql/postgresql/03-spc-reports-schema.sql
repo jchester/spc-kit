@@ -20,6 +20,9 @@ create view spc_reports.x_bar_r_rules as
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
        , ss.period
+       , sample_mean  as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when upper_control_limit is null and lower_control_limit is null then 'na'
            when sample_mean > upper_control_limit then 'out_of_control_upper'
@@ -47,6 +50,9 @@ create view spc_reports.r_rules as
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
        , ss.period
+       , sample_range as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when upper_control_limit is null and lower_control_limit is null then 'na'
            when sample_range > upper_control_limit then 'out_of_control_upper'
@@ -75,6 +81,9 @@ create view spc_reports.x_bar_s_rules as
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
        , ss.period
+       , sample_mean  as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when upper_control_limit is null and lower_control_limit is null then 'na'
            when sample_mean > upper_control_limit then 'out_of_control_upper'
@@ -98,16 +107,19 @@ by control_status being set to "na". When sample size is 1, use xmr_x_rules inst
 $$;
 
 create view spc_reports.s_rules as
-  select ss.id        as sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+  select ss.id         as sample_id
+       , control_w.id  as control_window_id
+       , limits_w.id   as limit_establishment_window_id
        , ss.period
+       , sample_stddev as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when upper_control_limit is null and lower_control_limit is null then 'na'
            when sample_stddev > upper_control_limit then 'out_of_control_upper'
            when sample_stddev < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end           as control_status
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.period <@ control_w.period
                                                           and ss.instrument_id = control_w.instrument_id
@@ -127,14 +139,17 @@ $$;
 
 create view spc_reports.p_conformant_rules as
   select ss.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id             as control_window_id
+       , limits_w.id              as limit_establishment_window_id
        , ss.period
+       , mean_fraction_conforming as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when mean_fraction_conforming > upper_control_limit then 'out_of_control_upper'
            when mean_fraction_conforming < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end                      as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
                                                                   and ss.instrument_id = control_w.instrument_id
@@ -154,14 +169,17 @@ $$;
 
 create view spc_reports.p_non_conformant_rules as
   select ss.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id                 as control_window_id
+       , limits_w.id                  as limit_establishment_window_id
        , ss.period
+       , mean_fraction_non_conforming as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when mean_fraction_non_conforming > upper_control_limit then 'out_of_control_upper'
            when mean_fraction_non_conforming < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end                          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
                                                                   and ss.instrument_id = control_w.instrument_id
@@ -179,14 +197,17 @@ $$;
 
 create view spc_reports.np_conformant_rules as
   select ss.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id                           as control_window_id
+       , limits_w.id                            as limit_establishment_window_id
        , ss.period
+       , mean_fraction_conforming * sample_size as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when (mean_fraction_conforming * sample_size) > upper_control_limit then 'out_of_control_upper'
            when (mean_fraction_conforming * sample_size) < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end                                    as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
                                                                   and ss.instrument_id = control_w.instrument_id
@@ -206,14 +227,17 @@ $$;
 
 create view spc_reports.np_non_conformant_rules as
   select ss.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id                               as control_window_id
+       , limits_w.id                                as limit_establishment_window_id
        , ss.period
+       , mean_fraction_non_conforming * sample_size as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when (mean_fraction_non_conforming * sample_size) > upper_control_limit then 'out_of_control_upper'
            when (mean_fraction_non_conforming * sample_size) < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end                                        as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.period <@ control_w.period
                                                                   and ss.instrument_id = control_w.instrument_id
@@ -231,14 +255,17 @@ $$;
 
 create view spc_reports.c_rules as
   select ncss.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id     as control_window_id
+       , limits_w.id      as limit_establishment_window_id
        , ncss.period
+       , non_conformities as controlled_value
+       , lower_control_limit
+       , upper_control_limit
        , case
            when (non_conformities) > upper_control_limit then 'out_of_control_upper'
            when (non_conformities) < lower_control_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end              as control_status
   from spc_intermediates.non_conformities_sample_statistics ncss
        join spc_data.windows                                control_w on ncss.period <@ control_w.period
                                                                 and ncss.instrument_id = control_w.instrument_id
@@ -255,15 +282,18 @@ $$;
 
 create view spc_reports.xmr_x_rules as
   select immr.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
+       , control_w.id   as control_window_id
+       , limits_w.id    as limit_establishment_window_id
        , immr.instrument_id
        , immr.period
+       , measured_value as controlled_value
+       , lower_natural_process_limit
+       , upper_natural_process_limit
        , case
            when measured_value > upper_natural_process_limit then 'out_of_control_upper'
            when measured_value < lower_natural_process_limit then 'out_of_control_lower'
            else 'in_control'
-         end          as control_status
+         end            as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.period <@ control_w.period
                                                                       and immr.instrument_id = control_w.instrument_id
@@ -287,6 +317,8 @@ create view spc_reports.xmr_mr_rules as
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
        , immr.period
+       , moving_range as controlled_value
+       , upper_range_limit
        , case
            when moving_range > upper_range_limit then 'out_of_control_upper'
            else 'in_control'
@@ -330,7 +362,7 @@ create view spc_reports.ewma_rules as
              when ewma > upper_limit then 'out_of_control_upper'
              when ewma < lower_limit then 'out_of_control_lower'
              else 'in_control'
-         end as control_status
+         end  as control_status
   from window_rels
        join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
             on eim.period <@ window_rels.period and eim.instrument_id = window_rels.instrument_id

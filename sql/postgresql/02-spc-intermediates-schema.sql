@@ -515,14 +515,13 @@ measurement is weighted (see Montgomery formulae 9.25 and 9.26, where it is the 
 $$;
 
 create view spc_intermediates.individual_measurement_statistics_ewma as
-    select w.id                        as limit_establishment_window_id
+    select w.id                        as window_id
          , avg(measured_value)         as mean_measured_value
          , stddev_samp(measured_value) as std_dev_measured_value
     from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.period <@ w.period and s.instrument_id = w.instrument_id
-    where w.type = 'limit_establishment'
-      and include_in_limit_calculations
+    where include_in_limit_calculations
     group by w.id;
 
 comment on view spc_intermediates.individual_measurement_statistics_ewma is $$
@@ -531,11 +530,7 @@ standard deviation is an input to the calculation of EWMA control limits (see Mo
 it is the value 'σ').
 $$;
 
-create function spc_intermediates.ewma_individual_measurements(
-  p_limit_establishment_window_id bigint
-, p_control_window_id             bigint
-, p_weighting                     decimal
-)
+create function spc_intermediates.ewma_individual_measurements(p_weighting decimal)
 returns table (
   window_id                     bigint,
   sample_id                     bigint,
@@ -545,7 +540,6 @@ returns table (
   sample_number_in_window       bigint,
   period                        tstzrange,
   performed_at                  timestamptz,
-  include_in_limit_calculations bool,
   measured_value                decimal,
   ewma                          decimal,
   upper_limit                   decimal,
@@ -554,29 +548,7 @@ returns table (
 )
 immutable language plpgsql as
 $$
-declare
-  v_mean_measured_value    decimal;
-  v_std_dev_measured_value decimal;
-  v_target_mean            decimal;
 begin
-  select mean_measured_value
-       , std_dev_measured_value
-  into v_mean_measured_value, v_std_dev_measured_value
-  from spc_intermediates.individual_measurement_statistics_ewma
-  where limit_establishment_window_id = p_limit_establishment_window_id;
-
-  if p_limit_establishment_window_id = p_control_window_id then
-    v_target_mean = v_mean_measured_value;
-  else
-    select spc_intermediates.ewma(ime.measured_value, p_weighting, v_mean_measured_value)
-           over (partition by ime.window_id order by ime.sample_number_in_window)
-    from spc_intermediates.individual_measurements_ewma ime
-    where ime.window_id = p_control_window_id
-    order by 1
-    limit 1
-    into v_target_mean;
-  end if;
-
   return query
     select wms.window_id
          , wms.sample_id
@@ -586,23 +558,22 @@ begin
          , wms.sample_number_in_window
          , wms.period
          , wms.performed_at
-         , wms.include_in_limit_calculations
          , wms.measured_value
-         , spc_intermediates.ewma(wms.measured_value, p_weighting, v_target_mean)
+         , spc_intermediates.ewma(wms.measured_value, p_weighting, mean_measured_value)
            over (partition by wms.window_id order by wms.measurement_id)                       as ewma
-         , v_target_mean + (2.7 * v_std_dev_measured_value) *
+         , mean_measured_value + (2.7 * std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as upper_limit
-         , v_target_mean                                                                       as center_line
-         , v_target_mean - (2.7 * v_std_dev_measured_value) *
+         , mean_measured_value                                                                       as center_line
+         , mean_measured_value - (2.7 * std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
     from spc_intermediates.individual_measurements_ewma wms
-    where wms.window_id in (p_limit_establishment_window_id, p_control_window_id);
+    join spc_intermediates.individual_measurement_statistics_ewma imse on wms.window_id = imse.window_id;
 end;
 $$;
 
-comment on function spc_intermediates.ewma_individual_measurements(bigint, bigint, decimal) is $$
+comment on function spc_intermediates.ewma_individual_measurements(decimal) is $$
 This is the core of the EWMA calculation process. It is implemented as a function because the behavior varies according
 to whether the control window is also the limit establishment window (ie, whether you are applying a window's mean and
 std dev to itself or to another window).

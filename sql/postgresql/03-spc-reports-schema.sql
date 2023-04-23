@@ -353,20 +353,12 @@ vulnerable to departures from normality in the data.
 $$;
 
 create view spc_reports.ewma_rules as
-  with window_rels as (select control_w.id     as control_window_id
-                            , limits_w.id      as limit_establishment_window_id
-                            , control_w.period as period
-                            , control_w.instrument_id
-                       from spc_data.windows                   control_w
-                            join spc_data.window_relationships wr on control_w.id = wr.control_window_id
-                            join spc_data.windows              limits_w
-                                 on limits_w.id = wr.limit_establishment_window_id)
   select eim.sample_id
-       , control_window_id
-       , limit_establishment_window_id
+       , window_id
        , eim.instrument_id
        , eim.period
        , eim.performed_at
+       , center_line
        , ewma as controlled_value
        , lower_limit
        , upper_limit
@@ -375,10 +367,7 @@ create view spc_reports.ewma_rules as
              when ewma < lower_limit then 'out_of_control_lower'
              else 'in_control'
          end  as control_status
-  from window_rels
-       join spc_intermediates.ewma_individual_measurements(limit_establishment_window_id, control_window_id, 0.1) eim
-            on eim.period <@ window_rels.period and eim.instrument_id = window_rels.instrument_id
-  where eim.include_in_limit_calculations;
+  from  spc_intermediates.ewma_individual_measurements(0.1) eim;
 
 comment on view spc_reports.ewma_rules is $$
 For each measurement and EWMA value, this rule applies the per-measurement limits to determine if a EWMA value is

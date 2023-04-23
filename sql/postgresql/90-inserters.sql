@@ -230,3 +230,47 @@ This function is used to quickly load data tables in the data/ directory.
 Do not use it to insert your data. It is not designed for general use.
 $$;
 
+create or replace function spc_data.bulk_insert_example_data_ewma(
+  p_instrument_name text,
+  p_window_desc     text,
+  p_window_period   tstzrange,
+  p_measurements    decimal[][]
+)
+  returns void
+as
+$$
+declare
+  v_instrument_queried_id         bigint;
+  v_sample_period                 tstzrange;
+  v_measurement_period            timestamptz;
+  v_sample_inserted_id            bigint;
+  v_sample                        decimal[];
+  v_measurement                   decimal;
+begin
+  select id from spc_data.instruments where name = p_instrument_name into v_instrument_queried_id;
+
+  insert into spc_data.windows (instrument_id, period, type, description)
+  values (v_instrument_queried_id, p_window_period, 'control', p_window_desc);
+
+  select tstzrange(lower(p_window_period), lower(p_window_period) + interval '1 minute')
+  into v_sample_period;
+
+  foreach v_sample slice 1 in array p_measurements loop
+    insert into spc_data.samples (instrument_id, period)
+    values (v_instrument_queried_id, v_sample_period)
+    returning id into v_sample_inserted_id;
+
+    select timestamptz(lower(v_sample_period)) into v_measurement_period;
+
+    foreach v_measurement in array v_sample loop
+      insert into spc_data.measurements(sample_id, performed_at, measured_value)
+      values (v_sample_inserted_id, v_measurement_period, v_measurement);
+
+      select timestamptz(v_measurement_period + interval '1 second')
+      into v_measurement_period;
+    end loop;
+
+    select tstzrange(upper(v_sample_period), upper(v_sample_period) + interval '1 minute') into v_sample_period;
+  end loop;
+end
+$$ language plpgsql;

@@ -39,7 +39,7 @@ See "References" for some more detailed reading.
       measurement-to-measurement changes in means (X) and moving ranges (mR). Sensitive to departure from normality.
       (See: Montgomery §6.4, Eqn 6.33; Wheeler & Chambers §3.6)
     * Limits for Exponentially-Weighted Moving Averages (EWMA). These track shifts in the mean. Useful adjunct to the
-      usual Shewhart charts.
+      usual Shewhart charts. (See: Montgomery §9.2, Eqns 9.25 & 9.26)
 * Report out-of-control samples on _attributes_ using:
     * p limits, available in both conformant (aka yield chart) and non-conformant (aka fallout chart) flavors. (See:
       Montgomery §7.2, Eqn 7.8)

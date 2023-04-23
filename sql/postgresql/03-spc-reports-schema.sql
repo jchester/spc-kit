@@ -21,6 +21,7 @@ create view spc_reports.x_bar_r_rules as
        , limits_w.id  as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , sample_mean  as controlled_value
        , lower_limit
        , upper_limit
@@ -53,6 +54,7 @@ create view spc_reports.r_rules as
        , ss.instrument_id
        , ss.period
        , sample_range as controlled_value
+       , center_line
        , lower_limit
        , upper_limit
        , case
@@ -84,6 +86,7 @@ create view spc_reports.x_bar_s_rules as
        , limits_w.id  as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , sample_mean  as controlled_value
        , lower_limit
        , upper_limit
@@ -115,6 +118,7 @@ create view spc_reports.s_rules as
        , limits_w.id   as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , sample_stddev as controlled_value
        , lower_limit
        , upper_limit
@@ -147,6 +151,7 @@ create view spc_reports.p_conformant_rules as
        , limits_w.id              as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , mean_fraction_conforming as controlled_value
        , lower_limit
        , upper_limit
@@ -178,6 +183,7 @@ create view spc_reports.p_non_conformant_rules as
        , limits_w.id                  as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , mean_fraction_non_conforming as controlled_value
        , lower_limit
        , upper_limit
@@ -207,6 +213,7 @@ create view spc_reports.np_conformant_rules as
        , limits_w.id                            as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , mean_fraction_conforming * sample_size as controlled_value
        , lower_limit
        , upper_limit
@@ -238,6 +245,7 @@ create view spc_reports.np_non_conformant_rules as
        , limits_w.id                                as limit_establishment_window_id
        , ss.instrument_id
        , ss.period
+       , center_line
        , mean_fraction_non_conforming * sample_size as controlled_value
        , lower_limit
        , upper_limit
@@ -267,6 +275,7 @@ create view spc_reports.c_rules as
        , limits_w.id      as limit_establishment_window_id
        , ncss.instrument_id
        , ncss.period
+       , center_line
        , non_conformities as controlled_value
        , lower_limit
        , upper_limit
@@ -296,6 +305,7 @@ create view spc_reports.xmr_x_rules as
        , immr.instrument_id
        , immr.period
        , immr.performed_at
+       , center_line
        , measured_value as controlled_value
        , lower_limit
        , upper_limit
@@ -329,6 +339,7 @@ create view spc_reports.xmr_mr_rules as
        , immr.instrument_id
        , immr.period
        , immr.performed_at
+       , center_line
        , moving_range as controlled_value
        , upper_limit
        , case

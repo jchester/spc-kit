@@ -525,7 +525,7 @@ create view spc_intermediates.individual_measurement_statistics_ewma as
     group by w.id;
 
 comment on view spc_intermediates.individual_measurement_statistics_ewma is $$
-This view calculates the mean and standard deviation of control windows. The mean is used as a target_mean and the
+This view calculates the mean and standard deviation of EWMA control windows. The mean is used as a target_mean and the
 standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26, where
 it is the value 'σ').
 $$;
@@ -574,12 +574,7 @@ end;
 $$;
 
 comment on function spc_intermediates.ewma_individual_measurements(decimal) is $$
-This is the core of the EWMA calculation process. It is implemented as a function because the behavior varies according
-to whether the control window is also the limit establishment window (ie, whether you are applying a window's mean and
-std dev to itself or to another window).
-
-When the IDs are not the same, the function carries the final EWMA of the limit establishment window into the first EWMA
-of the control window.
+This is the core of the EWMA calculation process.
 
 Upper limit is based on Montgomery formula 9.25, lower limit on formula 9.26.
 $$;

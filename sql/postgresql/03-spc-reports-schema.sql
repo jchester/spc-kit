@@ -373,4 +373,7 @@ comment on view spc_reports.ewma_rules is $$
 For each measurement and EWMA value, this rule applies the per-measurement limits to determine if a EWMA value is
 in-control or out-of-control. Note that unlike conventional Shewhart charts, the limits for each measurement vary
 according to the value of the measurement and values of previous measurements, represented by the EWMA.
+
+Because limits are per-measurement, there is no meaningful distinction between limit establishment and control windows
+in EWMA. Just use control windows.
 $$;

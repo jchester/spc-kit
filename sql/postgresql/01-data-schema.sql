@@ -13,7 +13,6 @@ create table spc_data.observed_systems (
 
 -- Instruments are the sources of measurements. Each instrument belongs to one system. Examples of instruments include a
 -- widget diameter gauge or webpage time-to-first-byte.
-
 create table spc_data.instruments (
   id                 bigserial primary key,
   observed_system_id bigint references spc_data.observed_systems (id) not null,

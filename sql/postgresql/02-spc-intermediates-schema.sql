@@ -1,10 +1,19 @@
 create schema if not exists spc_intermediates;
 
-comment on schema spc_intermediates is $$
-This schema encapsulates a variety of intermediate calculations, taking data from spc_data and exposing calculated
-values that are used in spc_reports.
-$$;
+-- This schema encapsulates a variety of intermediate calculations, taking data from spc_data and exposing calculated
+-- values that are used in spc_reports.
 
+-- These are scaling factors used in calculations of control limits on a variety of charts, according to the sample size
+-- used. Some of these values are derived from other values and could be calculated at view creation time, but for
+-- simplicity pre-computed values are used. Other values (like c4) are derived from calculus equations that cannot be
+-- performed by the database and so must be sourced from existing lookup tables.
+--
+-- Because this table only runs to 25 samples, that is the maximum sample size this schema can deal with. Ideally in
+-- future a program may be able to generate a much larger table for cases where very large samples can be obtained (eg.
+-- computer benchmarking).
+--
+-- Data from https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php and
+-- Appendix VI of Montgomery.
 -- @formatter:off
 create view spc_intermediates.scaling_factors(sample_size, a, a2, a3, c4, c4_reciprocal, b3, b4, b5, b6, lower_d2, lower_d2_reciprocal, lower_d3, upper_d1, upper_d2, upper_d3, upper_d4) as
 values
@@ -33,24 +42,23 @@ values
 , (23,    0.626,  0.162,  0.633,  0.9887,   1.0/0.9887,   0.545,  1.455,  0.539,    1.438,  3.858,     1.0/3.858,            0.716,      1.710,    6.006,       0.443,    1.557)
 , (24,    0.612,  0.157,  0.619,  0.9892,   1.0/0.9892,   0.555,  1.445,  0.549,    1.429,  3.895,     1.0/3.895,            0.712,      1.759,    6.031,       0.451,    1.548)
 , (25,    0.6,    0.153,  0.606,  0.9896,   1.0/0.9896,   0.565,  1.435,  0.559,    1.420,  3.931,     1.0/3.931,            0.708,      1.806,    6.056,       0.459,    1.541);
-
-comment on view spc_intermediates.scaling_factors is $$
-These are scaling factors used in calculations of control limits on a variety of charts, according to the sample size
-used. Some of these values are derived from other values and could be calculated at view creation time, but for
-simplicity pre-computed values are used. Other values (like c4) are derived from calculus equations that cannot be
-performed by the database and so must be sourced from existing lookup tables.
-
-Because this table only runs to 25 samples, that is the maximum sample size this schema can deal with. Ideally in future
-a program may be able to generate a much larger table for cases where very large samples can be obtained (eg. computer
-benchmarking).
-
-Data from https://qualityamerica.com/LSS-Knowledge-Center/statisticalprocesscontrol/control_chart_constants.php and
-Appendix VI of Montgomery.
-$$;
 -- @formatter:on
 
 -- Shewhart chart statistics
 
+-- The basis of statistical process control (SPC) is to batch periodic measurements into samples, and then to calculate
+-- information about them at the sample level, rather than the individual level. This allows SPC techniques to
+-- distinguish between variation that is due to in-sample effects versus between-sample effects.
+--
+-- This view calculates the four foundational sample statistics that are used in SPC calculations. These are:
+--
+-- * x̄, aka "X bar". The average of the measurements in the sample.
+-- * s. The sample standard deviation of the measurements in the sample.
+-- * R. The range of the measurements in the sample.
+-- * The sample size or count of the measurements in the sample.
+--
+-- Note that this data is used for variable data only. For attribute data, see the views used for calculating fraction
+-- conformant & non-conformant.
 create view spc_intermediates.measurement_sample_statistics as
   select s.id
        , s.period
@@ -64,22 +72,19 @@ create view spc_intermediates.measurement_sample_statistics as
        join spc_data.samples s on s.id = m.sample_id
   group by s.id, s.period;
 
-comment on view spc_intermediates.measurement_sample_statistics is $$
-The basis of statistical process control (SPC) is to batch periodic measurements into samples, and then to calculate
-information about them at the sample level, rather than the individual level. This allows SPC techniques to distinguish
-between variation that is due to in-sample effects versus between-sample effects.
-
-This view calculates the four foundational sample statistics that are used in SPC calculations. These are:
-
-* x̄, aka "X bar". The average of the measurements in the sample.
-* s. The sample standard deviation of the measurements in the sample.
-* R. The range of the measurements in the sample.
-* The sample size or count of the measurements in the sample.
-
-Note that this data is used for variable data only. For attribute data, see the views used for calculating fraction
-conformant & non-conformant.
-$$;
-
+-- Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines for each of the
+-- control charts. These are, simply put, the averages of the sample statistics within the limit establishment window.
+-- These are:
+--
+-- * ̿x, aka "X double bar" or "grand average/mean". The average of all sample x̄ values. Equals the average of all
+--   measurements in the window if the sample sizes are equal.
+-- * s̄, aka "s bar". The average of the standard deviations of the samples.
+-- * R̄, aka "R bar". The average of the ranges of the samples.
+-- * The average sample size or average count of measurements in the samples. This is used as a join value in subsequent
+--   views to look up records in scaling_factors.
+--
+-- At the moment this code does not support variable sample sizes, so the average sample size should be identical to
+-- every sample size in the window.
 create view spc_intermediates.measurement_limit_establishment_statistics as
   select w.id               as limit_establishment_window_id
        , avg(sample_mean)   as grand_mean
@@ -92,22 +97,15 @@ create view spc_intermediates.measurement_limit_establishment_statistics as
     and ss.include_in_limit_calculations
   group by w.id;
 
-comment on view spc_intermediates.measurement_limit_establishment_statistics is $$
-Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines for each of the
-control charts. These are, simply put, the averages of the sample statistics within the limit establishment window.
-These are:
-
-* ̿x, aka "X double bar" or "grand average/mean". The average of all sample x̄ values. Equals the average of all
-  measurements in the window if the sample sizes are equal.
-* s̄, aka "s bar". The average of the standard deviations of the samples.
-* R̄, aka "R bar". The average of the ranges of the samples.
-* The average sample size or average count of measurements in the samples. This is used as a join value in subsequent
-  views to look up records in scaling_factors.
-
-At the moment this code does not support variable sample sizes, so the average sample size should be identical to every
-sample size in the window.
-$$;
-
+-- For each limit establishment window, this view derives the x̄R upper control limit, center line and lower control
+-- limit. The x̄R (aka XbarR) limits are based on the average of samples for the center line and sample ranges as its
+-- measurement of variability within each sample and across samples.
+--
+-- Historically, x̄R limits have been typically used for samples where the sample size is 10 or less. Ranges were
+-- preferred as the measurement of sample variability because they are easy to calculate by hand.
+--
+-- x̄R limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
+-- upper and lower control limits will be null.
 create view spc_intermediates.x_bar_r_limits as
   select limit_establishment_window_id
        , grand_mean +
@@ -119,19 +117,11 @@ create view spc_intermediates.x_bar_r_limits as
           mean_range) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
-comment on view spc_intermediates.x_bar_r_limits is $$
-For each limit establishment window, this view derives the x̄R upper control limit, center line and lower control limit.
-The x̄R (aka XbarR) limits are based on the average of samples for the center line and sample ranges as its measurement
-of variability within each sample and across samples.
-
-Historically, x̄R limits have been typically used for samples where the sample size is 10 or less. Ranges were preferred
-as the measurement of sample variability because they are easy to calculate by hand.
-
-x̄R limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
-upper and lower control limits will be null.
-$$;
-
-
+-- For each limit establishment window, this view derives the R̄ upper control limit, center line and lower control
+-- limit. The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
+--
+-- ̄̄R̄ limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
+-- upper and lower control limits will be null.
 create view spc_intermediates.r_limits as
   select limit_establishment_window_id
        , ((select upper_d4 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
@@ -141,14 +131,19 @@ create view spc_intermediates.r_limits as
           mean_range) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
-comment on view spc_intermediates.r_limits is $$
-For each limit establishment window, this view derives the R̄ upper control limit, center line and lower control limit.
-The R̄ (aka R bar) limits are based on the ranges (max - min) of samples.
-
-̄̄R̄ limits are meaningless when sample size = 1 because there is no range when the sample size is 1. In this case the
-upper and lower control limits will be null.
-$$;
-
+-- For each limit establishment window, this view derives the x̄s upper control limit, center line and lower control
+-- limit. The x̄s (aka XbarS) limits are based on the average of samples for the center line and sample standard
+-- deviations as its measurement of variability within each sample and across samples.
+--
+-- Historically x̄s limits were not used often, because standard deviation is tedious to calculate by hand, meaning that
+-- the most popular choice was x̄R limits. However, as sample size increases, range becomes a less accurate reflection of
+-- variability in a sample, because it only accounts for the most extreme values and does not account for the centrality
+-- of mass in the sample. Standard deviation does not have this problem and so x̄s is usually recommended when sample
+-- sizes > 10. In principle nothing stops you from using x̄s for any sample size other than tradition (except when sample
+-- size = 1).
+--
+-- x̄s limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case
+-- the upper and lower control limits will be null.
 create view spc_intermediates.x_bar_s_limits as
   select limit_establishment_window_id
        , grand_mean + ((select a3 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
@@ -158,22 +153,11 @@ create view spc_intermediates.x_bar_s_limits as
                        mean_stddev) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
-comment on view spc_intermediates.x_bar_s_limits is $$
-For each limit establishment window, this view derives the x̄s upper control limit, center line and lower control limit.
-The x̄s (aka XbarS) limits are based on the average of samples for the center line and sample standard deviations as its
-measurement of variability within each sample and across samples.
-
-Historically x̄s limits were not used often, because standard deviation is tedious to calculate by hand, meaning that the
-most popular choice was x̄R limits. However, as sample size increases, range becomes a less accurate reflection of
-variability in a sample, because it only accounts for the most extreme values and does not account for the centrality of
-mass in the sample. Standard deviation does not have this problem and so x̄s is usually recommended when sample
-sizes > 10. In principle nothing stops you from using x̄s for any sample size other than tradition (except when sample
-size = 1).
-
-x̄s limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case the
-upper and lower control limits will be null.
-$$;
-
+-- For each limit establishment window, this view derives the s̄ upper control limit, center line and lower control
+-- limit. The s̄ limits are based on the standard deviations of samples.
+--
+-- s̄ limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case
+-- the upper and lower control limits will be null.
 create view spc_intermediates.s_limits as
   select limit_establishment_window_id
        , ((select b4 from spc_intermediates.scaling_factors where sample_size = mean_sample_size) *
@@ -183,16 +167,13 @@ create view spc_intermediates.s_limits as
           mean_stddev) as lower_limit
   from spc_intermediates.measurement_limit_establishment_statistics;
 
-comment on view spc_intermediates.s_limits is $$
-For each limit establishment window, this view derives the s̄ upper control limit, center line and lower control limit.
-The s̄ limits are based on the standard deviations of samples.
-
-s̄ limits are meaningless when sample size = 1 because there is no deviation when the sample size is 1. In this case the
-upper and lower control limits will be null.
-$$;
-
 -- p charts
 
+-- We take the raw data representing the counts of conforming and non-conforming items in a given sample, and convert
+-- them into fractions (along with calculating the sample size).
+--
+-- It's these fractions that are the controlled values. Note that this is a quite different idea from controlling values
+-- derived from measurements. See the comment on spc_data.whole_unit_conformance_inspections for further discussion.
 create view spc_intermediates.fraction_conforming as
   with counts as (select sample_id
                        , count(1) filter ( where conformant = true )  as conformant_count
@@ -207,14 +188,7 @@ create view spc_intermediates.fraction_conforming as
        , conformant_count + non_conformant_count                                           as sample_size
   from counts;
 
-comment on view spc_intermediates.fraction_conforming is $$
-We take the raw data representing the counts of conforming and non-conforming items in a given sample, and convert them
-into fractions (along with calculating the sample size).
-
-It's these fractions that are the controlled values. Note that this is a quite different idea from controlling values
-derived from measurements. See the comment on spc_data.whole_unit_conformance_inspections for further discussion.
-$$;
-
+-- Here we convert fraction conformant/non-conformant values into means for each sample.
 create view spc_intermediates.fraction_conforming_sample_statistics as
   select fc.sample_id
        , s.period
@@ -227,10 +201,13 @@ create view spc_intermediates.fraction_conforming_sample_statistics as
        join spc_data.samples                 s on fc.sample_id = s.id
   group by fc.sample_id, s.period, s.instrument_id, s.include_in_limit_calculations;
 
-comment on view spc_intermediates.fraction_conforming_sample_statistics is $$
-Here we convert fraction conformant/non-conformant values into means for each sample.
-$$;
-
+-- Once we have calculated statistics for each sample, the next step is to derive the center line for each of the
+-- control charts, taking values from limit establishment windows. The center lines are simply the grand mean, the mean
+-- of means, for samples in the window.
+--
+-- In fraction conforming/non-conforming charts were are only interested in the fractional values. There's no equivalent
+-- to the R or s charts used with measurement data. That is: we don't chart the variability of the samples, because
+-- every sample has been reduced to a single number, being the fraction.
 create view spc_intermediates.conformant_limit_establishment_statistics as
   select w.id                              as limit_establishment_window_id
        , avg(mean_fraction_conforming)     as grand_mean_conforming
@@ -242,16 +219,12 @@ create view spc_intermediates.conformant_limit_establishment_statistics as
     and fcss.include_in_limit_calculations
   group by w.id;
 
-comment on view spc_intermediates.conformant_limit_establishment_statistics is $$
-Once we have calculated statistics for each sample, the next step is to derive the center line for each of the control
-charts, taking values from limit establishment windows. The center lines are simply the grand mean, the mean of means
-for samples in the window.
-
-In fraction conforming/non-conforming charts were are only interested in the fractional values. There's no equivalent to
-the R or s charts used with measurement data. That is: we don't chart the variability of the samples, because every
-sample has been reduced to a single number, being the fraction.
-$$;
-
+-- For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
+-- limit for fraction conforming (aka a yield chart). The limits are based on a function of the grand mean of fractions
+-- conforming.
+--
+-- This chart is not very commonly used; it is more traditional to use the fraction non-conforming for control. This is
+-- included mostly for completeness.
 create view spc_intermediates.p_limits_conformant as
   select limit_establishment_window_id
        , grand_mean_conforming + (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
@@ -261,15 +234,11 @@ create view spc_intermediates.p_limits_conformant as
                                                           mean_sample_size)))) as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
-comment on view spc_intermediates.p_limits_conformant is $$
-For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
-limit for fraction conforming (aka a yield chart). The limits are based on a function of the grand mean of fractions
-conforming.
-
-This chart is not very commonly used; it is more traditional to use the fraction non-conforming for control. This is
-included mostly for completeness.
-$$;
-
+-- For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
+-- limit for fraction non-conforming (aka a fallout chart). The limits are based on a function of the grand mean of
+-- fractions non-conforming.
+--
+-- When people refer to p charts, this is usually what they are thinking of.
 create view spc_intermediates.p_limits_non_conformant as
   select limit_establishment_window_id
        , grand_mean_non_conforming + (3 * (sqrt((grand_mean_non_conforming * (1.0 - grand_mean_non_conforming)) /
@@ -280,16 +249,13 @@ create view spc_intermediates.p_limits_non_conformant as
                                   mean_sample_size))))              as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
-comment on view spc_intermediates.p_limits_non_conformant is $$
-For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
-limit for fraction non-conforming (aka a fallout chart). The limits are based on a function of the grand mean of
-fractions non-conforming.
-
-When people refer to p charts, this is usually what they are thinking of.
-$$;
-
 -- np charts
 
+-- For each limit establishment window, this view derives the np chart (number conforming) upper control limit, center
+-- line and lower control limit. Note that the p chart and np chart can disagree on whether a sample is in-control or
+-- not, because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
+--
+-- This is the conforming version of an np chart, rarely used.
 create view spc_intermediates.np_limits_conformant as
   select limit_establishment_window_id
        , (grand_mean_conforming * mean_sample_size) +
@@ -299,14 +265,12 @@ create view spc_intermediates.np_limits_conformant as
                                   (1.0 - grand_mean_conforming)))))                               as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
-comment on view spc_intermediates.np_limits_conformant is $$
-For each limit establishment window, this view derives the np chart (number conforming) upper control limit, center line
-and lower control limit. Note that the p chart and np chart can disagree on whether a sample is in-control or not,
-because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
-
-This is the conforming version of an np chart, rarely used.
-$$;
-
+-- For each limit establishment window, this view derives the np chart (number non-conforming) upper control limit,
+-- center line and lower control limit. Note that the p chart and np chart can disagree whether a sample is in-control
+-- or not, because the limits are calculated as decimals but samples are composed of an integer number of inspected
+-- items.
+--
+-- When people refer to np charts, this is usually what they are thinking of.
 create view spc_intermediates.np_limits_non_conformant as
   select limit_establishment_window_id
        , (grand_mean_non_conforming * mean_sample_size) +
@@ -318,16 +282,9 @@ create view spc_intermediates.np_limits_non_conformant as
                                   (1.0 - grand_mean_non_conforming))))) as lower_limit
   from spc_intermediates.conformant_limit_establishment_statistics;
 
-comment on view spc_intermediates.np_limits_non_conformant is $$
-For each limit establishment window, this view derives the np chart (number non-conforming) upper control limit, center
-line and lower control limit. Note that the p chart and np chart can disagree whether a sample is in-control or not,
-because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
-
-When people refer to np charts, this is usually what they are thinking of.
-$$;
-
 -- c charts
 
+-- This view joins values for downstream processing.
 create view spc_intermediates.non_conformities_sample_statistics as
   select punci.sample_id
        , s.period
@@ -337,10 +294,8 @@ create view spc_intermediates.non_conformities_sample_statistics as
   from spc_data.per_unit_non_conformities_inspections punci
        join spc_data.samples                          s on punci.sample_id = s.id;
 
-comment on view spc_intermediates.non_conformities_sample_statistics is $$
-This view joins values for downstream processing.
-$$;
-
+-- Here we convert non-conformity counts from individual statistics in a limit establishment window into the mean that
+-- will be used in c_limits.
 create view spc_intermediates.conformities_limit_establishment_statistics as
   select w.id                  as limit_establishment_window_id
        , avg(non_conformities) as mean_non_conformities
@@ -350,11 +305,9 @@ create view spc_intermediates.conformities_limit_establishment_statistics as
     and css.include_in_limit_calculations
   group by w.id;
 
-comment on view spc_intermediates.non_conformities_sample_statistics is $$
-Here we convert non-conformity counts from individual statistics in a limit establishment window into the mean that will
-be used in c_limits.
-$$;
-
+-- Here we calculate the center line, upper control limit and lower control limit for a count of non-conformities chart
+-- (aka c charts). Note that calculation is made for non-conformities only, no calculation is made for conformities.
+-- This is because the assumed distribution for c charts is a Poisson distribution, which is asymmetrical.
 create view spc_intermediates.c_limits as
   select limit_establishment_window_id
        , mean_non_conformities + (3 * sqrt(mean_non_conformities))                as upper_limit
@@ -362,14 +315,16 @@ create view spc_intermediates.c_limits as
        , greatest(0.0, mean_non_conformities - (3 * sqrt(mean_non_conformities))) as lower_limit
   from spc_intermediates.conformities_limit_establishment_statistics;
 
-comment on view spc_intermediates.c_limits is $$
-Here we calculate the center line, upper control limit and lower control limit for a count of non-conformities chart
-(aka c charts). Note that calculation is made for non-conformities only, no calculation is made for conformities. This
-is because the assumed distribution for c charts is a Poisson distribution, which is asymmetrical.
-$$;
-
 -- XmR charts
 
+-- This view joins measurements and moving ranges with sample and window information, intended for downstream processing
+-- into chart for individual values and moving ranges (aka XmR charts). A moving range is the difference between two
+-- successive measurements, achieved with the lag() window function.
+--
+-- This view has an important difference from its peers for things like sample statistics, or fractions and counts of
+-- non-conforming / non-conformities. Because the sample size is 1, it does not make sense to perform statistical
+-- summaries on a per-sample basis. Instead this view collects sample *and* window data, because single-measurement
+-- samples will need to be summarized on a window-by-window basis.
 create view spc_intermediates.individual_measurements_and_moving_ranges as
   select w.id                                                               as window_id
        , s.id                                                               as sample_id
@@ -385,17 +340,8 @@ create view spc_intermediates.individual_measurements_and_moving_ranges as
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
 
-comment on view spc_intermediates.individual_measurements_and_moving_ranges is $$
-This view joins measurements and moving ranges with sample and window information, intended for downstream processing
-into chart for individual values and moving ranges (aka XmR charts). A moving range is the difference between two
-successive measurements, achieved with the lag() window function.
-
-This view has an important difference from its peers for things like sample statistics, or fractions and counts of
-non-conforming / non-conformities. Because the sample size is 1, it does not make sense to perform statistical summaries
-on a per-sample basis. Instead this view collects sample *and* window data, because single-measurement samples will need
-to be summarized on a window-by-window basis.
-$$;
-
+-- Converts the basic sample/window figures from individual_measurements_and_moving_ranges into summary averages for
+-- each of the measurement value and the moving range.
 create view spc_intermediates.individual_measurement_and_moving_range_statistics as
   select window_id           as limit_establishment_window_id
        , avg(measured_value) as mean_measured_value
@@ -406,11 +352,10 @@ create view spc_intermediates.individual_measurement_and_moving_range_statistics
     and include_in_limit_calculations
   group by window_id;
 
-comment on view spc_intermediates.individual_measurement_and_moving_range_statistics is $$
-Converts the basic sample/window figures from individual_measurements_and_moving_ranges into summary averages for each
-of the measurement value and the moving range.
-$$;
-
+-- Here we calculate the center line, upper natural process limit (UNPL) and lower natural process limit (LNPL). Note
+-- the change in nomenclature - these are not control limits in the sense used in other Shewhart charts, because data is
+-- not grouped into samples with multiple measurements. Instead the limits are calculated over entire windows of data,
+-- meaning that all variation is captured in its original natural form.
 create view spc_intermediates.xmr_x_limits as
   select limit_establishment_window_id
        , mean_measured_value + (3 * (mean_moving_range / (select lower_d2
@@ -422,13 +367,13 @@ create view spc_intermediates.xmr_x_limits as
                                                           where sample_size = 2))) as lower_limit
   from spc_intermediates.individual_measurement_and_moving_range_statistics;
 
-comment on view spc_intermediates.xmr_x_limits is $$
-Here we calculate the center line, upper natural process limit (UNPL) and lower natural process limit (LNPL). Note the
-change in nomenclature - these are not control limits in the sense used in other Shewhart charts, because data is not
-grouped into samples with multiple measurements. Instead the limits are calculated over entire windows of data, meaning
-that all variation is captured in its original natural form.
-$$;
-
+-- Here we calculate the center line and upper range limit (URL) of the moving range (URL is the nomenclature from
+-- Wheeler & Chambers, Montgomery calls it an upper control limit). As with xmr_x_limits, the data is calculated over a
+-- whole window of data rather than grouped by samples.
+--
+-- There is no "lower range limit". This is because the formula for such a limit would require multiplying the mean
+-- moving range by the upper_d4 constant, which is zero when sample size = 2. Hence it is always zero. This should make
+-- sense, since the smallest possible value of subtracting two values is zero (when the values are equal).
 create view spc_intermediates.xmr_mr_limits as
   select limit_establishment_window_id
        , mean_moving_range *
@@ -436,18 +381,24 @@ create view spc_intermediates.xmr_mr_limits as
        , mean_moving_range                                                              as center_line
   from spc_intermediates.individual_measurement_and_moving_range_statistics;
 
-comment on view spc_intermediates.xmr_mr_limits is $$
-Here we calculate the center line and upper range limit (URL) of the moving range (URL is the nomenclature from Wheeler
-& Chambers, Montgomery calls it an upper control limit). As with xmr_x_limits, the data is calculated over a whole
-window of data rather than grouped by samples.
-
-There is no "lower range limit". This is because the formula for such a limit would require multiplying the mean moving
-range by the upper_d4 constant, which is zero when sample size = 2. Hence it is always zero. This should make sense,
-since the smallest possible value of subtracting two values is zero (when the values are equal).
-$$;
-
 -- Exponentially Weighted Moving Average (EWMA)
 
+-- Calculating an exponentially-weighted moving average (EWMA; aka Simple Exponential Smoothing) works as a recurrence
+-- relationship. It can be defined as an iterative function where each execution takes as an input the value of the
+-- previous execution.
+--
+-- This is the function that gets called iteratively.
+--
+-- * `last_avg` represents the output of the previous execution. If it is nil, the `target_mean` value is substituted.
+-- * `measurement` represents the value of the current measurement, used to update the EWMA.
+-- * `weighting` represents the fraction by which the `last_avg` is applied with the `measurement` to create a new
+--   average.
+--   Put another way, it is the speed at which older values become ignored in updating the average. High values of
+--   `weighting` cause older values to be ignored quickly, making the function more responsive to more recent values.
+--   Low values of `weighting` cause the influence of older values to linger longer, meaning the function takes longer
+--   to respond to shifts but is less sensitive to noise. In literature this parameter is called λ (typical of SPC
+--   literature) or α (typical of data science / forecasting literature).
+-- * `target_mean` is the declared mean of the data.
 create function spc_intermediates.ewma_step(
     last_avg           decimal
   , measurement        decimal
@@ -464,34 +415,17 @@ begin
 end;
 $$;
 
-comment on function spc_intermediates.ewma_step is $$
-Calculating an exponentially-weighted moving average (EWMA; aka Simple Exponential Smoothing) works as a recurrence
-relationship. It can be defined as an iterative function where each execution takes as an input the value of the
-previous execution.
-
-This is the function that gets called iteratively.
-
-* `last_avg` represents the output of the previous execution. If it is nil, the `target_mean` value is substituted.
-* `measurement` represents the value of the current measurement, used to update the EWMA.
-* `weighting` represents the fraction by which the `last_avg` is applied with the `measurement` to create a new average.
-  Put another way, it is the speed at which older values become ignored in updating the average. High values of
-  `weighting` cause older values to be ignored quickly, making the function more responsive to more recent values. Low
-  values of `weighting` cause the influence of older values to linger longer, meaning the function takes longer to
-  respond to shifts but is less sensitive to noise. In literature this parameter is called λ (typical of SPC literature)
-  or α (typical of data science / forecasting literature).
-* `target_mean` is the declared mean of the data.
-$$;
-
+-- The `ewma` aggregate is what wraps up `ewma_step` into an iterative loop. This means it can be used as an aggregate
+-- in the same way as inbuilt aggregates like `sum` or `avg`.
 create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
   sfunc = spc_intermediates.ewma_step,
   stype = decimal
 );
 
-comment on aggregate spc_intermediates.ewma(decimal, decimal, decimal) is $$
-The `ewma` aggregate is what wraps up `ewma_step` into an iterative loop. This means it can be used as an aggregate in
-the same way as inbuilt aggregates like `sum` or `avg`.
-$$;
-
+-- This prepares the underlying windows, samples and measurements for transformation into EWMAs and control limits. An
+-- important distinction from similar views like `individual_measurements_and_moving_ranges` is the calculation of
+-- `sample_number_in_window`. This value is used as an input for calculating the amount by which each particular
+-- measurement is weighted (see Montgomery formulae 9.25 and 9.26, where it is the value 'i').
 create view spc_intermediates.individual_measurements_ewma as
   select w.id                                                as window_id
        , s.id                                                as sample_id
@@ -507,13 +441,9 @@ create view spc_intermediates.individual_measurements_ewma as
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
 
-comment on view spc_intermediates.individual_measurements_ewma is $$
-This prepares the underlying windows, samples and measurements for transformation into EWMAs and control limits. An
-important distinction from similar views like `individual_measurements_and_moving_ranges` is the calculation of
-`sample_number_in_window`. This value is used as an input for calculating the amount by which each particular
-measurement is weighted (see Montgomery formulae 9.25 and 9.26, where it is the value 'i').
-$$;
-
+-- This view calculates the mean and standard deviation of EWMA control windows. The mean is used as a target_mean and
+-- the standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26,
+-- where it is the value 'σ').
 create view spc_intermediates.individual_measurement_statistics_ewma as
     select w.id                        as window_id
          , avg(measured_value)         as mean_measured_value
@@ -524,12 +454,9 @@ create view spc_intermediates.individual_measurement_statistics_ewma as
     where include_in_limit_calculations
     group by w.id;
 
-comment on view spc_intermediates.individual_measurement_statistics_ewma is $$
-This view calculates the mean and standard deviation of EWMA control windows. The mean is used as a target_mean and the
-standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26, where
-it is the value 'σ').
-$$;
-
+-- This is the core of the EWMA calculation process.
+--
+-- Upper limit is based on Montgomery formula 9.25, lower limit on formula 9.26.
 create function spc_intermediates.ewma_individual_measurements(p_weighting decimal)
 returns table (
   window_id                     bigint,
@@ -571,10 +498,4 @@ begin
     from spc_intermediates.individual_measurements_ewma wms
     join spc_intermediates.individual_measurement_statistics_ewma imse on wms.window_id = imse.window_id;
 end;
-$$;
-
-comment on function spc_intermediates.ewma_individual_measurements(decimal) is $$
-This is the core of the EWMA calculation process.
-
-Upper limit is based on Montgomery formula 9.25, lower limit on formula 9.26.
 $$;

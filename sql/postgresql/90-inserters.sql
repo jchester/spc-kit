@@ -1,3 +1,6 @@
+-- This function is used to quickly load data tables in the data/ directory.
+--
+-- Do not use it to insert your data. It is not designed for general use.
 create or replace function spc_data.bulk_insert_example_data_measurements(
   p_instrument_name text,
   p_window_desc     text,
@@ -68,12 +71,9 @@ begin
 end
 $$ language plpgsql;
 
-comment on function spc_data.bulk_insert_example_data_measurements is $$
-This function is used to quickly load data tables in the data/ directory.
-
-Do not use it to insert your data. It is not designed for general use.
-$$;
-
+-- This function is used to quickly load data tables in the data/ directory.
+--
+-- Do not use it to insert your data. It is not designed for general use.
 create or replace function spc_data.bulk_insert_example_data_whole_item_conformities(
   p_instrument_name text,
   p_window_desc     text,
@@ -151,12 +151,9 @@ begin
 end
 $$ language plpgsql;
 
-comment on function spc_data.bulk_insert_example_data_whole_item_conformities is $$
-This function is used to quickly load data tables in the data/ directory.
-
-Do not use it to insert your data. It is not designed for general use.
-$$;
-
+-- This function is used to quickly load data tables in the data/ directory.
+--
+-- Do not use it to insert your data. It is not designed for general use.
 create or replace function spc_data.bulk_insert_example_data_per_unit_non_conformities(
   p_instrument_name text,
   p_window_desc     text,
@@ -223,12 +220,6 @@ begin
   end loop;
 end
 $$ language plpgsql;
-
-comment on function spc_data.bulk_insert_example_data_per_unit_non_conformities is $$
-This function is used to quickly load data tables in the data/ directory.
-
-Do not use it to insert your data. It is not designed for general use.
-$$;
 
 create or replace function spc_data.bulk_insert_example_data_ewma(
   p_instrument_name text,

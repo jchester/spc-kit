@@ -1,6 +1,4 @@
-create schema if not exists spc_reports;
-
--- This is where you read out the control status of individual samples, based on the application of Shewhart rules.
+-- This is where you read out the control status of individual samples, based on the application of various rules.
 -- Control status can be one of four conditions:
 --
 -- * in_control. There is nothing to do, the process is operating with common cause variability.
@@ -11,6 +9,7 @@ create schema if not exists spc_reports;
 --
 -- When using an ORM, you will typically join these views to the base tables in spc_data in order to attach control
 -- status about samples to the sample object.
+create schema if not exists spc_reports;
 
 -- Shewhart charts
 

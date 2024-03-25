@@ -1,7 +1,6 @@
-create schema if not exists spc_intermediates;
-
 -- This schema encapsulates a variety of intermediate calculations, taking data from spc_data and exposing calculated
 -- values that are used in spc_reports.
+create schema if not exists spc_intermediates;
 
 -- These are scaling factors used in calculations of control limits on a variety of charts, according to the sample size
 -- used. Some of these values are derived from other values and could be calculated at view creation time, but for

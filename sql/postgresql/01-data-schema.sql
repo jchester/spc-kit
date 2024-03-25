@@ -1,6 +1,5 @@
-create schema if not exists spc_data;
-
 -- This schema is where you add your data. Just tables. When using ORM these will be your base objects.
+create schema if not exists spc_data;
 
 -- observed_systems represents a single system under observation, which may have multiple associated streams of
 -- measurement samples via instruments. Example systems would include a widget manufacturing production line, or a

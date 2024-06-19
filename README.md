@@ -335,6 +335,7 @@ where control_window_id = 2
 Giving:
 
 | Sample ID | Sample Average | Upper Limit | Control Status |
+|-----------|----------------|-------------|----------------|
 | 43 | 1.69696 | 1.693224336 | out_of_control_upper |
 | 45 | 1.77 | 1.693224336 | out_of_control_upper |
 

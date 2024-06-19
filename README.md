@@ -77,7 +77,7 @@ Instrument.
 For our first example we will use Tables 6.1 and 6.2 from Montgomery. Our Observed System will be the photolithography
 process in a semiconductor factory:
 
-```postgresql
+```sql
 insert into spc_data.observed_systems(id, name)
 values (1, 'Photolithography Process from Montgomery');
 ```
@@ -88,7 +88,7 @@ narrow or too wide, the resulting circuit may be faulty.
 
 Let's add the instrument:
 
-```postgresql
+```sql
 insert into spc_data.instruments(id, observed_system_id, name)
 values (1, 1, 'Flow Resist Width (Tables 6.1 and 6.2)');
 ```
@@ -98,7 +98,7 @@ values (1, 1, 'Flow Resist Width (Tables 6.1 and 6.2)');
 Each Instrument takes periodic _Samples_, which in turn have one or more _Measurements_. Let us add some data for the
 two tables, starting with samples:
 
-```postgresql
+```sql
 insert into spc_data.samples (id, instrument_id, period, include_in_limit_calculations, annotation)
 -- Table 6.1
 values (1,  1, '["2023-01-01 00:00:00+00","2023-01-01 00:01:00+00")', true, null),
@@ -157,7 +157,7 @@ you can easily create a zero-width range. (See the comment on `spc_data.samples`
 Now we add data. Five measurements are taken per sample, yielding 125 measurements for Table 6.1 and another 100 for
 Table 6.2, for a total of 225 measurements:
 
-```postgresql
+```sql
 -- @formatter:off
 insert into spc_data.measurements (id, sample_id, performed_at, measured_value)
 values (1,   1,  '2023-01-01 00:00:00.000000 +00:00', 1.3235),  (2,   1,  '2023-01-01 00:00:01.000000 +00:00', 1.4128),
@@ -286,7 +286,7 @@ acceptable number) is then used in subsequent samples to detect out-of-control c
 Therefore, SPC-kit allows you to group together Samples into _Windows_, which express a time range and for what purpose
 the Samples are to be used. Let's add two windows for the Tables 6.1 (limit establishment) and 6.2 (control):
 
-```postgresql
+```sql
 insert into spc_data.windows(id, instrument_id, type, period, description)
 values (1, 1, 'limit_establishment', '[2023-01-01 00:00:00,2023-01-01 00:25:00)', 'Table 6.1');
 insert into spc_data.windows(id, instrument_id, type, period, description)
@@ -300,7 +300,7 @@ validate inputs).
 Each control window belongs to one limit establishment window. This relationship does not rely on time ranges, but is
 explicitly recorded in `spc_data.window_relationships`. Let us connect our two windows together:
 
-```postgresql
+```sql
 insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 2);
 ```
 
@@ -308,7 +308,7 @@ Note that you may link a limit-establishment window to itself. This is useful fo
 between limit establishment and control is unimportant. For completeness we will do so for the window established based
 on Table 6.1:
 
-```postgresql
+```sql
 insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 1);
 ```
 
@@ -323,7 +323,7 @@ Each row in a Rule view tells you whether a Sample was within control limits, or
 
 Let's look at Table 6.2 and see if we can find out-of-control Samples:
 
-```postgresql
+```sql
 select sample_id,
        controlled_value,
        upper_limit

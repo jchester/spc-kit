@@ -65,7 +65,7 @@ queries.
 
 A lot of the details of what's what and how it works lives in PostgreSQL comments. However, to help you to get started,
 here is a short walkthrough of adding data and retrieving rule results. We will use data taken from Montgomery (see
-[References][#references]).
+[References](#references)).
 
 ### Establish systems and instruments.
 

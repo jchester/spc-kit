@@ -99,6 +99,7 @@ Each Instrument takes periodic _Samples_, which in turn have one or more _Measur
 two tables, starting with samples:
 
 ```sql
+-- @formatter:off
 insert into spc_data.samples (id, instrument_id, period, include_in_limit_calculations, annotation)
 -- Table 6.1
 values (1,  1, '["2023-01-01 00:00:00+00","2023-01-01 00:01:00+00")', true, null),  (2,  1, '["2023-01-01 00:01:00+00","2023-01-01 00:02:00+00")', true, null),
@@ -125,6 +126,7 @@ values (1,  1, '["2023-01-01 00:00:00+00","2023-01-01 00:01:00+00")', true, null
        (40, 1, '["2023-01-01 00:39:00+00","2023-01-01 00:40:00+00")', true, null),  (41, 1, '["2023-01-01 00:40:00+00","2023-01-01 00:41:00+00")', true, null),
        (42, 1, '["2023-01-01 00:41:00+00","2023-01-01 00:42:00+00")', true, null),  (43, 1, '["2023-01-01 00:42:00+00","2023-01-01 00:43:00+00")', true, null),
        (44, 1, '["2023-01-01 00:43:00+00","2023-01-01 00:44:00+00")', true, null),  (45, 1, '["2023-01-01 00:44:00+00","2023-01-01 00:45:00+00")', true, null);
+-- @formatter:on
 ```
 
 Note that `period` is a time _range_, not a time _stamp_. This represents that while individual measurements may be

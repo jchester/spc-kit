@@ -65,7 +65,7 @@ queries.
 
 A lot of the details of what's what and how it works lives in PostgreSQL comments. However, to help you to get started,
 here is a short walkthrough of adding data and retrieving rule results. We will use data taken from Montgomery (see
-[References](#references)).
+[References and Further Reading](#references-and-further-reading)).
 
 ### Establish systems and instruments.
 
@@ -342,11 +342,13 @@ Giving:
 We can see that samples 43 and 45 are unusually high: they are `out_of_control_upper`. This means we need to perform an
 investigation to establish what has occurred to cause the unusual sample average.
 
-## References
+## References and Further Reading
 
 Listed in suggested order of priority.
 
 * Stjernlöf, C. ["Statistical Process Control: A Practitioner's Guide"](https://two-wrongs.com/statistical-process-control-a-practitioners-guide.html),
-  _Two Wrongs_. 
+  _Two Wrongs_.
+* Chin, C. ["Becoming Data Driven, From First Principles"](https://commoncog.com/becoming-data-driven-first-principles/),
+  _Commoncog_.
 * Montgomery, Douglas C. _Introduction to Statistical Quality Control_, 8th EMEA Ed.
 * Wheeler, Donald J and Chambers, David S. _Understanding Statistical Process Control_, 3rd Ed.

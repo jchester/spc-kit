@@ -23,7 +23,7 @@ Because statistical process control is based on simple data and simple rules, it
 successfully. Folks were doing this stuff by hand in the 50s without fuss. Turning it into SQL makes it even easier to
 apply in a modern context.
 
-See "References" for some more detailed reading.
+See [References and Further Reading](#references-and-further-reading) for some more detailed reading.
 
 ## What it can do
 

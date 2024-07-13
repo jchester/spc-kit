@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bigdecimal (3.1.8)
+    pg (1.5.6)
+    sequel (5.82.0)
+      bigdecimal
+
+PLATFORMS
+  arm64-darwin-22
+
+DEPENDENCIES
+  pg
+  sequel
+
+BUNDLED WITH
+   2.4.12

@@ -33,9 +33,27 @@ class MontgomerySpec < Minitest::Spec
         DB[:x_bar_r_rules].where(instrument_id: 1)
       end
 
-      it "has two upper out-of-control points" do
-        control_count = subject.where(control_status: "out_of_control_upper").count
-        assert_equal 2, control_count
+      it "has the correct mean" do
+        mean = subject.select(:center_line).first[:center_line]
+        assert_in_delta 1.506, mean
+      end
+
+      it "has the correct upper limit" do
+        upper_limit = subject.select(:upper_limit).first[:upper_limit]
+        assert_in_delta 1.693, upper_limit
+      end
+
+      it "has the correct lower limit" do
+        lower_limit = subject.select(:lower_limit).first[:lower_limit]
+        assert_in_delta 1.318, lower_limit
+      end
+
+      it "is out of control at samples 43 and 45" do
+        control_43 = subject.where(sample_id: 43).select(:control_status).first
+        assert_equal "out_of_control_upper", control_43[:control_status]
+
+        control_45 = subject.where(sample_id: 43).select(:control_status).first
+        assert_equal "out_of_control_upper", control_45[:control_status]
       end
 
       it "has no out-of-control lower points" do

@@ -34,17 +34,17 @@ class MontgomerySpec < Minitest::Spec
       end
 
       it "has the correct mean" do
-        mean = subject.select(:center_line).first[:center_line]
+        mean = subject.first[:center_line]
         assert_in_delta 1.506, mean
       end
 
       it "has the correct upper limit" do
-        upper_limit = subject.select(:upper_limit).first[:upper_limit]
+        upper_limit = subject.first[:upper_limit]
         assert_in_delta 1.693, upper_limit
       end
 
       it "has the correct lower limit" do
-        lower_limit = subject.select(:lower_limit).first[:lower_limit]
+        lower_limit = subject.first[:lower_limit]
         assert_in_delta 1.318, lower_limit
       end
 
@@ -73,17 +73,17 @@ class MontgomerySpec < Minitest::Spec
       end
 
       it "has the correct mean" do
-        mean = subject.select(:center_line).first[:center_line]
+        mean = subject.first[:center_line]
         assert_in_delta 0.32521, mean
       end
 
       it "has the correct upper limit" do
-        upper_limit = subject.select(:upper_limit).first[:upper_limit]
+        upper_limit = subject.first[:upper_limit]
         assert_in_delta 0.68749, upper_limit
       end
 
       it "has the correct lower limit" do
-        lower_limit = subject.select(:lower_limit).first[:lower_limit]
+        lower_limit = subject.first[:lower_limit]
         assert_equal 0, lower_limit
       end
 

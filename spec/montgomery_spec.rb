@@ -120,5 +120,31 @@ class MontgomerySpec < Minitest::Spec
         assert_equal 25, control_count
       end
     end
+
+    describe "s̄ rules" do
+      subject do
+        DB[:s_rules].where(instrument_id: 2)
+      end
+
+      it "has the correct mean" do
+        mean = subject.first[:center_line]
+        assert_in_delta 0.0094, mean
+      end
+
+      it "has the correct upper limit" do
+        upper_limit = subject.first[:upper_limit]
+        assert_in_delta 0.0196, upper_limit
+      end
+
+      it "has the correct lower limit" do
+        lower_limit = subject.first[:lower_limit]
+        assert_equal 0, lower_limit
+      end
+
+      it "has 25 in-control points out of 25" do
+        control_count = subject.where(control_status: "in_control").count
+        assert_equal 25, control_count
+      end
+    end
   end
 end

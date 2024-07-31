@@ -27,8 +27,8 @@ class MontgomerySpec < Minitest::Spec
     DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
   end
 
-  describe "x̄R rules" do
-    describe "Flow Width example" do
+  describe "Flow Width example" do
+    describe "x̄R rules" do
       subject do
         DB[:x_bar_r_rules].where(instrument_id: 1)
       end

@@ -93,4 +93,32 @@ class MontgomerySpec < Minitest::Spec
       end
     end
   end
+
+  describe "Engine Piston Diameter example" do
+    describe "x̄s rules" do
+      subject do
+        DB[:x_bar_s_rules].where(instrument_id: 2)
+      end
+
+      it "has the correct mean" do
+        mean = subject.first[:center_line]
+        assert_in_delta 74.001, mean
+      end
+
+      it "has the correct upper limit" do
+        upper_limit = subject.first[:upper_limit]
+        assert_in_delta 74.014, upper_limit
+      end
+
+      it "has the correct lower limit" do
+        lower_limit = subject.first[:lower_limit]
+        assert_in_delta 73.988, lower_limit
+      end
+
+      it "has 25 in-control points out of 25" do
+        control_count = subject.where(control_status: "in_control").count
+        assert_equal 25, control_count
+      end
+    end
+  end
 end

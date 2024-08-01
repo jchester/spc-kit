@@ -148,14 +148,16 @@ class MontgomerySpec < Minitest::Spec
   end
 
   describe "Printed Circuit Boards" do
-    subject do
-      DB[:c_rules].where(instrument_id: 4)
+    describe "c rules" do
+      subject do
+        DB[:c_rules].where(instrument_id: 4)
+      end
+
+      it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
+
+      it_has_status_counts_of(in_control: 24, out_of_control_upper: 1, out_of_control_lower: 1)
+
+      it_is_out_of_control_at(upper_samples: [120], lower_samples: [106])
     end
-
-    it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
-
-    it_has_status_counts_of(in_control: 24, out_of_control_upper: 1, out_of_control_lower: 1)
-
-    it_is_out_of_control_at(upper_samples: [120], lower_samples: [106])
   end
 end

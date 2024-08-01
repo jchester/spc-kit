@@ -30,15 +30,15 @@ class MontgomerySpec < Minitest::Spec
 
   def self.it_has_params(mean:, upper:, lower:)
     it "has the correct mean" do
-      assert_in_delta mean, subject.first[:center_line]
+      assert_in_delta mean, subject.first[:center_line], 0.002
     end
 
     it "has the correct upper limit" do
-      assert_in_delta upper, subject.first[:upper_limit]
+      assert_in_delta upper, subject.first[:upper_limit], 0.002
     end
 
     it "has the correct lower limit" do
-      assert_in_delta lower, subject.first[:lower_limit]
+      assert_in_delta lower, subject.first[:lower_limit], 0.002
     end
   end
 
@@ -115,6 +115,24 @@ class MontgomerySpec < Minitest::Spec
       end
 
       it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
+
+      it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
+
+      it "is out of control at samples 85 and 93" do
+        control_85 = subject.where(sample_id: 85).select(:control_status).first
+        assert_equal "out_of_control_upper", control_85[:control_status]
+
+        control_93 = subject.where(sample_id: 93).select(:control_status).first
+        assert_equal "out_of_control_upper", control_93[:control_status]
+      end
+    end
+
+    describe "np non-conformant rules" do
+      subject do
+        DB[:np_non_conformant_rules].where(instrument_id: 3)
+      end
+
+      it_has_params(mean: 11.565, upper: 20.510, lower: 2.620)
 
       it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
 

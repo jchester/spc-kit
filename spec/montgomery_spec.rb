@@ -52,7 +52,7 @@ class MontgomerySpec < Minitest::Spec
     end
 
     it "has the correct number of out-of-control-lower points" do
-      assert_equal out_of_control_upper, subject.where(control_status: "out_of_control_upper").count
+      assert_equal out_of_control_lower, subject.where(control_status: "out_of_control_lower").count
     end
   end
 

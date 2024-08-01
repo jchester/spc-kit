@@ -56,6 +56,24 @@ class MontgomerySpec < Minitest::Spec
     end
   end
 
+  def self.it_is_out_of_control_at(upper_samples:, lower_samples:)
+    upper_samples.each do |sample_id|
+      it "it is out-of-control-upper at sample #{sample_id}" do
+        control_status = subject.where(sample_id: sample_id).select(:control_status).first
+        refute_nil control_status, "no matching out-of-control-upper sample was found for #{sample_id}"
+        assert_equal "out_of_control_upper", control_status[:control_status]
+      end
+    end
+
+    lower_samples.each do |sample_id|
+      it "it is out-of-control-lower at sample #{sample_id}" do
+        control_status = subject.where(sample_id: sample_id).select(:control_status).first
+        refute_nil control_status, "no matching out-of-control-lower sample was found for #{sample_id}"
+        assert_equal "out_of_control_lower", control_status[:control_status]
+      end
+    end
+  end
+
   describe "Flow Width example" do
     describe "x̄R rules" do
       subject do
@@ -66,13 +84,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_status_counts_of(in_control: 43, out_of_control_upper: 2, out_of_control_lower: 0)
 
-      it "is out of control at samples 43 and 45" do
-        control_43 = subject.where(sample_id: 43).select(:control_status).first
-        assert_equal "out_of_control_upper", control_43[:control_status]
-
-        control_45 = subject.where(sample_id: 43).select(:control_status).first
-        assert_equal "out_of_control_upper", control_45[:control_status]
-      end
+      it_is_out_of_control_at(upper_samples: [43, 45], lower_samples: [])
     end
 
     describe "R̄ rules" do
@@ -118,13 +130,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
 
-      it "is out of control at samples 85 and 93" do
-        control_85 = subject.where(sample_id: 85).select(:control_status).first
-        assert_equal "out_of_control_upper", control_85[:control_status]
-
-        control_93 = subject.where(sample_id: 93).select(:control_status).first
-        assert_equal "out_of_control_upper", control_93[:control_status]
-      end
+      it_is_out_of_control_at(upper_samples: [85, 93], lower_samples: [])
     end
 
     describe "np non-conformant rules" do
@@ -136,13 +142,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
 
-      it "is out of control at samples 85 and 93" do
-        control_85 = subject.where(sample_id: 85).select(:control_status).first
-        assert_equal "out_of_control_upper", control_85[:control_status]
-
-        control_93 = subject.where(sample_id: 93).select(:control_status).first
-        assert_equal "out_of_control_upper", control_93[:control_status]
-      end
+      it_is_out_of_control_at(upper_samples: [85, 93], lower_samples: [])
     end
   end
 end

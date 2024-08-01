@@ -42,6 +42,20 @@ class MontgomerySpec < Minitest::Spec
     end
   end
 
+  def self.it_has_status_counts_of(in_control:, out_of_control_upper:, out_of_control_lower:)
+    it "has the correct number of in-control points" do
+      assert_equal in_control, subject.where(control_status: "in_control").count
+    end
+
+    it "has the correct number of out-of-control-upper points" do
+      assert_equal out_of_control_upper, subject.where(control_status: "out_of_control_upper").count
+    end
+
+    it "has the correct number of out-of-control-lower points" do
+      assert_equal out_of_control_upper, subject.where(control_status: "out_of_control_upper").count
+    end
+  end
+
   describe "Flow Width example" do
     describe "x̄R rules" do
       subject do
@@ -50,22 +64,14 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_params(mean: 1.506, upper: 1.693, lower: 1.318)
 
+      it_has_status_counts_of(in_control: 43, out_of_control_upper: 2, out_of_control_lower: 0)
+
       it "is out of control at samples 43 and 45" do
         control_43 = subject.where(sample_id: 43).select(:control_status).first
         assert_equal "out_of_control_upper", control_43[:control_status]
 
         control_45 = subject.where(sample_id: 43).select(:control_status).first
         assert_equal "out_of_control_upper", control_45[:control_status]
-      end
-
-      it "has no out-of-control lower points" do
-        control_count = subject.where(control_status: "out_of_control_lower").count
-        assert_equal 0, control_count
-      end
-
-      it "has 43 in-control points" do
-        control_count = subject.where(control_status: "in_control").count
-        assert_equal 43, control_count
       end
     end
 
@@ -76,10 +82,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_params(mean: 0.32521, upper: 0.68749, lower: 0)
 
-      it "has 45 in-control points out of 45" do
-        control_count = subject.where(control_status: "in_control").count
-        assert_equal 45, control_count
-      end
+      it_has_status_counts_of(in_control: 45, out_of_control_upper: 0, out_of_control_lower: 0)
     end
   end
 
@@ -91,10 +94,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_params(mean: 74.001, upper: 74.014, lower: 73.988)
 
-      it "has 25 in-control points out of 25" do
-        control_count = subject.where(control_status: "in_control").count
-        assert_equal 25, control_count
-      end
+      it_has_status_counts_of(in_control: 25, out_of_control_upper: 0, out_of_control_lower: 0)
     end
 
     describe "s̄ rules" do
@@ -104,10 +104,7 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_params(mean: 0.0094, upper: 0.0196, lower: 0)
 
-      it "has 25 in-control points out of 25" do
-        control_count = subject.where(control_status: "in_control").count
-        assert_equal 25, control_count
-      end
+      it_has_status_counts_of(in_control: 25, out_of_control_upper: 0, out_of_control_lower: 0)
     end
   end
 
@@ -119,22 +116,14 @@ class MontgomerySpec < Minitest::Spec
 
       it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
 
+      it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
+
       it "is out of control at samples 85 and 93" do
         control_85 = subject.where(sample_id: 85).select(:control_status).first
         assert_equal "out_of_control_upper", control_85[:control_status]
 
         control_93 = subject.where(sample_id: 93).select(:control_status).first
         assert_equal "out_of_control_upper", control_93[:control_status]
-      end
-
-      it "has no out-of-control lower points" do
-        control_count = subject.where(control_status: "out_of_control_lower").count
-        assert_equal 0, control_count
-      end
-
-      it "has 28 in-control points" do
-        control_count = subject.where(control_status: "in_control").count
-        assert_equal 28, control_count
       end
     end
   end

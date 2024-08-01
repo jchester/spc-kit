@@ -28,26 +28,27 @@ class MontgomerySpec < Minitest::Spec
     DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
   end
 
+  def self.it_has_params(mean:, upper:, lower:)
+    it "has the correct mean" do
+      assert_in_delta mean, subject.first[:center_line]
+    end
+
+    it "has the correct upper limit" do
+      assert_in_delta upper, subject.first[:upper_limit]
+    end
+
+    it "has the correct lower limit" do
+      assert_in_delta lower, subject.first[:lower_limit]
+    end
+  end
+
   describe "Flow Width example" do
     describe "x̄R rules" do
       subject do
         DB[:x_bar_r_rules].where(instrument_id: 1)
       end
 
-      it "has the correct mean" do
-        mean = subject.first[:center_line]
-        assert_in_delta 1.506, mean
-      end
-
-      it "has the correct upper limit" do
-        upper_limit = subject.first[:upper_limit]
-        assert_in_delta 1.693, upper_limit
-      end
-
-      it "has the correct lower limit" do
-        lower_limit = subject.first[:lower_limit]
-        assert_in_delta 1.318, lower_limit
-      end
+      it_has_params(mean: 1.506, upper: 1.693, lower: 1.318)
 
       it "is out of control at samples 43 and 45" do
         control_43 = subject.where(sample_id: 43).select(:control_status).first
@@ -73,20 +74,7 @@ class MontgomerySpec < Minitest::Spec
         DB[:r_rules].where(instrument_id: 1)
       end
 
-      it "has the correct mean" do
-        mean = subject.first[:center_line]
-        assert_in_delta 0.32521, mean
-      end
-
-      it "has the correct upper limit" do
-        upper_limit = subject.first[:upper_limit]
-        assert_in_delta 0.68749, upper_limit
-      end
-
-      it "has the correct lower limit" do
-        lower_limit = subject.first[:lower_limit]
-        assert_equal 0, lower_limit
-      end
+      it_has_params(mean: 0.32521, upper: 0.68749, lower: 0)
 
       it "has 45 in-control points out of 45" do
         control_count = subject.where(control_status: "in_control").count
@@ -101,20 +89,7 @@ class MontgomerySpec < Minitest::Spec
         DB[:x_bar_s_rules].where(instrument_id: 2)
       end
 
-      it "has the correct mean" do
-        mean = subject.first[:center_line]
-        assert_in_delta 74.001, mean
-      end
-
-      it "has the correct upper limit" do
-        upper_limit = subject.first[:upper_limit]
-        assert_in_delta 74.014, upper_limit
-      end
-
-      it "has the correct lower limit" do
-        lower_limit = subject.first[:lower_limit]
-        assert_in_delta 73.988, lower_limit
-      end
+      it_has_params(mean: 74.001, upper: 74.014, lower: 73.988)
 
       it "has 25 in-control points out of 25" do
         control_count = subject.where(control_status: "in_control").count
@@ -127,20 +102,7 @@ class MontgomerySpec < Minitest::Spec
         DB[:s_rules].where(instrument_id: 2)
       end
 
-      it "has the correct mean" do
-        mean = subject.first[:center_line]
-        assert_in_delta 0.0094, mean
-      end
-
-      it "has the correct upper limit" do
-        upper_limit = subject.first[:upper_limit]
-        assert_in_delta 0.0196, upper_limit
-      end
-
-      it "has the correct lower limit" do
-        lower_limit = subject.first[:lower_limit]
-        assert_equal 0, lower_limit
-      end
+      it_has_params(mean: 0.0094, upper: 0.0196, lower: 0)
 
       it "has 25 in-control points out of 25" do
         control_count = subject.where(control_status: "in_control").count
@@ -155,20 +117,7 @@ class MontgomerySpec < Minitest::Spec
         DB[:p_non_conformant_rules].where(instrument_id: 3)
       end
 
-      it "has the correct mean" do
-        mean = subject.first[:center_line]
-        assert_in_delta 0.2313, mean
-      end
-
-      it "has the correct upper limit" do
-        upper_limit = subject.first[:upper_limit]
-        assert_in_delta 0.4102, upper_limit
-      end
-
-      it "has the correct lower limit" do
-        lower_limit = subject.first[:lower_limit]
-        assert_in_delta 0.0524, lower_limit
-      end
+      it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
 
       it "is out of control at samples 85 and 93" do
         control_85 = subject.where(sample_id: 85).select(:control_status).first

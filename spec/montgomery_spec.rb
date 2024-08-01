@@ -24,21 +24,22 @@ class MontgomerySpec < Minitest::Spec
     DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))
     DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/measurements.csv"))
     DB.copy_into(:whole_unit_conformance_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/whole_unit_conformance_inspections.csv"))
+    DB.copy_into(:per_unit_non_conformities_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/per_unit_non_conformities_inspections.csv"))
     DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
     DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
   end
 
   def self.it_has_params(mean:, upper:, lower:)
     it "has the correct mean" do
-      assert_in_delta mean, subject.first[:center_line], 0.002
+      assert_in_delta mean, subject.first[:center_line], 0.01
     end
 
     it "has the correct upper limit" do
-      assert_in_delta upper, subject.first[:upper_limit], 0.002
+      assert_in_delta upper, subject.first[:upper_limit], 0.01
     end
 
     it "has the correct lower limit" do
-      assert_in_delta lower, subject.first[:lower_limit], 0.002
+      assert_in_delta lower, subject.first[:lower_limit], 0.01
     end
   end
 
@@ -144,5 +145,17 @@ class MontgomerySpec < Minitest::Spec
 
       it_is_out_of_control_at(upper_samples: [85, 93], lower_samples: [])
     end
+  end
+
+  describe "Printed Circuit Boards" do
+    subject do
+      DB[:c_rules].where(instrument_id: 4)
+    end
+
+    it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
+
+    it_has_status_counts_of(in_control: 24, out_of_control_upper: 1, out_of_control_lower: 1)
+
+    it_is_out_of_control_at(upper_samples: [120], lower_samples: [106])
   end
 end

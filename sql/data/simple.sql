@@ -29,7 +29,7 @@ values ((select id from spc_data.observed_systems where name = 'Shewhart Test Sy
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-in-control:cw-in-control',
                'shewhart:lew-in-control',
-               '[2023-04-01 00:00:00,2023-04-01 00:25:00)',
+               '[2023-09-01 00:00:00,2023-09-01 00:25:00)',
                'limit_establishment',
                array [
                  array [1, 2, 3], array [1, 2, 3], array [1, 2, 3], array [1, 2, 3], array [1, 2, 3],
@@ -43,7 +43,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-in-control:cw-in-control',
                'shewhart:cw-in-control',
-               '[2023-04-01 00:25:00,2023-04-02 00:00:00)',
+               '[2023-09-01 00:25:00,2023-09-02 00:00:00)',
                'control',
                array [
                  array [1, 2, 3],
@@ -59,7 +59,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-in-control:cw-out-control',
                'shewhart:lew-in-control',
-               '[2023-04-03 00:00:00,2023-04-03 00:25:00)',
+               '[2023-09-03 00:00:00,2023-09-03 00:25:00)',
                'limit_establishment',
                array [
                  array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7],
@@ -73,7 +73,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-in-control:cw-out-control',
                'shewhart:cw-out-control',
-               '[2023-04-03 00:25:00,2023-04-04 00:00:00)',
+               '[2023-09-03 00:25:00,2023-09-04 00:00:00)',
                'control',
                array [
                  array [93, 94, 95, 96, 97, 98, 99], -- Xbar out of control upper
@@ -88,7 +88,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-in-control',
                'lew-out-control',
-               '[2023-04-06 00:00:00,2023-04-06 00:29:00)',
+               '[2023-09-06 00:00:00,2023-09-06 00:29:00)',
                'limit_establishment',
                array [
                  array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7],
@@ -106,7 +106,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-in-control',
                'shewhart:cw-in-control',
-               '[2023-04-06 00:29:00,2023-04-07 00:00:00)',
+               '[2023-09-06 00:29:00,2023-09-07 00:00:00)',
                'control',
                array [
                  array [1, 2, 3, 4, 5, 6, 7],
@@ -121,7 +121,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-out-control',
                'lew-out-control',
-               '[2023-04-08 00:00:00,2023-04-08 00:29:00)',
+               '[2023-09-08 00:00:00,2023-09-08 00:29:00)',
                'limit_establishment',
                array [
                  array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7],
@@ -139,7 +139,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-out-control',
                'shewhart:cw-out-control',
-               '[2023-04-08 00:29:00,2023-04-09 00:00:00)',
+               '[2023-09-08 00:29:00,2023-09-09 00:00:00)',
                'control',
                array [
                  array [93, 94, 95, 96, 97, 98, 99], -- Xbar out of control upper
@@ -154,7 +154,7 @@ select spc_data.bulk_insert_example_data_measurements(
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-in-control:with-exclusions',
                'shewhart:lew-out-control:with-exclusions',
-               '[2023-04-10 00:00:00,2023-04-10 00:29:00)',
+               '[2023-09-10 00:00:00,2023-09-10 00:29:00)',
                'limit_establishment',
                array [
                  array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7], array [1, 2, 3, 4, 5, 6, 7],
@@ -212,7 +212,7 @@ where id in
 select spc_data.bulk_insert_example_data_measurements(
                'shewhart:lew-out-control:cw-in-control:with-exclusions',
                'shewhart:cw-in-control:with-exclusions',
-               '[2023-04-10 00:29:00,2023-04-11 00:00:00)',
+               '[2023-09-10 00:29:00,2023-09-11 00:00:00)',
                'control',
                array [
                  array [1, 2, 3],
@@ -242,7 +242,7 @@ values ((select id from spc_data.observed_systems where name = 'EWMA Test System
 select spc_data.bulk_insert_example_data_ewma(
                'ewma:in-control',
                'ewma:in-control',
-               '[2023-04-12 00:00:00,2023-04-12 00:15:00)',
+               '[2023-09-12 00:00:00,2023-09-12 00:15:00)',
                array [
                  array [9], array [10], array [11],
                  array [9], array [10], array [11],
@@ -262,7 +262,7 @@ select spc_data.bulk_insert_example_data_ewma(
 select spc_data.bulk_insert_example_data_ewma(
                'ewma:out-control-upper',
                'ewma:lew-out-control-upper',
-               '[2023-04-19 00:00:00,Infinity)',
+               '[2023-09-19 00:00:00,Infinity)',
                array [
                  -- Mean = 0, Std dev = 1
                  array [-0.226503044], array [0.515544019], array [-1.299524220], array [0.615632103], array [-0.413264723],
@@ -300,7 +300,7 @@ select spc_data.bulk_insert_example_data_ewma(
 select spc_data.bulk_insert_example_data_ewma(
                'ewma:out-control-lower',
                'ewma:lew-out-control-lower',
-               '[2023-04-19 00:00:00,Infinity)',
+               '[2023-09-19 00:00:00,Infinity)',
                array [
                  -- Mean = 0, Std dev = 1
                  array [-0.226503044], array [0.515544019], array [-1.299524220], array [0.615632103], array [-0.413264723],

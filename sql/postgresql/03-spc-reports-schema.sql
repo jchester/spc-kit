@@ -315,6 +315,7 @@ create view spc_reports.xmr_mr_rules as
        , center_line
        , moving_range as controlled_value
        , upper_limit
+       , 0 as lower_limit -- this is always the case
        , case
            when moving_range > upper_limit then 'out_of_control_upper'
            else 'in_control'

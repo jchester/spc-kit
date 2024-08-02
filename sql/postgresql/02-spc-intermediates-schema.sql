@@ -456,7 +456,7 @@ create view spc_intermediates.individual_measurement_statistics_ewma as
 -- This is the core of the EWMA calculation process.
 --
 -- Upper limit is based on Montgomery formula 9.25, lower limit on formula 9.26.
-create function spc_intermediates.ewma_individual_measurements(p_weighting decimal)
+create function spc_intermediates.ewma_individual_measurements(p_weighting decimal, p_limits_width decimal)
 returns table (
   window_id                     bigint,
   sample_id                     bigint,
@@ -487,11 +487,11 @@ begin
          , wms.measured_value
          , spc_intermediates.ewma(wms.measured_value, p_weighting, mean_measured_value)
            over (partition by wms.window_id order by wms.measurement_id)                       as ewma
-         , mean_measured_value + (2.7 * std_dev_measured_value) *
+         , mean_measured_value + (p_limits_width * std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as upper_limit
          , mean_measured_value                                                                       as center_line
-         , mean_measured_value - (2.7 * std_dev_measured_value) *
+         , mean_measured_value - (p_limits_width * std_dev_measured_value) *
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
     from spc_intermediates.individual_measurements_ewma wms

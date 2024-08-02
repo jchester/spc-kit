@@ -351,4 +351,4 @@ create view spc_reports.ewma_rules as
              when ewma < lower_limit then 'out_of_control_lower'
              else 'in_control'
          end  as control_status
-  from  spc_intermediates.ewma_individual_measurements(0.1) eim;
+  from  spc_intermediates.ewma_individual_measurements(0.1, 2.7) eim;

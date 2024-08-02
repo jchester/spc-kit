@@ -368,5 +368,9 @@ $$
              when ewma < lower_limit then 'out_of_control_lower'
              else 'in_control'
          end  as control_status
-  from  spc_intermediates.ewma_individual_measurements(p_weighting, p_limits_width,p_target_mean) eim;
+  from  spc_intermediates.ewma_individual_measurements(
+                p_weighting,
+                p_limits_width,
+                p_target_mean
+        ) eim;
 $$

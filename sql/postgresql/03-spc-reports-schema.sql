@@ -348,10 +348,13 @@ create view spc_reports.xmr_mr_rules as
 --   Montgomery says that as λ becomes smaller, limits should also become smaller.
 -- * `p_target_mean` represents a fixed, predefined target value, which will be input into the first iteration of the
 --   EWMA calculation. If not provided this value will be derived from the mean value of the limit establishment window.
+-- * `p_target_std_dev` represents a fixed, predefined target value for standard deviation. If not provided this value
+--   will be derived from the standard deviation of the limit establishment window.
 create function spc_reports.ewma_rules(
     p_weighting decimal,
     p_limits_width decimal default 3.0,
-    p_target_mean decimal default null
+    p_target_mean decimal default null,
+    p_target_std_dev decimal default null
 ) returns table (
     sample_id bigint,
     window_id bigint,
@@ -384,6 +387,7 @@ $$
   from  spc_intermediates.ewma_individual_measurements(
                 p_weighting,
                 p_limits_width,
-                p_target_mean
+                p_target_mean,
+                p_target_std_dev
         ) eim;
 $$

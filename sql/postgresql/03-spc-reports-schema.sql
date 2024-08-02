@@ -342,7 +342,8 @@ create view spc_reports.ewma_rules as
        , eim.period
        , eim.performed_at
        , center_line
-       , ewma as controlled_value
+       , measured_value as controlled_value
+       , ewma as exponentially_weighted_moving_average
        , lower_limit
        , upper_limit
        , case

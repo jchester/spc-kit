@@ -335,9 +335,22 @@ create view spc_reports.xmr_mr_rules as
 --
 -- Because limits are per-measurement, there is no meaningful distinction between limit establishment and control
 -- windows in EWMA. Just use control windows.
+--
+-- The rule is parameterized because EWMA is configurable (unlike the fixed values used in Shewhart rules).
+--
+-- * `p_weighting` represents how rapidly older values are weighted into insignificance. High values cause faster decay,
+--   meaning that the EWMA is more reactive to new values. Low values retain older values longer, reducing sensitivity
+--   to noise. In literature this parameter is called λ (typical of SPC literature) or α (typical of data science /
+--   forecasting literature). Acceptable values are 0.0 to 1.0. According to Montgomery (§9.2.2) typical values chosen
+--   for λ are between 0.05 and 0.25.
+-- * `p_limits_width` represents the limit widths. In other Shewhart charts this is typically set to 3 and that is the
+--   default for this function. EWMA limits are adjustable to allow for sensitivity to small shifts to be configured.
+--   Montgomery says that as λ becomes smaller, limits should also become smaller.
+-- * `p_target_mean` represents a fixed, predefined target value, which will be input into the first iteration of the
+--   EWMA calculation. If not provided this value will be derived from the mean value of the limit establishment window.
 create function spc_reports.ewma_rules(
     p_weighting decimal,
-    p_limits_width decimal,
+    p_limits_width decimal default 3.0,
     p_target_mean decimal default null
 ) returns table (
     sample_id bigint,

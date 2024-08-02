@@ -335,7 +335,24 @@ create view spc_reports.xmr_mr_rules as
 --
 -- Because limits are per-measurement, there is no meaningful distinction between limit establishment and control
 -- windows in EWMA. Just use control windows.
-create view spc_reports.ewma_rules as
+create function spc_reports.ewma_rules(
+    p_weighting decimal,
+    p_limits_width decimal,
+    p_target_mean decimal default null
+) returns table (
+    sample_id bigint,
+    window_id bigint,
+    instrument_id bigint,
+    period tstzrange,
+    performed_at timestamptz,
+    center_line decimal,
+    controlled_value decimal,
+    exponentially_weighted_moving_average decimal,
+    lower_limit decimal,
+    upper_limit decimal,
+    control_status text
+) language sql as
+$$
   select eim.sample_id
        , window_id
        , eim.instrument_id
@@ -351,4 +368,5 @@ create view spc_reports.ewma_rules as
              when ewma < lower_limit then 'out_of_control_lower'
              else 'in_control'
          end  as control_status
-  from  spc_intermediates.ewma_individual_measurements(0.1, 2.7) eim;
+  from  spc_intermediates.ewma_individual_measurements(p_weighting, p_limits_width,p_target_mean) eim;
+$$

@@ -176,6 +176,7 @@ where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.x_bar_r_rules
        where control_status != 'in_control'
+       and instrument_id = 5
        order by lower(period) desc
        limit 2);
 
@@ -186,6 +187,7 @@ where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.r_rules
        where control_status != 'in_control'
+       and instrument_id = 5
        order by lower(period) desc
        limit 2);
 
@@ -196,6 +198,7 @@ where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.x_bar_s_rules
        where control_status != 'in_control'
+       and instrument_id = 5
        order by lower(period) desc
        limit 2);
 
@@ -206,6 +209,7 @@ where id in
       (select sample_id as reason_for_exclusion
        from spc_reports.s_rules
        where control_status != 'in_control'
+       and instrument_id = 5
        order by lower(period) desc
        limit 2);
 

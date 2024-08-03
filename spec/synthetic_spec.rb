@@ -180,7 +180,7 @@ class SyntheticSpec < Minitest::Spec
 
         it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
 
-        it_has_status_counts_of(in_control: 28, out_of_control_upper: 1, out_of_control_lower: 1)
+        it_has_status_counts_of(in_control: 32, out_of_control_upper: 1, out_of_control_lower: 1)
 
         it_is_out_of_control_at(upper_samples: [85], lower_samples: [86])
       end
@@ -192,7 +192,7 @@ class SyntheticSpec < Minitest::Spec
 
         it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
 
-        it_has_status_counts_of(in_control: 28, out_of_control_upper: 1, out_of_control_lower: 1)
+        it_has_status_counts_of(in_control: 32, out_of_control_upper: 1, out_of_control_lower: 1)
 
         it_is_out_of_control_at(upper_samples: [87], lower_samples: [88])
       end
@@ -204,7 +204,7 @@ class SyntheticSpec < Minitest::Spec
 
         it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
 
-        it_has_status_counts_of(in_control: 28, out_of_control_upper: 1, out_of_control_lower: 1)
+        it_has_status_counts_of(in_control: 32, out_of_control_upper: 1, out_of_control_lower: 1)
 
         it_is_out_of_control_at(upper_samples: [85], lower_samples: [86])
       end
@@ -216,7 +216,7 @@ class SyntheticSpec < Minitest::Spec
 
         it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
 
-        it_has_status_counts_of(in_control: 28, out_of_control_upper: 1, out_of_control_lower: 1)
+        it_has_status_counts_of(in_control: 32, out_of_control_upper: 1, out_of_control_lower: 1)
 
         it_is_out_of_control_at(upper_samples: [87], lower_samples: [88])
       end

@@ -75,9 +75,11 @@ class SyntheticSpec < Minitest::Spec
 
   describe "Shewhart charts" do
     describe "Limit in-control / Control in-control" do
+      instrument_id = 1
+
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id: 1)
+          DB[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 4.046, lower: -0.046)
@@ -87,7 +89,7 @@ class SyntheticSpec < Minitest::Spec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id: 1)
+          DB[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 5.148, lower: 0)
@@ -97,7 +99,7 @@ class SyntheticSpec < Minitest::Spec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id: 1)
+          DB[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 3.954, lower: 0.046)
@@ -107,7 +109,7 @@ class SyntheticSpec < Minitest::Spec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id: 1)
+          DB[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 1, upper: 2.568, lower: 0)

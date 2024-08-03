@@ -1,0 +1,8 @@
+1,1,shewhart:lew-in-control:cw-in-control
+2,1,shewhart:lew-in-control:cw-out-control
+3,1,shewhart:lew-out-control:cw-in-control
+4,1,shewhart:lew-out-control:cw-out-control
+5,1,shewhart:lew-out-control:cw-in-control:with-exclusions
+6,2,ewma:in-control
+7,2,ewma:out-control-upper
+8,2,ewma:out-control-lower

@@ -1,0 +1,13 @@
+1,1,limit_establishment,"[""2023-09-01 00:00:00+00"",""2023-09-01 00:25:00+00"")",shewhart:lew-in-control
+2,1,control,"[""2023-09-01 00:25:00+00"",""2023-09-02 00:00:00+00"")",shewhart:cw-in-control
+3,2,limit_establishment,"[""2023-09-03 00:00:00+00"",""2023-09-03 00:25:00+00"")",shewhart:lew-in-control
+4,2,control,"[""2023-09-03 00:25:00+00"",""2023-09-04 00:00:00+00"")",shewhart:cw-out-control
+5,3,limit_establishment,"[""2023-09-06 00:00:00+00"",""2023-09-06 00:29:00+00"")",lew-out-control
+6,3,control,"[""2023-09-06 00:29:00+00"",""2023-09-07 00:00:00+00"")",shewhart:cw-in-control
+7,4,limit_establishment,"[""2023-09-08 00:00:00+00"",""2023-09-08 00:29:00+00"")",lew-out-control
+8,4,control,"[""2023-09-08 00:29:00+00"",""2023-09-09 00:00:00+00"")",shewhart:cw-out-control
+9,5,limit_establishment,"[""2023-09-10 00:00:00+00"",""2023-09-10 00:29:00+00"")",shewhart:lew-out-control:with-exclusions
+10,5,control,"[""2023-09-10 00:29:00+00"",""2023-09-11 00:00:00+00"")",shewhart:cw-in-control:with-exclusions
+11,6,control,"[""2023-09-12 00:00:00+00"",""2023-09-12 00:15:00+00"")",ewma:in-control
+12,7,control,"[""2023-09-19 00:00:00+00"",infinity)",ewma:lew-out-control-upper
+13,8,control,"[""2023-09-19 00:00:00+00"",infinity)",ewma:lew-out-control-lower

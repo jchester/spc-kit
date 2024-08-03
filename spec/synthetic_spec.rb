@@ -318,4 +318,39 @@ class SyntheticSpec < Minitest::Spec
       end
     end
   end
+
+  describe "EWMA charts" do
+    describe "in-control / computed mean & std dev" do
+      instrument_id = 6
+
+      subject do
+        DB.from(
+          Sequel.lit('spc_reports.ewma_rules(?, ?)',
+                     0.1, # weighting
+                     3 # limits
+          )
+        ).where(instrument_id:).order_by(:sample_id)
+      end
+
+      it_has_params(mean: 10, upper: 10.253, lower: 9.746)
+
+      it_has_status_counts_of(in_control: 15, out_of_control_upper: 0, out_of_control_lower: 0)
+
+      it "has the correct EWMA values" do
+        # @formatter:off
+        ewma_values = [
+          9.9000,  9.9100,  10.0190, 9.9171,  9.9253,
+          10.0328, 9.9295,  9.9366,  10.0429, 9.9386,
+          9.94478, 10.0503, 9.9452,  9.9507,  10.0556
+        ]
+        # @formatter:on
+
+        paired_array = ewma_values.zip(subject.select_map(:exponentially_weighted_moving_average))
+
+        paired_array.each do |value1, value2|
+          assert_in_delta value1, value2
+        end
+      end
+    end
+  end
 end

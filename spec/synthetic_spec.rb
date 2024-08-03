@@ -221,5 +221,57 @@ class SyntheticSpec < Minitest::Spec
         it_is_out_of_control_at(upper_samples: [87], lower_samples: [88])
       end
     end
+
+    describe "Limit out-of-control / Control out-of-control" do
+      instrument_id = 4
+
+      describe "x̄R rules" do
+        subject do
+          DB[:x_bar_r_rules].where(instrument_id:)
+        end
+
+        it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
+
+        it_has_status_counts_of(in_control: 29, out_of_control_upper: 2, out_of_control_lower: 2)
+
+        it_is_out_of_control_at(upper_samples: [119, 123], lower_samples: [120, 124])
+      end
+
+      describe "R̄ rules" do
+        subject do
+          DB[:r_rules].where(instrument_id:)
+        end
+
+        it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
+
+        it_has_status_counts_of(in_control: 29, out_of_control_upper: 2, out_of_control_lower: 2)
+
+        it_is_out_of_control_at(upper_samples: [121, 125], lower_samples: [122, 126])
+      end
+
+      describe "x̄s rules" do
+        subject do
+          DB[:x_bar_s_rules].where(instrument_id:)
+        end
+
+        it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
+
+        it_has_status_counts_of(in_control: 29, out_of_control_upper: 2, out_of_control_lower: 2)
+
+        it_is_out_of_control_at(upper_samples: [119, 123], lower_samples: [120, 124])
+      end
+
+      describe "s̄ rules" do
+        subject do
+          DB[:s_rules].where(instrument_id:)
+        end
+
+        it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
+
+        it_has_status_counts_of(in_control: 29, out_of_control_upper: 2, out_of_control_lower: 2)
+
+        it_is_out_of_control_at(upper_samples: [121,125], lower_samples: [122, 126])
+      end
+    end
   end
 end

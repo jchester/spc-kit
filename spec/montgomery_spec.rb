@@ -186,4 +186,72 @@ class MontgomerySpec < Minitest::Spec
       it_is_out_of_control_at(upper_samples: [165], lower_samples: [])
     end
   end
+
+  describe "Normal Distribution With Shifting Mean" do
+    describe "EWMA with fixed targets" do
+      subject do
+        DB.from(
+          Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',
+                     0.1, # weighting
+                     2.7, # limits
+                     10, # target mean
+                     1 # target std dev
+          )
+        ).where(instrument_id: 6).order_by(:sample_id)
+      end
+
+      it_has_params(mean: 10, upper: 10.27, lower: 9.73)
+
+      it_has_status_counts_of(in_control: 28, out_of_control_upper: 2, out_of_control_lower: 0)
+
+      it_is_out_of_control_at(upper_samples: [195, 196], lower_samples: [])
+
+      it "has the correct EWMA values" do
+        # @formatter:off
+        ewma_values = [
+          9.945,    9.7495, 9.70355,  9.8992, 10.1253, 10.1307, 9.92167, 10.0755, 9.98796, 10.0232,
+          9.92384, 10.0785, 10.1216, 10.0495, 10.0525, 9.98426, 10.0478,  10.074, 9.91864, 10.0108,
+          10.0997, 10.0227, 10.2495, 10.3745, 10.3971, 10.4654, 10.4568, 10.5731, 10.6468, 10.6341
+        ]
+        # @formatter:on
+
+        paired_array = ewma_values.zip(subject.select_map(:exponentially_weighted_moving_average))
+
+        paired_array.each do |value1, value2|
+          assert_in_delta value1, value2, 0.0001
+        end
+      end
+    end
+
+    describe "EWMA with computed targets" do
+      subject do
+        DB.from(
+          Sequel.lit('spc_reports.ewma_rules(?, ?)',
+                     0.1, # weighting
+                     2.7 # limits
+          )
+        ).where(instrument_id: 6).order_by(:sample_id)
+      end
+
+      it_has_params(mean: 10.315, upper: 10.626, lower: 10.004)
+
+      it_has_status_counts_of(in_control: 30, out_of_control_upper: 0, out_of_control_lower: 0)
+
+      it "has the correct EWMA values" do
+        # @formatter:off
+        ewma_values = [
+          10.2285, 10.0046, 9.93318, 10.1058, 10.3112, 10.2981, 10.0723, 10.2111, 10.1099, 10.1329,
+          10.0226, 10.1674, 10.2016, 10.1215, 10.1173, 10.0426, 10.1003, 10.1213, 9.96119, 10.0490,
+          10.1341, 10.0537, 10.2773, 10.3996, 10.4196, 10.4857, 10.4751, 10.5896, 10.6616, 10.6474
+        ]
+        # @formatter:on
+
+        paired_array = ewma_values.zip(subject.select_map(:exponentially_weighted_moving_average))
+
+        paired_array.each do |value1, value2|
+          assert_in_delta value1, value2, 0.0001
+        end
+      end
+    end
+  end
 end

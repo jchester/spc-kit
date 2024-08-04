@@ -8,7 +8,8 @@ DB = Sequel.connect(
   port: 5432,
   database: 'spc',
   search_path: %w[spc_data spc_reports],
-  logger: Logger.new('db.log', level: Logger::DEBUG)
+  logger: Logger.new('db.log', level: Logger::DEBUG),
+  max_connections: 20
 )
 
 class SpcSpec < Minitest::Spec

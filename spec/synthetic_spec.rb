@@ -4,9 +4,7 @@ require 'logger'
 require_relative 'spc_spec'
 
 class SyntheticSpec < SpcSpec
-  before do
-    @db.rollback_on_exit(savepoint: true)
-
+  before(:all) do
     @db.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/observed_systems.csv"))
     @db.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/instruments.csv"))
     @db.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/samples.csv"))

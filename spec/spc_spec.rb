@@ -1,18 +1,35 @@
 require 'minitest/autorun'
+require 'minitest/hooks/default'
 require 'sequel'
 require 'logger'
+require 'testcontainers/postgres'
 
 class SpcSpec < Minitest::Spec
-  def run(*args, &block)
+  before(:all) do
+    @postgres_container = Testcontainers::PostgresContainer.new
+    @postgres_container.start
+
     @db = Sequel.connect(
       adapter: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      database: 'spc',
+      host: @postgres_container.host,
+      port: @postgres_container.first_mapped_port,
+      username: 'test',
+      password: 'test',
+      database: 'test',
       search_path: %w[spc_data spc_reports],
       logger: Logger.new('db.log', level: Logger::DEBUG)
     )
-    @db.transaction(rollback: :always, auto_savepoint: true) { super }
+
+    @db.transaction(rollback: :always, auto_savepoint: true) {  }
+
+    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/01-data-schema.sql"))
+    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/02-spc-intermediates-schema.sql"))
+    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/03-spc-reports-schema.sql"))
+  end
+
+  after(:all) do
+    @postgres_container.stop
+    @postgres_container.delete
   end
 
   def self.it_has_params(mean:, upper:, lower:)

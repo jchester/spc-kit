@@ -2,18 +2,17 @@ require 'minitest/autorun'
 require 'sequel'
 require 'logger'
 
-DB = Sequel.connect(
-  adapter: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  database: 'spc',
-  search_path: %w[spc_data spc_reports],
-  logger: Logger.new('db.log', level: Logger::DEBUG)
-)
-
 class SpcSpec < Minitest::Spec
   def run(*args, &block)
-    DB.transaction(rollback: :always, auto_savepoint: true) { super }
+    @db = Sequel.connect(
+      adapter: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'spc',
+      search_path: %w[spc_data spc_reports],
+      logger: Logger.new('db.log', level: Logger::DEBUG)
+    )
+    @db.transaction(rollback: :always, auto_savepoint: true) { super }
   end
 
   def self.it_has_params(mean:, upper:, lower:)

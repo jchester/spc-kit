@@ -5,22 +5,22 @@ require_relative 'spc_spec'
 
 class MontgomerySpec < SpcSpec
   before do
-    DB.rollback_on_exit(savepoint: true)
+    @db.rollback_on_exit(savepoint: true)
 
-    DB.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/observed_systems.csv"))
-    DB.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/instruments.csv"))
-    DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))
-    DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/measurements.csv"))
-    DB.copy_into(:whole_unit_conformance_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/whole_unit_conformance_inspections.csv"))
-    DB.copy_into(:per_unit_non_conformities_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/per_unit_non_conformities_inspections.csv"))
-    DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
-    DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
+    @db.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/observed_systems.csv"))
+    @db.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/instruments.csv"))
+    @db.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))
+    @db.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/measurements.csv"))
+    @db.copy_into(:whole_unit_conformance_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/whole_unit_conformance_inspections.csv"))
+    @db.copy_into(:per_unit_non_conformities_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/per_unit_non_conformities_inspections.csv"))
+    @db.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
+    @db.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
   end
 
   describe "Flow Width example" do
     describe "x̄R rules" do
       subject do
-        DB[:x_bar_r_rules].where(instrument_id: 1)
+        @db[:x_bar_r_rules].where(instrument_id: 1)
       end
 
       it_has_params(mean: 1.506, upper: 1.693, lower: 1.318)
@@ -32,7 +32,7 @@ class MontgomerySpec < SpcSpec
 
     describe "R̄ rules" do
       subject do
-        DB[:r_rules].where(instrument_id: 1)
+        @db[:r_rules].where(instrument_id: 1)
       end
 
       it_has_params(mean: 0.32521, upper: 0.68749, lower: 0)
@@ -44,7 +44,7 @@ class MontgomerySpec < SpcSpec
   describe "Engine Piston Diameter example" do
     describe "x̄s rules" do
       subject do
-        DB[:x_bar_s_rules].where(instrument_id: 2)
+        @db[:x_bar_s_rules].where(instrument_id: 2)
       end
 
       it_has_params(mean: 74.001, upper: 74.014, lower: 73.988)
@@ -54,7 +54,7 @@ class MontgomerySpec < SpcSpec
 
     describe "s̄ rules" do
       subject do
-        DB[:s_rules].where(instrument_id: 2)
+        @db[:s_rules].where(instrument_id: 2)
       end
 
       it_has_params(mean: 0.0094, upper: 0.0196, lower: 0)
@@ -66,7 +66,7 @@ class MontgomerySpec < SpcSpec
   describe "Orange Juice Can Inspection" do
     describe "p non-conformant rules" do
       subject do
-        DB[:p_non_conformant_rules].where(instrument_id: 3)
+        @db[:p_non_conformant_rules].where(instrument_id: 3)
       end
 
       it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
@@ -78,7 +78,7 @@ class MontgomerySpec < SpcSpec
 
     describe "np non-conformant rules" do
       subject do
-        DB[:np_non_conformant_rules].where(instrument_id: 3)
+        @db[:np_non_conformant_rules].where(instrument_id: 3)
       end
 
       it_has_params(mean: 11.565, upper: 20.510, lower: 2.620)
@@ -92,7 +92,7 @@ class MontgomerySpec < SpcSpec
   describe "Printed Circuit Boards" do
     describe "c rules" do
       subject do
-        DB[:c_rules].where(instrument_id: 4)
+        @db[:c_rules].where(instrument_id: 4)
       end
 
       it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
@@ -106,7 +106,7 @@ class MontgomerySpec < SpcSpec
   describe "Mortgage Loan Cost" do
     describe "XmR X rules" do
       subject do
-        DB[:xmr_x_rules].where(instrument_id: 5)
+        @db[:xmr_x_rules].where(instrument_id: 5)
       end
 
       it_has_params(mean: 300.5, upper: 321.22, lower: 279.78)
@@ -118,7 +118,7 @@ class MontgomerySpec < SpcSpec
 
     describe "XmR MR rules" do
       subject do
-        DB[:xmr_mr_rules].where(instrument_id: 5)
+        @db[:xmr_mr_rules].where(instrument_id: 5)
       end
 
       it_has_params(mean: 7.79, upper: 25.45, lower: 0)
@@ -132,7 +132,7 @@ class MontgomerySpec < SpcSpec
   describe "Normal Distribution With Shifting Mean" do
     describe "EWMA with fixed targets" do
       subject do
-        DB.from(
+        @db.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',
                      0.1, # weighting
                      2.7, # limits
@@ -159,7 +159,7 @@ class MontgomerySpec < SpcSpec
 
     describe "EWMA with computed targets" do
       subject do
-        DB.from(
+        @db.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?)',
                      0.1, # weighting
                      2.7 # limits

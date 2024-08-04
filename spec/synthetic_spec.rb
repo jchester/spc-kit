@@ -5,14 +5,14 @@ require_relative 'spc_spec'
 
 class SyntheticSpec < SpcSpec
   before do
-    DB.rollback_on_exit(savepoint: true)
+    @db.rollback_on_exit(savepoint: true)
 
-    DB.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/observed_systems.csv"))
-    DB.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/instruments.csv"))
-    DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/samples.csv"))
-    DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/measurements.csv"))
-    DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/windows.csv"))
-    DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/window_relationships.csv"))
+    @db.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/observed_systems.csv"))
+    @db.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/instruments.csv"))
+    @db.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/samples.csv"))
+    @db.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/measurements.csv"))
+    @db.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/windows.csv"))
+    @db.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/window_relationships.csv"))
   end
 
   describe "Shewhart charts" do
@@ -21,7 +21,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          @db[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 4.046, lower: -0.046)
@@ -31,7 +31,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          @db[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 5.148, lower: 0)
@@ -41,7 +41,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          @db[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2, upper: 3.954, lower: 0.046)
@@ -51,7 +51,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          @db[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 1, upper: 2.568, lower: 0)
@@ -65,7 +65,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          @db[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 4, upper: 6.514, lower: 1.486)
@@ -77,7 +77,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          @db[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 6, upper: 11.544, lower: 0.456)
@@ -89,7 +89,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          @db[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 4, upper: 6.553, lower: 1.446)
@@ -101,7 +101,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          @db[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2.16, upper: 4.066, lower: 0.255)
@@ -117,7 +117,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          @db[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
@@ -129,7 +129,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          @db[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
@@ -141,7 +141,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          @db[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
@@ -153,7 +153,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          @db[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
@@ -169,7 +169,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          @db[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
@@ -181,7 +181,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          @db[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
@@ -193,7 +193,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          @db[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
@@ -205,7 +205,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          @db[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
@@ -221,7 +221,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          @db[:x_bar_r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 4, upper: 6.514, lower: 1.486)
@@ -231,7 +231,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          @db[:r_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 6, upper: 11.544, lower: 0.456)
@@ -241,7 +241,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          @db[:x_bar_s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 4, upper: 6.553, lower: 1.447)
@@ -251,7 +251,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          @db[:s_rules].where(instrument_id:)
         end
 
         it_has_params(mean: 2.160, upper: 4.066, lower: 0.255)
@@ -266,7 +266,7 @@ class SyntheticSpec < SpcSpec
       instrument_id = 6
 
       subject do
-        DB.from(
+        @db.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?)',
                      0.1, # weighting
                      3 # limits
@@ -307,7 +307,7 @@ class SyntheticSpec < SpcSpec
       instrument_id = 7
 
       subject do
-        DB.from(
+        @db.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',
                      0.1, # weighting
                      3, # limits
@@ -348,7 +348,7 @@ class SyntheticSpec < SpcSpec
       instrument_id = 8
 
       subject do
-        DB.from(
+        @db.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',
                      0.1, # weighting
                      3, # limits

@@ -5,6 +5,8 @@ require_relative 'spc_spec'
 
 class MontgomerySpec < SpcSpec
   before(:all) do
+    setup_database
+
     @db.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/observed_systems.csv"))
     @db.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/instruments.csv"))
     @db.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))
@@ -13,6 +15,10 @@ class MontgomerySpec < SpcSpec
     @db.copy_into(:per_unit_non_conformities_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/per_unit_non_conformities_inspections.csv"))
     @db.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
     @db.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
+  end
+
+  after(:all) do
+    teardown_database
   end
 
   describe "Flow Width example" do

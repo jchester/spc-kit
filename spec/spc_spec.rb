@@ -5,7 +5,9 @@ require 'logger'
 require 'testcontainers/postgres'
 
 class SpcSpec < Minitest::Spec
-  before(:all) do
+  include Minitest::Hooks
+
+  def setup_database
     @postgres_container = Testcontainers::PostgresContainer.new
     @postgres_container.start
 
@@ -17,17 +19,18 @@ class SpcSpec < Minitest::Spec
       password: 'test',
       database: 'test',
       search_path: %w[spc_data spc_reports],
-      logger: Logger.new('db.log', level: Logger::DEBUG)
+      logger: Logger.new('db.log', level: Logger::DEBUG),
+      connect_sqls: [
+        File.read("#{Dir.pwd}/../sql/postgresql/01-data-schema.sql"),
+        File.read("#{Dir.pwd}/../sql/postgresql/02-spc-intermediates-schema.sql"),
+        File.read("#{Dir.pwd}/../sql/postgresql/03-spc-reports-schema.sql")
+      ]
     )
 
     @db.transaction(rollback: :always, auto_savepoint: true) {  }
-
-    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/01-data-schema.sql"))
-    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/02-spc-intermediates-schema.sql"))
-    @db.run(File.read("#{Dir.pwd}/../sql/postgresql/03-spc-reports-schema.sql"))
   end
 
-  after(:all) do
+  def teardown_database
     @postgres_container.stop
     @postgres_container.delete
   end

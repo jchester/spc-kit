@@ -403,20 +403,21 @@ create function spc_intermediates.ewma_step(
   , measurement        decimal
   , weighting          decimal
   , target_mean        decimal
+  , scale              integer
 ) returns decimal immutable language plpgsql as
 $$
 begin
   if last_avg is null then
-    return weighting * measurement + (1.0 - weighting) * target_mean;
+    return trunc((weighting * measurement + (1.0 - weighting) * target_mean), scale);
   else
-    return weighting * measurement + (1.0 - weighting) * last_avg;
+    return trunc((weighting * measurement + (1.0 - weighting) * last_avg), scale);
   end if;
 end;
 $$;
 
 -- The `ewma` aggregate is what wraps up `ewma_step` into an iterative loop. This means it can be used as an aggregate
 -- in the same way as inbuilt aggregates like `sum` or `avg`.
-create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal) (
+create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, target_mean decimal, scale integer) (
   sfunc = spc_intermediates.ewma_step,
   stype = decimal
 );
@@ -460,7 +461,8 @@ create function spc_intermediates.ewma_individual_measurements(
     p_weighting decimal,
     p_limits_width decimal,
     p_target_mean decimal default null,
-    p_target_std_dev decimal default null
+    p_target_std_dev decimal default null,
+    scale integer default 8
 ) returns table (
   window_id                     bigint,
   sample_id                     bigint,
@@ -489,7 +491,7 @@ begin
          , wms.period
          , wms.performed_at
          , wms.measured_value
-         , spc_intermediates.ewma(wms.measured_value, p_weighting, coalesce(p_target_mean, mean_measured_value))
+         , spc_intermediates.ewma(wms.measured_value, p_weighting, coalesce(p_target_mean, mean_measured_value), scale)
            over (partition by wms.window_id order by wms.measurement_id)                       as ewma
          , coalesce(p_target_mean, mean_measured_value) + (p_limits_width * coalesce(p_target_std_dev, std_dev_measured_value)) *
                            sqrt(((p_weighting / (2 - p_weighting)) *

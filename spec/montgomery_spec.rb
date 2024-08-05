@@ -1,6 +1,3 @@
-require 'minitest/autorun'
-require 'sequel'
-require 'logger'
 require_relative 'spc_spec'
 
 class MontgomerySpec < SpcSpec

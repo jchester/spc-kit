@@ -398,6 +398,7 @@ create view spc_intermediates.xmr_mr_limits as
 --   to respond to shifts but is less sensitive to noise. In literature this parameter is called λ (typical of SPC
 --   literature) or α (typical of data science / forecasting literature).
 -- * `target_mean` is the declared mean of the data.
+-- * `scale` sets the maximum number of numbers after the decimal point that the calculation will make.
 create function spc_intermediates.ewma_step(
     last_avg           decimal
   , measurement        decimal

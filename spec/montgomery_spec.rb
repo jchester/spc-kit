@@ -2,8 +2,6 @@ require_relative 'spc_spec'
 
 class MontgomerySpec < SpcSpec
   before do
-    DB.rollback_on_exit(savepoint: true)
-
     DB.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/observed_systems.csv"))
     DB.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/instruments.csv"))
     DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))

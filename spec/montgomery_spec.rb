@@ -109,7 +109,7 @@ class MontgomerySpec < SpcSpec
   describe "Mortgage Loan Cost" do
     instrument_id = 5
 
-      describe "XmR X rules" do
+    describe "XmR X rules" do
       subject do
         DB[:xmr_x_rules].where(instrument_id:)
       end
@@ -137,7 +137,7 @@ class MontgomerySpec < SpcSpec
   describe "Normal Distribution With Shifting Mean" do
     instrument_id = 6
 
-      describe "EWMA with fixed targets" do
+    describe "EWMA with fixed targets" do
       subject do
         DB.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',

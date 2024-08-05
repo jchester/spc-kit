@@ -13,9 +13,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Flow Width example" do
+    instrument_id = 1
+
     describe "x̄R rules" do
       subject do
-        DB[:x_bar_r_rules].where(instrument_id: 1)
+        DB[:x_bar_r_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 1.506, upper: 1.693, lower: 1.318)
@@ -27,7 +29,7 @@ class MontgomerySpec < SpcSpec
 
     describe "R̄ rules" do
       subject do
-        DB[:r_rules].where(instrument_id: 1)
+        DB[:r_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 0.32521, upper: 0.68749, lower: 0)
@@ -37,9 +39,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Engine Piston Diameter example" do
+    instrument_id = 2
+
     describe "x̄s rules" do
       subject do
-        DB[:x_bar_s_rules].where(instrument_id: 2)
+        DB[:x_bar_s_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 74.001, upper: 74.014, lower: 73.988)
@@ -49,7 +53,7 @@ class MontgomerySpec < SpcSpec
 
     describe "s̄ rules" do
       subject do
-        DB[:s_rules].where(instrument_id: 2)
+        DB[:s_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 0.0094, upper: 0.0196, lower: 0)
@@ -59,9 +63,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Orange Juice Can Inspection" do
+    instrument_id = 3
+
     describe "p non-conformant rules" do
       subject do
-        DB[:p_non_conformant_rules].where(instrument_id: 3)
+        DB[:p_non_conformant_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
@@ -73,7 +79,7 @@ class MontgomerySpec < SpcSpec
 
     describe "np non-conformant rules" do
       subject do
-        DB[:np_non_conformant_rules].where(instrument_id: 3)
+        DB[:np_non_conformant_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 11.565, upper: 20.510, lower: 2.620)
@@ -85,9 +91,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Printed Circuit Boards" do
+    instrument_id = 4
+
     describe "c rules" do
       subject do
-        DB[:c_rules].where(instrument_id: 4)
+        DB[:c_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
@@ -99,9 +107,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Mortgage Loan Cost" do
-    describe "XmR X rules" do
+    instrument_id = 5
+
+      describe "XmR X rules" do
       subject do
-        DB[:xmr_x_rules].where(instrument_id: 5)
+        DB[:xmr_x_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 300.5, upper: 321.22, lower: 279.78)
@@ -113,7 +123,7 @@ class MontgomerySpec < SpcSpec
 
     describe "XmR MR rules" do
       subject do
-        DB[:xmr_mr_rules].where(instrument_id: 5)
+        DB[:xmr_mr_rules].where(instrument_id:)
       end
 
       it_has_params(mean: 7.79, upper: 25.45, lower: 0)
@@ -125,7 +135,9 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Normal Distribution With Shifting Mean" do
-    describe "EWMA with fixed targets" do
+    instrument_id = 6
+
+      describe "EWMA with fixed targets" do
       subject do
         DB.from(
           Sequel.lit('spc_reports.ewma_rules(?, ?, ?, ?)',
@@ -134,7 +146,7 @@ class MontgomerySpec < SpcSpec
                      10, # target mean
                      1 # target std dev
           )
-        ).where(instrument_id: 6).order_by(:sample_id)
+        ).where(instrument_id:).order_by(:sample_id)
       end
 
       it_has_params(mean: 10, upper: 10.27, lower: 9.73)
@@ -159,7 +171,7 @@ class MontgomerySpec < SpcSpec
                      0.1, # weighting
                      2.7 # limits
           )
-        ).where(instrument_id: 6).order_by(:sample_id)
+        ).where(instrument_id:).order_by(:sample_id)
       end
 
       it_has_params(mean: 10.315, upper: 10.626, lower: 10.004)

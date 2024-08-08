@@ -194,7 +194,7 @@ class MontgomerySpec < SpcSpec
         ).where(instrument_id:).order_by(:sample_id)
       end
 
-      describe "Cₙ" do
+      describe "Calculating Cₙ" do
         it_has_correct_values(column: :c_n, values: [
           # @formatter:off
           -0.55,  -2.56,  -3.27,  -1.61,  0.55,

@@ -67,7 +67,8 @@ so _caveat emptor_.
   * [qicharts2](https://github.com/anhoej/qicharts2/) by Jacob Anhøj.
   * [runcharter](https://github.com/johnmackintosh/runcharter),
     [spccharter](https://github.com/johnmackintosh/spccharter) and
-    [cusumcharter](https://github.com/johnmackintosh/cusumcharter) by John MacKintosh
+    [cusumcharter](https://github.com/johnmackintosh/cusumcharter) by John MacKintosh.
+  * [NHSRplotthedots](https://github.com/nhs-r-community/NHSRplotthedots) by NHS-r-community.
 
 ## Installation
 

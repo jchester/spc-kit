@@ -52,6 +52,23 @@ Sample sizes are assumed to be equal throughout a window.
 
 Everything else. No variable sample sizes. No sensitizing rules. No u charts. No Cusum. No Hotelling T². Etc.
 
+## Alternatives
+
+SQL not your style? Not a problem.
+
+Here are some alternative packages I found with some light searching. Most of them include inbuilt plotting capability,
+unlike SPC Kit. I have chosen examples where there are tests and some activity in the past few years (not always fair,
+it is possible to "finish" an SPC package if you don't bother with exotic charts). I have not tried out these packages,
+so _caveat emptor_.
+
+* Python: [SPC](https://github.com/hviidhenrik/SPC) by Henrik Hviid Hansen.
+* Julia: [StatisticalProcessMonitoring.jl](https://github.com/DedZago/StatisticalProcessMonitoring.jl) by Daniele Zago.
+* R: a very active community. These looked most promising:
+  * [qicharts2](https://github.com/anhoej/qicharts2/) by Jacob Anhøj.
+  * [runcharter](https://github.com/johnmackintosh/runcharter),
+    [spccharter](https://github.com/johnmackintosh/spccharter) and
+    [cusumcharter](https://github.com/johnmackintosh/cusumcharter) by John MacKintosh
+
 ## Installation
 
 The SQL dialect used is unapologetically PostgreSQL, so you need that running first.

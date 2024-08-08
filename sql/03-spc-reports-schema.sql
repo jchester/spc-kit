@@ -390,4 +390,35 @@ $$
                 p_target_mean,
                 p_target_std_dev
         ) eim;
+$$;
+
+-- Cumulative Sum aka Cusum
+
+create function spc_reports.cusum_rules(
+    p_target_mean     decimal default null
+)
+returns table (
+    measurement_id  bigint,
+    sample_id       bigint,
+    window_id       bigint,
+    instrument_id   bigint,
+    measured_value  decimal,
+    error           decimal,
+    C_n             decimal
+)
+immutable language sql as
 $$
+      select m.id as measurement_id
+    , m.sample_id
+    , w.id                                                                      as window_id
+    , s.instrument_id                                                           as sample_id
+    , m.measured_value
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value)           as error
+    , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
+        over (partition by w.id order by m.id)                                  as C_n
+from spc_data.measurements m
+         join spc_data.samples s on s.id = m.sample_id
+         join spc_data.instruments i on i.id = s.instrument_id
+         join spc_data.windows w on i.id = w.instrument_id
+         join spc_intermediates.individual_measurement_statistics_ewma imse on w.id = imse.window_id;
+$$;

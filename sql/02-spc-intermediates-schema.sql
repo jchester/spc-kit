@@ -505,3 +505,6 @@ begin
     join spc_intermediates.individual_measurement_statistics_ewma imse on wms.window_id = imse.window_id;
 end;
 $$;
+
+-- Cumulative Sum, aka Cusum
+

@@ -186,5 +186,33 @@ class MontgomerySpec < SpcSpec
       ])
       # @formatter:on
     end
+
+    describe "Cusum with fixed target" do
+      subject do
+        DB.from(
+          Sequel.lit('spc_reports.cusum_rules(?)', 10) # target mean = 10
+        ).where(instrument_id:).order_by(:sample_id)
+      end
+
+      describe "Cₙ" do
+        it "has the correct Cₙ values" do
+          # @formatter:off
+          values = [
+            -0.55,  -2.56,  -3.27,  -1.61,  0.55,
+            0.73,   -1.23,  0.23,   -0.57,  -0.23,
+            -1.2,   0.27,   0.78,   0.18,   0.26,
+            -0.37,  0.25,   0.56,   -0.92,  -0.08,
+            0.82,   0.15,   2.44,   3.94,   4.54,
+            5.62,   6,      7.62,   8.93,   9.45
+          ]
+          # @formatter:on
+          paired_array = values.zip(subject.select_map(:c_n))
+
+          paired_array.each do |value1, value2|
+            assert_in_delta value1, value2
+          end
+        end
+      end
+    end
   end
 end

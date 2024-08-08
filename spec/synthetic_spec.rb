@@ -274,7 +274,7 @@ class SyntheticSpec < SpcSpec
       it_has_status_counts_of(in_control: 15, out_of_control_upper: 0, out_of_control_lower: 0)
 
       # @formatter:off
-      it_has_correct_ewma_values([
+      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
          9.9000,  9.9100,  10.0190, 9.9171,  9.9253,
          10.0328, 9.9295,  9.9366,  10.0429, 9.9386,
          9.94478, 10.0503, 9.9452,  9.9507,  10.0556
@@ -320,7 +320,7 @@ class SyntheticSpec < SpcSpec
       it_is_out_of_control_at(upper_samples: [311, 312, 313, 315], lower_samples: [])
 
       # @formatter:off
-      it_has_correct_ewma_values([
+      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
         -0.02265, 0.031169, -0.10190, -0.03014, -0.06845, -0.15743, -0.22870, -0.29335, -0.23038, -0.08910,
         -0.06474, -0.08544, 0.037422, 0.108123, -0.05295, 0.130413, 0.070408, -0.06630, -0.11573, -0.17563,
         -0.20404, -0.27729, -0.18360, -0.24396, -0.04197, -0.07127, -0.17527, -0.07431, -0.01900, -0.09254,
@@ -361,7 +361,7 @@ class SyntheticSpec < SpcSpec
       it_is_out_of_control_at(upper_samples: [], lower_samples: [450, 454, 455])
 
       # @formatter:off
-      it_has_correct_ewma_values([
+      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
         -0.02265, 0.031169, -0.10190, -0.03014, -0.06845, -0.32973, -0.22770, -0.19097, -0.20481, -0.25646,
         -0.27679, -0.34276, -0.24253, -0.29699, -0.08970, -0.06527, -0.08593, 0.036986, 0.107731, -0.05330,
         -0.08147, -0.18446, -0.08258, -0.02643, -0.09923, -0.03412, -0.05259, -0.21521, -0.10145, -0.09989,

@@ -63,9 +63,9 @@ class SpcSpec < Minitest::Spec
     end
   end
 
-  def self.it_has_correct_ewma_values(values)
-    it "has the correct EWMA values" do
-      paired_array = values.zip(subject.select_map(:exponentially_weighted_moving_average))
+  def self.it_has_correct_values(column:, values:)
+    it "has the correct values for #{column}" do
+      paired_array = values.zip(subject.select_map(column))
 
       paired_array.each do |value1, value2|
         assert_in_delta value1, value2

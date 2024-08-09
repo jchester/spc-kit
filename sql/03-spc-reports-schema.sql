@@ -411,7 +411,7 @@ $$
       select m.id as measurement_id
     , m.sample_id
     , w.id                                                                      as window_id
-    , s.instrument_id                                                           as sample_id
+    , s.instrument_id
     , m.measured_value
     , m.measured_value - coalesce(p_target_mean, mean_measured_value)           as error
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))

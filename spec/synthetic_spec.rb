@@ -280,22 +280,6 @@ class SyntheticSpec < SpcSpec
          9.94478, 10.0503, 9.9452,  9.9507,  10.0556
       ])
       # @formatter:on
-
-      it "has the correct EWMA values" do
-        # @formatter:off
-        ewma_values = [
-          9.9000,  9.9100,  10.0190, 9.9171,  9.9253,
-          10.0328, 9.9295,  9.9366,  10.0429, 9.9386,
-          9.94478, 10.0503, 9.9452,  9.9507,  10.0556
-        ]
-        # @formatter:on
-
-        paired_array = ewma_values.zip(subject.select_map(:exponentially_weighted_moving_average))
-
-        paired_array.each do |value1, value2|
-          assert_in_delta value1, value2
-        end
-      end
     end
 
     describe "out-of-control upper / target mean & std dev" do

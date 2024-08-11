@@ -420,7 +420,7 @@ $$
     , m.measured_value
     , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
     , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_allowance as deviation_plus
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_allowance as deviation_plus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_allowance as deviation_minus
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
         over (partition by w.id order by m.id)                                      as C_n
     , spc_intermediates.cusum_c_plus(m.measured_value, p_allowance, coalesce(p_target_mean, mean_measured_value))

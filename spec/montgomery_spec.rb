@@ -190,8 +190,25 @@ class MontgomerySpec < SpcSpec
     describe "Cusum with fixed target" do
       subject do
         DB.from(
-          Sequel.lit('spc_reports.cusum_rules(?)', 10) # target mean = 10
+          Sequel.lit('spc_reports.cusum_rules(?, ?)',
+                     0.5, # allowance
+                     10 # target mean
+          )
         ).where(instrument_id:).order_by(:sample_id)
+      end
+
+
+      describe "Calculating net deviation" do
+        it_has_correct_values(column: :deviation, values: [
+          # @formatter:off
+          -0.55,  -2.01,  -0.71,  1.66,   2.16,
+          0.18,   -1.96,  1.46,   -0.8,   0.34,
+          -0.97,  1.47,   0.51,   -0.6,   0.08,
+          -0.63,  0.62,   0.31,   -1.48,  0.84,
+          0.9,    -0.67,  2.29,   1.5,    0.6,
+          1.08,   0.38,   1.62,   1.31,   0.52
+        # @formatter:on
+        ])
       end
 
       describe "Calculating Cₙ" do
@@ -203,6 +220,58 @@ class MontgomerySpec < SpcSpec
           -0.37,  0.25,   0.56,   -0.92,  -0.08,
           0.82,   0.15,   2.44,   3.94,   4.54,
           5.62,   6,      7.62,   8.93,   9.45
+          # @formatter:on
+        ])
+      end
+
+      describe "Calculating positive deviation" do
+        it_has_correct_values(column: :deviation_plus, values: [
+          # @formatter:off
+          -1.05,  -2.51,  -1.21,  1.16,   1.66,
+          -0.32,  -2.46,  0.96,   -1.3,   -0.16,
+          -1.47,  0.97,   0.01,   -1.1,   -0.42,
+          -1.13,  0.12,   -0.19,  -1.98,  0.34,
+          0.4,    -1.17,  1.79,   1.0,    0.1,
+          0.58,   -0.12,  1.12,   0.81,   0.02
+          # @formatter:on
+        ])
+      end
+
+      describe "Calculating C⁺" do
+        it_has_correct_values(column: :c_plus, values: [
+          # @formatter:off
+          0,      0,      0,      1.16,   2.82,
+          2.50,   0.04,   1.00,   0,      0,
+          0,      0.97,   0.98,   0,      0,
+          0,      0.12,   0,      0,      0.34,
+          0.74,   0,      1.79,   2.79,   2.89,
+          3.47,   3.35,   4.47,   5.28,   5.30
+          # @formatter:on
+        ])
+      end
+
+      describe "Calculating negative deviation" do
+        it_has_correct_values(column: :deviation_minus, values: [
+          # @formatter:off
+          -0.05,  -1.51,  -0.21,  2.16,   2.66,
+          0.68,   -1.46,  1.96,   -0.3,   0.84,
+          -0.47,  1.97,   1.01,   -0.1,   0.58,
+          -0.13,  1.12,   0.81,   -0.98,  1.34,
+          1.4,    -0.17,  2.79,   2.0,    1.1,
+          1.58,   0.88,   2.12,   1.81,   1.02
+          # @formatter:on
+        ])
+      end
+
+      describe "Calculating C⁻" do
+        it_has_correct_values(column: :c_minus, values: [
+          # @formatter:off
+          -0.05,  -1.56,    -1.77,  0,      0,
+          0,      -1.46,    0,      -0.3,   0,
+          -0.47,  0,        0,      -0.1,   0,
+          -0.13,  0,        0,      -0.98,  0,
+          0,      -0.17,    0,      0,      0,
+          0,      0,        0,      0,      0
           # @formatter:on
         ])
       end

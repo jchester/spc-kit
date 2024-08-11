@@ -395,7 +395,8 @@ $$;
 -- Cumulative Sum aka Cusum
 
 create function spc_reports.cusum_rules(
-    p_target_mean     decimal default null
+      p_allowance       decimal
+    , p_target_mean     decimal default null
 )
 returns table (
     measurement_id  bigint,
@@ -403,22 +404,33 @@ returns table (
     window_id       bigint,
     instrument_id   bigint,
     measured_value  decimal,
-    error           decimal,
-    C_n             decimal
+    deviation       decimal,
+    deviation_plus  decimal,
+    deviation_minus decimal,
+    C_n             decimal,
+    C_plus          decimal,
+    C_minus         decimal
 )
 immutable language sql as
 $$
       select m.id as measurement_id
     , m.sample_id
-    , w.id                                                                      as window_id
+    , w.id                                                                          as window_id
     , s.instrument_id
     , m.measured_value
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value)           as error
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_allowance as deviation_plus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_allowance as deviation_plus
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
-        over (partition by w.id order by m.id)                                  as C_n
+        over (partition by w.id order by m.id)                                      as C_n
+    , spc_intermediates.cusum_c_plus(m.measured_value, p_allowance, coalesce(p_target_mean, mean_measured_value))
+        over window_sample                                                          as C_plus
+    , spc_intermediates.cusum_c_minus(m.measured_value, p_allowance, coalesce(p_target_mean, mean_measured_value))
+        over window_sample                                                          as C_minus
 from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
          join spc_data.instruments i on i.id = s.instrument_id
          join spc_data.windows w on i.id = w.instrument_id
-         join spc_intermediates.individual_measurement_statistics_ewma imse on w.id = imse.window_id;
+         join spc_intermediates.individual_measurement_statistics_ewma imse on w.id = imse.window_id
+window window_sample as (partition by w.id order by m.sample_id);
 $$;

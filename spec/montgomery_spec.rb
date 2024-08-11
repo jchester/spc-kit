@@ -197,7 +197,6 @@ class MontgomerySpec < SpcSpec
         ).where(instrument_id:).order_by(:sample_id)
       end
 
-
       describe "Calculating net deviation" do
         it_has_correct_values(column: :deviation, values: [
           # @formatter:off

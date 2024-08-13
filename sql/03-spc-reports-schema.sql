@@ -394,22 +394,28 @@ $$;
 
 -- Cumulative Sum aka Cusum
 
+-- Asymmetric form of cusum_rules()
 create function spc_reports.cusum_rules(
-      p_allowance       decimal
-    , p_target_mean     decimal default null
+      p_upper_allowance         decimal
+    , p_upper_decision_interval decimal
+    , p_lower_allowance         decimal
+    , p_lower_decision_interval decimal
+    , p_target_mean             decimal default null
 )
 returns table (
-    measurement_id  bigint,
-    sample_id       bigint,
-    window_id       bigint,
-    instrument_id   bigint,
-    measured_value  decimal,
-    deviation       decimal,
-    deviation_plus  decimal,
-    deviation_minus decimal,
-    C_n             decimal,
-    C_plus          decimal,
-    C_minus         decimal
+    measurement_id          bigint,
+    sample_id               bigint,
+    window_id               bigint,
+    instrument_id           bigint,
+    measured_value          decimal,
+    deviation               decimal,
+    deviation_plus          decimal,
+    deviation_minus         decimal,
+    C_n                     decimal,
+    C_plus                  decimal,
+    C_minus                 decimal,
+    upper_decision_interval boolean,
+    lower_decision_interval boolean
 )
 immutable language sql as
 $$
@@ -419,18 +425,55 @@ $$
     , s.instrument_id
     , m.measured_value
     , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_allowance as deviation_plus
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_allowance as deviation_minus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as deviation_plus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as deviation_minus
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
         over (partition by w.id order by m.id)                                      as C_n
-    , spc_intermediates.cusum_c_plus(m.measured_value, p_allowance, coalesce(p_target_mean, mean_measured_value))
+    , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
         over window_sample                                                          as C_plus
-    , spc_intermediates.cusum_c_minus(m.measured_value, p_allowance, coalesce(p_target_mean, mean_measured_value))
+    , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
         over window_sample                                                          as C_minus
+    , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
+        over window_sample > p_upper_decision_interval                              as upper_decision_interval
+    , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
+        over window_sample < p_lower_decision_interval                              as lower_decision_interval
 from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
          join spc_data.instruments i on i.id = s.instrument_id
          join spc_data.windows w on i.id = w.instrument_id
          join spc_intermediates.individual_measurement_statistics_ewma imse on w.id = imse.window_id
 window window_sample as (partition by w.id order by m.sample_id);
+$$;
+
+-- Symmetric form of cusum_rules()
+create function spc_reports.cusum_rules(
+      p_allowance           decimal
+    , p_decision_interval   decimal
+    , p_target_mean         decimal default null
+)
+returns table (
+    measurement_id          bigint,
+    sample_id               bigint,
+    window_id               bigint,
+    instrument_id           bigint,
+    measured_value          decimal,
+    deviation               decimal,
+    deviation_plus          decimal,
+    deviation_minus         decimal,
+    C_n                     decimal,
+    C_plus                  decimal,
+    C_minus                 decimal,
+    upper_decision_interval boolean,
+    lower_decision_interval boolean
+)
+immutable language sql as
+$$
+select *
+from spc_reports.cusum_rules(
+        p_allowance
+    , p_decision_interval
+    , p_allowance
+    , p_decision_interval
+    , p_target_mean
+     );
 $$;

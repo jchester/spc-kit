@@ -190,8 +190,9 @@ class MontgomerySpec < SpcSpec
     describe "Cusum with fixed target" do
       subject do
         DB.from(
-          Sequel.lit('spc_reports.cusum_rules(?, ?)',
+          Sequel.lit('spc_reports.cusum_rules(?, ?, ?)',
                      0.5, # allowance
+                     5, # decision interval
                      10 # target mean
           )
         ).where(instrument_id:).order_by(:sample_id)

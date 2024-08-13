@@ -206,7 +206,7 @@ class MontgomerySpec < SpcSpec
           -0.63,  0.62,   0.31,   -1.48,  0.84,
           0.9,    -0.67,  2.29,   1.5,    0.6,
           1.08,   0.38,   1.62,   1.31,   0.52
-        # @formatter:on
+          # @formatter:on
         ])
       end
 

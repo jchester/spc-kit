@@ -475,7 +475,7 @@ from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
          join spc_data.instruments i on i.id = s.instrument_id
          join spc_data.windows w on i.id = w.instrument_id
-         join spc_intermediates.individual_measurement_statistics_ewma imse on w.id = imse.window_id
+         join spc_intermediates.individual_measurement_statistics_window imsw on w.id = imsw.window_id
 window window_sample as (partition by w.id order by m.sample_id);
 $$;
 

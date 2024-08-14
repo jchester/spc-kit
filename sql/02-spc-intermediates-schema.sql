@@ -445,7 +445,7 @@ create view spc_intermediates.individual_measurements_ewma as
 -- This view calculates the mean and standard deviation of EWMA control windows. The mean is used as a target_mean and
 -- the standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26,
 -- where it is the value 'σ').
-create view spc_intermediates.individual_measurement_statistics_ewma as
+create view spc_intermediates.individual_measurement_statistics_window as
     select w.id                        as window_id
          , avg(measured_value)         as mean_measured_value
          , stddev_samp(measured_value) as std_dev_measured_value
@@ -502,7 +502,7 @@ begin
                            sqrt(((p_weighting / (2 - p_weighting)) *
                                  (1 - (1 - p_weighting) ^ (2 * wms.sample_number_in_window)))) as lower_limit
     from spc_intermediates.individual_measurements_ewma wms
-    join spc_intermediates.individual_measurement_statistics_ewma imse on wms.window_id = imse.window_id;
+    join spc_intermediates.individual_measurement_statistics_window imsw on wms.window_id = imsw.window_id;
 end;
 $$;
 

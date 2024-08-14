@@ -394,7 +394,41 @@ $$;
 
 -- Cumulative Sum aka Cusum
 
--- Asymmetric form of cusum_rules()
+-- cusum_rules() provides the entrypoint for Cusum calculations of net (Cₙ), positive (C⁺) and negative (C⁻) deviations
+-- from a mean. This is the asymmetric function that implements the bulk of the logic for Cusum reports. "Asymmetry"
+-- here simply means that you can choose different values for upper and lower allowances or decision intervals.
+--
+--  Parameters:
+--
+-- * `p_upper_allowance` is the "allowance" for C⁺, known also in literature as K. The allowance should be set to a
+--    value which represents half of the difference from the mean that is acceptable or normal. So for example, if you
+--    want to detect shifts of 10 units, set `p_upper_allowance` to 5.
+-- * `p_upper_decision_interval` is the "decision interval" for C⁺, known also in literature as H. The decision interval
+--    represents the limits of deviation at which C⁺ is considered to have grown large enough that it's considered to be
+--    out-of-control. The units are standard deviations, not the underlying measurement units. Typically set to 4 or 5,
+--    depending on sensitivity requirements. See Montgomery §9.1.3 for a discussion of selecting K and H based on the
+--    desired Average Run Length (how long, on average, between false alarms).
+-- * `p_lower_allowance`. Same as `p_upper_allowance`, but for C⁻.
+-- * `p_lower_decision_interval`. Same as `p_upper_decision_interval`, but for C⁻.
+-- * `p_target_mean` represents a fixed, known value for the mean of the process. If not provided this will be derived
+--    from the limit establishment window.
+--
+-- Note that the function will not focus its calculations on a particular window, instrument etc unless you include a
+-- `where window_id = 999` or similar in your query. Leaving off such a where clause will cause the calculation to run
+-- over all samples from all windows, instruments etc. Slow and basically useless.
+--
+--  Returns:
+-- * `sample_id`, `window_id` and `instrument_id`. For filtering by these values. It is recommended to use
+--   `where window_id = <some ID>` when using this function.
+-- * `measured_value`. As the name suggests.
+-- * `deviation`. The net amount by which the measured value differs from the mean.
+-- * `deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
+-- * `deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
+-- * `C_n`. The calculated Cₙ value for this measurement.
+-- * `C_plus`. The calculated C⁺ for this measurement.
+-- * `C_minus`. The calculated C⁻ for this measurement.
+-- * `upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
+-- * `lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
 create function spc_reports.cusum_rules(
       p_upper_allowance         decimal
     , p_upper_decision_interval decimal
@@ -445,7 +479,9 @@ from spc_data.measurements m
 window window_sample as (partition by w.id order by m.sample_id);
 $$;
 
--- Symmetric form of cusum_rules()
+-- This is the symmetric form of cusum_rules(), provided for convenience. That is, it only takes a single value for
+-- allowance and decision interval and applies these for both upper and lower calculations. It delegates to the fully
+-- asymmetric version of cusum_rules(); see that function for a discussion of parameters and returned values.
 create function spc_reports.cusum_rules(
       p_allowance           decimal
     , p_decision_interval   decimal

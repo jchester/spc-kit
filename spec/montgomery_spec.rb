@@ -4,12 +4,12 @@ class MontgomerySpec < SpcSpec
   before do
     DB.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/observed_systems.csv"))
     DB.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/instruments.csv"))
+    DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
+    DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
     DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/samples.csv"))
     DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/measurements.csv"))
     DB.copy_into(:whole_unit_conformance_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/whole_unit_conformance_inspections.csv"))
     DB.copy_into(:per_unit_non_conformities_inspections, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/per_unit_non_conformities_inspections.csv"))
-    DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/windows.csv"))
-    DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/montgomery/window_relationships.csv"))
   end
 
   describe "Flow Width example" do

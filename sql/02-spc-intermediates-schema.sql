@@ -60,8 +60,7 @@ values
 -- conformant & non-conformant.
 create view spc_intermediates.measurement_sample_statistics as
   select s.id
-       , s.period
-       , s.instrument_id
+       , s.window_id
        , s.include_in_limit_calculations
        , avg(measured_value)                       as sample_mean
        , stddev_samp(measured_value)               as sample_stddev
@@ -69,7 +68,8 @@ create view spc_intermediates.measurement_sample_statistics as
        , count(1)                                  as sample_size
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-  group by s.id, s.period;
+       join spc_data.windows w on s.window_id = w.id
+  group by s.id, w.id;
 
 -- Once per-sample statistics have been calculated, the next step in SPC is to derive the center lines for each of the
 -- control charts. These are, simply put, the averages of the sample statistics within the limit establishment window.
@@ -91,7 +91,7 @@ create view spc_intermediates.measurement_limit_establishment_statistics as
        , avg(sample_range)  as mean_range
        , avg(sample_size)   as mean_sample_size
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows                           w on ss.period <@ w.period
+       join spc_data.windows w                           on ss.window_id = w.id
   where w.type = 'limit_establishment'
     and ss.include_in_limit_calculations
   group by w.id;
@@ -190,15 +190,14 @@ create view spc_intermediates.fraction_conforming as
 -- Here we convert fraction conformant/non-conformant values into means for each sample.
 create view spc_intermediates.fraction_conforming_sample_statistics as
   select fc.sample_id
-       , s.period
-       , s.instrument_id
+       , s.window_id
        , s.include_in_limit_calculations
        , avg(fraction_conforming)     as mean_fraction_conforming
        , avg(fraction_non_conforming) as mean_fraction_non_conforming
        , sum(sample_size)             as sample_size
   from spc_intermediates.fraction_conforming fc
        join spc_data.samples                 s on fc.sample_id = s.id
-  group by fc.sample_id, s.period, s.instrument_id, s.include_in_limit_calculations;
+  group by fc.sample_id, s.window_id, s.include_in_limit_calculations;
 
 -- Once we have calculated statistics for each sample, the next step is to derive the center line for each of the
 -- control charts, taking values from limit establishment windows. The center lines are simply the grand mean, the mean
@@ -213,7 +212,7 @@ create view spc_intermediates.conformant_limit_establishment_statistics as
        , avg(mean_fraction_non_conforming) as grand_mean_non_conforming
        , avg(sample_size)                  as mean_sample_size
   from spc_intermediates.fraction_conforming_sample_statistics fcss
-       join spc_data.windows                                   w on fcss.period <@ w.period
+       join spc_data.windows w on fcss.window_id = w.id
   where w.type = 'limit_establishment'
     and fcss.include_in_limit_calculations
   group by w.id;
@@ -286,8 +285,7 @@ create view spc_intermediates.np_limits_non_conformant as
 -- This view joins values for downstream processing.
 create view spc_intermediates.non_conformities_sample_statistics as
   select punci.sample_id
-       , s.period
-       , s.instrument_id
+       , s.window_id
        , s.include_in_limit_calculations
        , punci.non_conformities
   from spc_data.per_unit_non_conformities_inspections punci
@@ -299,7 +297,7 @@ create view spc_intermediates.conformities_limit_establishment_statistics as
   select w.id                  as limit_establishment_window_id
        , avg(non_conformities) as mean_non_conformities
   from spc_intermediates.non_conformities_sample_statistics css
-       join spc_data.windows                                w on css.period <@ w.period
+       join spc_data.windows w on css.window_id = w.id
   where w.type = 'limit_establishment'
     and css.include_in_limit_calculations
   group by w.id;
@@ -327,9 +325,7 @@ create view spc_intermediates.c_limits as
 create view spc_intermediates.individual_measurements_and_moving_ranges as
   select w.id                                                               as window_id
        , s.id                                                               as sample_id
-       , s.instrument_id                                                    as instrument_id
        , w.type                                                             as window_type
-       , s.period
        , m.performed_at
        , s.include_in_limit_calculations
        , measured_value
@@ -337,19 +333,19 @@ create view spc_intermediates.individual_measurements_and_moving_ranges as
              lag(measured_value, 1) over (partition by w.id order by m.id)) as moving_range
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
+       join spc_data.windows w on s.window_id = w.id;
 
 -- Converts the basic sample/window figures from individual_measurements_and_moving_ranges into summary averages for
 -- each of the measurement value and the moving range.
 create view spc_intermediates.individual_measurement_and_moving_range_statistics as
-  select window_id           as limit_establishment_window_id
+  select w.id           as limit_establishment_window_id
        , avg(measured_value) as mean_measured_value
        , avg(moving_range)   as mean_moving_range
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       w on w.id = immr.window_id
   where window_type = 'limit_establishment'
     and include_in_limit_calculations
-  group by window_id;
+  group by w.id;
 
 -- Here we calculate the center line, upper natural process limit (UNPL) and lower natural process limit (LNPL). Note
 -- the change in nomenclature - these are not control limits in the sense used in other Shewhart charts, because data is
@@ -431,16 +427,14 @@ create view spc_intermediates.individual_measurements_ewma as
   select w.id                                                as window_id
        , s.id                                                as sample_id
        , m.id                                                as measurement_id
-       , s.instrument_id                                     as instrument_id
        , w.type                                              as window_type
        , row_number() over (partition by w.id order by s.id) as sample_number_in_window
-       , s.period
        , m.performed_at
        , s.include_in_limit_calculations
        , m.measured_value
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period and w.instrument_id = s.instrument_id;
+       join spc_data.windows w on s.window_id = w.id;
 
 -- This view calculates the mean and standard deviation of EWMA control windows. The mean is used as a target_mean and
 -- the standard deviation is an input to the calculation of EWMA control limits (see Montgomery formulae 9.25 and 9.26,
@@ -451,7 +445,7 @@ create view spc_intermediates.individual_measurement_statistics_window as
          , stddev_samp(measured_value) as std_dev_measured_value
     from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
-       join spc_data.windows w on s.period <@ w.period and s.instrument_id = w.instrument_id
+       join spc_data.windows w on s.window_id = w.id
     where include_in_limit_calculations
     group by w.id;
 
@@ -486,10 +480,8 @@ begin
     select wms.window_id
          , wms.sample_id
          , wms.measurement_id
-         , wms.instrument_id
          , wms.window_type
          , wms.sample_number_in_window
-         , wms.period
          , wms.performed_at
          , wms.measured_value
          , spc_intermediates.ewma(wms.measured_value, p_weighting, coalesce(p_target_mean, mean_measured_value), scale)

@@ -21,6 +21,46 @@ create table spc_data.instruments (
   unique (name, observed_system_id)
 );
 
+
+create type spc_data.window_type as enum ('limit_establishment', 'control');
+
+-- Windows are essentially ranges of time during which samples are collected for a given instrument on a given system.
+-- There are two window types: limit establishment windows and control windows.
+--
+-- Limit establishment windows are the period of samples used to establish Shewhart chart control limits, which are then
+-- applied during a control window. Typical guidance is that limit establishment windows should contain at least 20 to
+-- 25 samples.
+--
+-- Limit establishment is also known as "Phase I" of control chart usage.
+--
+-- Importantly, all figures calculated using these windows are "trial limits". At the moment this project does not
+-- perform the full Phase I process of recursively eliminating out-of-control samples from the calculated set until all
+-- remaining values are in-control values. This is a future goal.
+--
+-- Control windows are periods during which calculated limits are to be applied. Every control window has one limit
+-- establishment window to which it belongs and from which control limits can be calculated and applied to the control
+-- window.
+create table spc_data.windows (
+  id            bigint generated always as identity primary key,
+  instrument_id bigint references spc_data.instruments (id) not null,
+  type          spc_data.window_type                        not null,
+  description   text
+);
+
+-- A single limit establishment window may have zero to many control windows, but each control window may only have a
+-- single limit establishment window. Notably, limit establishment windows may be applied to themselves, allowing for
+-- out-of-control points in the limit establishment window to be identified.
+--
+-- These needs are why the relationships are represented in a separate 1:many join table, rather than as separate tables
+-- or as foreign keys from the windows table into itself.
+create table spc_data.window_relationships (
+  limit_establishment_window_id bigint references spc_data.windows not null,
+  control_window_id             bigint references spc_data.windows not null,
+
+  primary key (limit_establishment_window_id, control_window_id),
+  unique (control_window_id)
+);
+
 -- Samples are periodic occasions on which multiple measurements are collected from an instrument. Each sample belongs
 -- to one instrument but may have many measurements.
 --
@@ -49,12 +89,9 @@ create table spc_data.instruments (
 -- assignable cause variation.
 create table spc_data.samples (
   id                            bigint generated always as identity primary key,
-  instrument_id                 bigint references spc_data.instruments (id) not null,
-  period                        tstzrange                                   not null,
+  window_id                     bigint references spc_data.windows (id)     not null,
   include_in_limit_calculations bool default true                           not null,
-  annotation                    text,
-
-  unique (period, instrument_id)
+  annotation                    text
 );
 
 -- A measurement represents a single value collected from a single instrument at a single point in time, as part of a
@@ -117,46 +154,4 @@ create table spc_data.per_unit_non_conformities_inspections (
   non_conformities int                                     not null,
 
   unique (performed_at, sample_id)
-);
-
-create type spc_data.window_type as enum ('limit_establishment', 'control');
-
--- Windows are essentially ranges of time during which samples are collected for a given instrument on a given system.
--- There are two window types: limit establishment windows and control windows.
---
--- Limit establishment windows are the period of samples used to establish Shewhart chart control limits, which are then
--- applied during a control window. Typical guidance is that limit establishment windows should contain at least 20 to
--- 25 samples.
---
--- Limit establishment is also known as "Phase I" of control chart usage.
---
--- Importantly, all figures calculated using these windows are "trial limits". At the moment this project does not
--- perform the full Phase I process of recursively eliminating out-of-control samples from the calculated set until all
--- remaining values are in-control values. This is a future goal.
---
--- Control windows are periods during which calculated limits are to be applied. Every control window has one limit
--- establishment window to which it belongs and from which control limits can be calculated and applied to the control
--- window.
-create table spc_data.windows (
-  id            bigint generated always as identity primary key,
-  instrument_id bigint references spc_data.instruments (id) not null,
-  type          spc_data.window_type                        not null,
-  period        tstzrange                                   not null,
-  description   text,
-
-  unique (period, instrument_id)
-);
-
--- A single limit establishment window may have zero to many control windows, but each control window may only have a
--- single limit establishment window. Notably, limit establishment windows may be applied to themselves, allowing for
--- out-of-control points in the limit establishment window to be identified.
---
--- These needs are why the relationships are represented in a separate 1:many join table, rather than as separate tables
--- or as foreign keys from the windows table into itself.
-create table spc_data.window_relationships (
-  limit_establishment_window_id bigint references spc_data.windows not null,
-  control_window_id             bigint references spc_data.windows not null,
-
-  primary key (limit_establishment_window_id, control_window_id),
-  unique (control_window_id)
 );

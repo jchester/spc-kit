@@ -22,8 +22,7 @@ create view spc_reports.x_bar_r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id         as instrument_id
        , center_line
        , sample_mean  as controlled_value
        , lower_limit
@@ -35,10 +34,10 @@ create view spc_reports.x_bar_r_rules as
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows                           control_w on ss.period <@ control_w.period
-                                                          and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                       i on control_w.instrument_id = i.id
        join spc_intermediates.x_bar_r_limits on limits_w.id = x_bar_r_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -52,8 +51,7 @@ create view spc_reports.r_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id         as instrument_id
        , sample_range as controlled_value
        , center_line
        , lower_limit
@@ -65,10 +63,10 @@ create view spc_reports.r_rules as
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows                           control_w on ss.period <@ control_w.period
-                                                          and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                       i on control_w.instrument_id = i.id
        join spc_intermediates.r_limits on limits_w.id = r_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -81,8 +79,7 @@ create view spc_reports.x_bar_s_rules as
   select ss.id        as sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id         as instrument_id
        , center_line
        , sample_mean  as controlled_value
        , lower_limit
@@ -94,10 +91,10 @@ create view spc_reports.x_bar_s_rules as
            else 'in_control'
          end          as control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows                           control_w on ss.period <@ control_w.period
-                                                          and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                       i on control_w.instrument_id = i.id
        join spc_intermediates.x_bar_s_limits on limits_w.id = x_bar_s_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -111,8 +108,7 @@ create view spc_reports.s_rules as
   select ss.id         as sample_id
        , control_w.id  as control_window_id
        , limits_w.id   as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id          as instrument_id
        , center_line
        , sample_stddev as controlled_value
        , lower_limit
@@ -124,10 +120,10 @@ create view spc_reports.s_rules as
            else 'in_control'
          end           as control_status
   from spc_intermediates.measurement_sample_statistics ss
-       join spc_data.windows                           control_w on ss.period <@ control_w.period
-                                                          and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
        join spc_data.windows                           limits_w on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                       i on control_w.instrument_id = i.id
        join spc_intermediates.s_limits on limits_w.id = s_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -140,8 +136,7 @@ create view spc_reports.p_conformant_rules as
   select ss.sample_id
        , control_w.id             as control_window_id
        , limits_w.id              as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id                     as instrument_id
        , center_line
        , mean_fraction_conforming as controlled_value
        , lower_limit
@@ -152,11 +147,11 @@ create view spc_reports.p_conformant_rules as
            else 'in_control'
          end                      as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
-       join spc_data.windows                                   control_w on ss.period <@ control_w.period
-                                                                  and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                               i on control_w.instrument_id = i.id
        join spc_intermediates.p_limits_conformant on limits_w.id = p_limits_conformant.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -166,8 +161,7 @@ create view spc_reports.p_non_conformant_rules as
   select ss.sample_id
        , control_w.id                 as control_window_id
        , limits_w.id                  as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id                         as instrument_id
        , center_line
        , mean_fraction_non_conforming as controlled_value
        , lower_limit
@@ -178,11 +172,11 @@ create view spc_reports.p_non_conformant_rules as
            else 'in_control'
          end                          as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
-       join spc_data.windows                                   control_w on ss.period <@ control_w.period
-                                                                  and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                               i on control_w.instrument_id = i.id
        join spc_intermediates.p_limits_non_conformant
             on limits_w.id = p_limits_non_conformant.limit_establishment_window_id
   where include_in_limit_calculations;
@@ -196,8 +190,7 @@ create view spc_reports.np_conformant_rules as
   select ss.sample_id
        , control_w.id                           as control_window_id
        , limits_w.id                            as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id                                   as instrument_id
        , center_line
        , mean_fraction_conforming * sample_size as controlled_value
        , lower_limit
@@ -208,11 +201,11 @@ create view spc_reports.np_conformant_rules as
            else 'in_control'
          end                                    as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
-       join spc_data.windows                                   control_w on ss.period <@ control_w.period
-                                                                  and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                               i on control_w.instrument_id = i.id
        join spc_intermediates.np_limits_conformant on limits_w.id = np_limits_conformant.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -222,8 +215,7 @@ create view spc_reports.np_non_conformant_rules as
   select ss.sample_id
        , control_w.id                               as control_window_id
        , limits_w.id                                as limit_establishment_window_id
-       , ss.instrument_id
-       , ss.period
+       , i.id                                       as instrument_id
        , center_line
        , mean_fraction_non_conforming * sample_size as controlled_value
        , lower_limit
@@ -234,11 +226,11 @@ create view spc_reports.np_non_conformant_rules as
            else 'in_control'
          end                                        as control_status
   from spc_intermediates.fraction_conforming_sample_statistics ss
-       join spc_data.windows                                   control_w on ss.period <@ control_w.period
-                                                                  and ss.instrument_id = control_w.instrument_id
+       join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
        join spc_data.windows                                   limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                               i on control_w.instrument_id = i.id
        join spc_intermediates.np_limits_non_conformant
             on limits_w.id = np_limits_non_conformant.limit_establishment_window_id
   where include_in_limit_calculations;
@@ -249,8 +241,7 @@ create view spc_reports.c_rules as
   select ncss.sample_id
        , control_w.id     as control_window_id
        , limits_w.id      as limit_establishment_window_id
-       , ncss.instrument_id
-       , ncss.period
+       , i.id             as instrument_id
        , center_line
        , non_conformities as controlled_value
        , lower_limit
@@ -261,11 +252,11 @@ create view spc_reports.c_rules as
            else 'in_control'
          end              as control_status
   from spc_intermediates.non_conformities_sample_statistics ncss
-       join spc_data.windows                                control_w on ncss.period <@ control_w.period
-                                                                and ncss.instrument_id = control_w.instrument_id
+       join spc_data.windows                                control_w on ncss.window_id = control_w.id
        join spc_data.window_relationships                   wr on control_w.id = wr.control_window_id
        join spc_data.windows                                limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                            i on control_w.instrument_id = i.id
        join spc_intermediates.c_limits on limits_w.id = c_limits.limit_establishment_window_id
   where ncss.include_in_limit_calculations;
 
@@ -279,8 +270,7 @@ create view spc_reports.xmr_x_rules as
   select immr.sample_id
        , control_w.id   as control_window_id
        , limits_w.id    as limit_establishment_window_id
-       , immr.instrument_id
-       , immr.period
+       , i.id           as instrument_id
        , immr.performed_at
        , center_line
        , measured_value as controlled_value
@@ -292,11 +282,11 @@ create view spc_reports.xmr_x_rules as
            else 'in_control'
          end            as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
-       join spc_data.windows                                       control_w on immr.period <@ control_w.period
-                                                                      and immr.instrument_id = control_w.instrument_id
+       join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
        join spc_data.windows                                       limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                                   i on control_w.instrument_id = i.id
        join spc_intermediates.xmr_x_limits on limits_w.id = xmr_x_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -309,8 +299,7 @@ create view spc_reports.xmr_mr_rules as
   select immr.sample_id
        , control_w.id as control_window_id
        , limits_w.id  as limit_establishment_window_id
-       , immr.instrument_id
-       , immr.period
+       , i.id         as instrument_id
        , immr.performed_at
        , center_line
        , moving_range as controlled_value
@@ -321,11 +310,11 @@ create view spc_reports.xmr_mr_rules as
            else 'in_control'
          end          as control_status
   from spc_intermediates.individual_measurements_and_moving_ranges immr
-       join spc_data.windows                                       control_w on immr.period <@ control_w.period
-                                                                        and immr.instrument_id = control_w.instrument_id
+       join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
        join spc_data.windows                                       limits_w
             on limits_w.id = wr.limit_establishment_window_id
+       join spc_data.instruments                                   i on control_w.instrument_id = i.id
        join spc_intermediates.xmr_mr_limits on limits_w.id = xmr_mr_limits.limit_establishment_window_id
   where include_in_limit_calculations;
 
@@ -456,7 +445,7 @@ $$
       select m.id as measurement_id
     , m.sample_id
     , w.id                                                                          as window_id
-    , s.instrument_id
+    , w.instrument_id
     , m.measured_value
     , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
     , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as deviation_plus
@@ -473,8 +462,8 @@ $$
         over window_sample < p_lower_decision_interval                              as lower_decision_interval
 from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
-         join spc_data.instruments i on i.id = s.instrument_id
-         join spc_data.windows w on i.id = w.instrument_id
+         join spc_data.windows w on s.window_id = w.id
+         join spc_data.instruments i on i.id = w.instrument_id
          join spc_intermediates.individual_measurement_statistics_window imsw on w.id = imsw.window_id
 window window_sample as (partition by w.id order by m.sample_id);
 $$;

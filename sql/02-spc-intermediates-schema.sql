@@ -426,6 +426,7 @@ create aggregate spc_intermediates.ewma(measurement decimal, weighting decimal, 
 create view spc_intermediates.individual_measurements_ewma as
   select w.id                                                as window_id
        , s.id                                                as sample_id
+       , w.instrument_id
        , m.id                                                as measurement_id
        , w.type                                              as window_type
        , row_number() over (partition by w.id order by s.id) as sample_number_in_window
@@ -465,7 +466,6 @@ create function spc_intermediates.ewma_individual_measurements(
   instrument_id                 bigint,
   window_type                   spc_data.window_type,
   sample_number_in_window       bigint,
-  period                        tstzrange,
   performed_at                  timestamptz,
   measured_value                decimal,
   ewma                          decimal,
@@ -480,6 +480,7 @@ begin
     select wms.window_id
          , wms.sample_id
          , wms.measurement_id
+         , wms.instrument_id
          , wms.window_type
          , wms.sample_number_in_window
          , wms.performed_at

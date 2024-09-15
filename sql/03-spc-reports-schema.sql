@@ -348,7 +348,7 @@ create function spc_reports.ewma_rules(
     sample_id bigint,
     window_id bigint,
     instrument_id bigint,
-    period tstzrange,
+    window_type spc_data.window_type,
     performed_at timestamptz,
     center_line decimal,
     controlled_value decimal,
@@ -361,7 +361,7 @@ $$
   select eim.sample_id
        , window_id
        , eim.instrument_id
-       , eim.period
+       , eim.window_type
        , eim.performed_at
        , center_line
        , measured_value as controlled_value

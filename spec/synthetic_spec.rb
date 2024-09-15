@@ -4,10 +4,10 @@ class SyntheticSpec < SpcSpec
   before do
     DB.copy_into(:observed_systems, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/observed_systems.csv"))
     DB.copy_into(:instruments, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/instruments.csv"))
-    DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/samples.csv"))
-    DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/measurements.csv"))
     DB.copy_into(:windows, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/windows.csv"))
     DB.copy_into(:window_relationships, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/window_relationships.csv"))
+    DB.copy_into(:samples, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/samples.csv"))
+    DB.copy_into(:measurements, format: :csv, data: File.read("#{Dir.pwd}/data/synthetic/measurements.csv"))
   end
 
   describe "Shewhart charts" do
@@ -269,15 +269,16 @@ class SyntheticSpec < SpcSpec
         ).where(instrument_id:).order_by(:sample_id)
       end
 
-      it_has_params(mean: 10, upper: 10.253, lower: 9.746)
+      it_has_params(mean: 9.975, upper: 10.201, lower: 9.749)
 
-      it_has_status_counts_of(in_control: 15, out_of_control_upper: 0, out_of_control_lower: 0)
+      it_has_status_counts_of(in_control: 20, out_of_control_upper: 0, out_of_control_lower: 0)
 
       # @formatter:off
       it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
-         9.9000,  9.9100,  10.0190, 9.9171,  9.9253,
-         10.0328, 9.9295,  9.9366,  10.0429, 9.9386,
-         9.94478, 10.0503, 9.9452,  9.9507,  10.0556
+        9.8775,   9.8898,   10.0008,  9.9007,   9.9106,
+        10.0196,  9.9176,   9.9258,   10.0333,  9.9299,
+        9.9369,   10.0432,  9.9389,   9.9450,   10.0505,
+        9.9955,   9.9959,   10.0463,  10.0417,  9.9875
       ])
       # @formatter:on
     end

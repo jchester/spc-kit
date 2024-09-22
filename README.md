@@ -96,7 +96,7 @@ For our first example we will use Tables 6.1 and 6.2 from Montgomery. Our Observ
 process in a semiconductor factory:
 
 ```sql
-insert into spc_data.observed_systems(id, name)
+insert into spc_data.observed_systems(id, name) overriding system value
 values (1, 'Photolithography Process from Montgomery');
 ```
 
@@ -107,57 +107,71 @@ narrow or too wide, the resulting circuit may be faulty.
 Let's add the instrument:
 
 ```sql
-insert into spc_data.instruments(id, observed_system_id, name)
+insert into spc_data.instruments(id, observed_system_id, name) overriding system value
 values (1, 1, 'Flow Resist Width (Tables 6.1 and 6.2)');
+```
+### Windows
+
+Windows are spans of Samples that belong to an Instrument.
+
+Montgomery gives two tables of data (6.1 and 6.2). Table 6.1 is intended for establishing the process control limits of
+the current process; 6.2 is for when the process is operating under control. These are distinct uses for data. Most
+importantly, the limits established with the first set of samples (traditionally 20 samples is considered the minimum
+acceptable number) is then used in subsequent samples to detect out-of-control conditions.
+
+Therefore, SPC-kit allows you to group together Samples into _Windows_, which express the purpose for which the Samples
+are to be used. Let's add two windows for the Tables 6.1 (limit establishment) and 6.2 (control):
+
+```sql
+insert into spc_data.windows(id, instrument_id, type, description) overriding system value
+values (1, 1, 'limit_establishment', 'Table 6.1');
+insert into spc_data.windows(id, instrument_id, type, description) overriding system value
+values (2, 1, 'control', 'Table 6.2');
+```
+
+Each control window belongs to one limit establishment window. This relationship does not rely on time ranges, but is
+explicitly recorded in `spc_data.window_relationships`. Let us connect our two windows together:
+
+```sql
+insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 2);
+```
+
+Note that you may link a limit-establishment window to itself. This is useful for cases (like XmR) where the distinction
+between limit establishment and control is unimportant. For completeness we will do so for the window established based
+on Table 6.1:
+
+```sql
+insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 1);
 ```
 
 ### Samples and Measurements
 
-Each Instrument takes periodic _Samples_, which in turn have one or more _Measurements_. Let us add some data for the
-two tables, starting with samples:
+Each Window contains _Samples_, which in turn have one or more _Measurements_. Let us add some data for the two tables,
+starting with establishing the samples within each window:
 
 ```sql
 -- @formatter:off
-insert into spc_data.samples (id, instrument_id, period, include_in_limit_calculations, annotation)
+insert into spc_data.samples (id, window_id, include_in_limit_calculations) overriding system value
 -- Table 6.1
-values (1,  1, '["2023-01-01 00:00:00+00","2023-01-01 00:01:00+00")', true, null),  (2,  1, '["2023-01-01 00:01:00+00","2023-01-01 00:02:00+00")', true, null),
-       (3,  1, '["2023-01-01 00:02:00+00","2023-01-01 00:03:00+00")', true, null),  (4,  1, '["2023-01-01 00:03:00+00","2023-01-01 00:04:00+00")', true, null),
-       (5,  1, '["2023-01-01 00:04:00+00","2023-01-01 00:05:00+00")', true, null),  (6,  1, '["2023-01-01 00:05:00+00","2023-01-01 00:06:00+00")', true, null),
-       (7,  1, '["2023-01-01 00:06:00+00","2023-01-01 00:07:00+00")', true, null),  (8,  1, '["2023-01-01 00:07:00+00","2023-01-01 00:08:00+00")', true, null),
-       (9,  1, '["2023-01-01 00:08:00+00","2023-01-01 00:09:00+00")', true, null),  (10, 1, '["2023-01-01 00:09:00+00","2023-01-01 00:10:00+00")', true, null),
-       (11, 1, '["2023-01-01 00:10:00+00","2023-01-01 00:11:00+00")', true, null),  (12, 1, '["2023-01-01 00:11:00+00","2023-01-01 00:12:00+00")', true, null),
-       (13, 1, '["2023-01-01 00:12:00+00","2023-01-01 00:13:00+00")', true, null),  (14, 1, '["2023-01-01 00:13:00+00","2023-01-01 00:14:00+00")', true, null),
-       (15, 1, '["2023-01-01 00:14:00+00","2023-01-01 00:15:00+00")', true, null),  (16, 1, '["2023-01-01 00:15:00+00","2023-01-01 00:16:00+00")', true, null),
-       (17, 1, '["2023-01-01 00:16:00+00","2023-01-01 00:17:00+00")', true, null),  (18, 1, '["2023-01-01 00:17:00+00","2023-01-01 00:18:00+00")', true, null),
-       (19, 1, '["2023-01-01 00:18:00+00","2023-01-01 00:19:00+00")', true, null),  (20, 1, '["2023-01-01 00:19:00+00","2023-01-01 00:20:00+00")', true, null),
-       (21, 1, '["2023-01-01 00:20:00+00","2023-01-01 00:21:00+00")', true, null),  (22, 1, '["2023-01-01 00:21:00+00","2023-01-01 00:22:00+00")', true, null),
-       (23, 1, '["2023-01-01 00:22:00+00","2023-01-01 00:23:00+00")', true, null),  (24, 1, '["2023-01-01 00:23:00+00","2023-01-01 00:24:00+00")', true, null),
-       (25, 1, '["2023-01-01 00:24:00+00","2023-01-01 00:25:00+00")', true, null),
+values (1,  1, true),  (2,  1, true),  (3,  1, true),  (4,  1, true),  (5,  1, true),
+       (6,  1, true),  (7,  1, true),  (8,  1, true),  (9,  1, true),  (10, 1, true),
+       (11, 1, true),  (12, 1, true),  (13, 1, true),  (14, 1, true),  (15, 1, true),
+       (16, 1, true),  (17, 1, true),  (18, 1, true),  (19, 1, true),  (20, 1, true),
+       (21, 1, true),  (22, 1, true),  (23, 1, true),  (24, 1, true),  (25, 1, true),
 -- Table 6.2
-       (26, 1, '["2023-01-01 00:25:00+00","2023-01-01 00:26:00+00")', true, null),  (27, 1, '["2023-01-01 00:26:00+00","2023-01-01 00:27:00+00")', true, null),
-       (28, 1, '["2023-01-01 00:27:00+00","2023-01-01 00:28:00+00")', true, null),  (29, 1, '["2023-01-01 00:28:00+00","2023-01-01 00:29:00+00")', true, null),
-       (30, 1, '["2023-01-01 00:29:00+00","2023-01-01 00:30:00+00")', true, null),  (31, 1, '["2023-01-01 00:30:00+00","2023-01-01 00:31:00+00")', true, null),
-       (32, 1, '["2023-01-01 00:31:00+00","2023-01-01 00:32:00+00")', true, null),  (33, 1, '["2023-01-01 00:32:00+00","2023-01-01 00:33:00+00")', true, null),
-       (34, 1, '["2023-01-01 00:33:00+00","2023-01-01 00:34:00+00")', true, null),  (35, 1, '["2023-01-01 00:34:00+00","2023-01-01 00:35:00+00")', true, null),
-       (36, 1, '["2023-01-01 00:35:00+00","2023-01-01 00:36:00+00")', true, null),  (37, 1, '["2023-01-01 00:36:00+00","2023-01-01 00:37:00+00")', true, null),
-       (38, 1, '["2023-01-01 00:37:00+00","2023-01-01 00:38:00+00")', true, null),  (39, 1, '["2023-01-01 00:38:00+00","2023-01-01 00:39:00+00")', true, null),
-       (40, 1, '["2023-01-01 00:39:00+00","2023-01-01 00:40:00+00")', true, null),  (41, 1, '["2023-01-01 00:40:00+00","2023-01-01 00:41:00+00")', true, null),
-       (42, 1, '["2023-01-01 00:41:00+00","2023-01-01 00:42:00+00")', true, null),  (43, 1, '["2023-01-01 00:42:00+00","2023-01-01 00:43:00+00")', true, null),
-       (44, 1, '["2023-01-01 00:43:00+00","2023-01-01 00:44:00+00")', true, null),  (45, 1, '["2023-01-01 00:44:00+00","2023-01-01 00:45:00+00")', true, null);
+       (26, 2, true),  (27, 2, true),  (28, 2, true),  (29, 2, true),  (30, 2, true),
+       (31, 2, true),  (32, 2, true),  (33, 2, true),  (34, 2, true),  (35, 2, true),
+       (36, 2, true),  (37, 2, true),  (38, 2, true),  (39, 2, true),  (40, 2, true),
+       (41, 2, true),  (42, 2, true),  (43, 2, true),  (44, 2, true),  (45, 2, true);
 -- @formatter:on
 ```
-
-Note that `period` is a time _range_, not a time _stamp_. This represents that while individual measurements may be
-instantaneous, samples take place over some (possibly very small) span of time. If you have truly simultaneous sampling,
-you can easily create a zero-width range. (See the comment on `spc_data.samples` for a discussion of
-`include_in_limit_calculations`).
 
 Now we add data. Five measurements are taken per sample, yielding 125 measurements for Table 6.1 and another 100 for
 Table 6.2, for a total of 225 measurements:
 
 ```sql
 -- @formatter:off
-insert into spc_data.measurements (id, sample_id, performed_at, measured_value)
+insert into spc_data.measurements (id, sample_id, performed_at, measured_value) overriding system value
 values (1,   1,  '2023-01-01 00:00:00.000000 +00:00', 1.3235),  (2,   1,  '2023-01-01 00:00:01.000000 +00:00', 1.4128),  (3,   1,  '2023-01-01 00:00:02.000000 +00:00', 1.6744),  (4,   1,  '2023-01-01 00:00:03.000000 +00:00', 1.4573),
        (5,   1,  '2023-01-01 00:00:04.000000 +00:00', 1.6914),  (6,   2,  '2023-01-01 00:01:00.000000 +00:00', 1.4314),  (7,   2,  '2023-01-01 00:01:01.000000 +00:00', 1.3592),  (8,   2,  '2023-01-01 00:01:02.000000 +00:00', 1.6075),
        (9,   2,  '2023-01-01 00:01:03.000000 +00:00', 1.4666),  (10,  2,  '2023-01-01 00:01:04.000000 +00:00', 1.6109),  (11,  3,  '2023-01-01 00:02:00.000000 +00:00', 1.4284),  (12,  3,  '2023-01-01 00:02:01.000000 +00:00', 1.4871),
@@ -218,46 +232,6 @@ values (1,   1,  '2023-01-01 00:00:00.000000 +00:00', 1.3235),  (2,   1,  '2023-
 -- @formatter:on
 ```
 
-### Windows
-
-Montgomery gives two tables of data (6.1 and 6.2). Table 6.1 is intended for establishing the process control limits of
-the current process; 6.2 is for when the process is operating under control. These are distinct uses for data. Most
-importantly, the limits established with the first set of samples (traditionally 20 samples is considered the minimum
-acceptable number) is then used in subsequent samples to detect out-of-control conditions.
-
-Therefore, SPC-kit allows you to group together Samples into _Windows_, which express a time range and for what purpose
-the Samples are to be used. Let's add two windows for the Tables 6.1 (limit establishment) and 6.2 (control):
-
-```sql
-insert into spc_data.windows(id, instrument_id, type, period, description)
-values (1, 1, 'limit_establishment', '[2023-01-01 00:00:00,2023-01-01 00:25:00)', 'Table 6.1');
-insert into spc_data.windows(id, instrument_id, type, period, description)
-values (2, 1, 'control', '[2023-01-01 00:25:00,2023-01-01 01:00:00)', 'Table 6.2');
-```
-
-Note that `period` in an `spc_data.window` is distinct from `period` in a `sample`. You should ensure that that each
-`window` fully encloses `sample` periods; this is not enforced in the schema (you could possibly write a trigger to
-validate inputs).
-
-Each control window belongs to one limit establishment window. This relationship does not rely on time ranges, but is
-explicitly recorded in `spc_data.window_relationships`. Let us connect our two windows together:
-
-```sql
-insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 2);
-```
-
-Note that you may link a limit-establishment window to itself. This is useful for cases (like XmR) where the distinction
-between limit establishment and control is unimportant. For completeness we will do so for the window established based
-on Table 6.1:
-
-```sql
-insert into spc_data.window_relationships (limit_establishment_window_id, control_window_id) values (1, 1);
-```
-
-Do you need to add `window`s? Yes, even though the `window` may point to itself in `window_relationships`. All the
-`spc_reports.*_rules` views provide IDs for limit establishment and control windows, even though for some cases (like
-XmR rules) they will always be the same.
-
 ### Reading back rule results
 
 Data inserted into `spc_data` is processed through `spc_intermediate` and then assembled into per-measurement _Rules_.
@@ -268,10 +242,12 @@ Let's look at Table 6.2 and see if we can find out-of-control Samples:
 ```sql
 select sample_id,
        controlled_value,
-       upper_limit
+       upper_limit,
+       control_status
 from spc_reports.x_bar_r_rules
 where control_window_id = 2
-  and control_status != 'in_control';
+  and control_status != 'in_control'
+order by sample_id;
 ```
 
 Giving:

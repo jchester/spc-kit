@@ -42,7 +42,7 @@ create view spc_reports.x_bar_r_rules as
   where include_in_limit_calculations;
 
 -- This view applies the limits derived in r_limits to matching control windows, showing which sample ranges where
--- in-control and out-of-control according the the R̄ limits on R. These signals are useful up until sample size = 10;
+-- in-control and out-of-control according the R̄ limits on R. These signals are useful up until sample size = 10;
 -- after that you should switch to using s_rules instead.
 --
 -- ̄̄R̄ rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated

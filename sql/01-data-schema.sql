@@ -24,8 +24,8 @@ create table spc_data.instruments (
 
 create type spc_data.window_type as enum ('limit_establishment', 'control');
 
--- Windows are essentially ranges of time during which samples are collected for a given instrument on a given system.
--- There are two window types: limit establishment windows and control windows.
+-- Windows are essentially ranges of samples, belonging to one instrument, that are collected for a given instrument on
+-- a given system. There are two window types: limit establishment windows and control windows.
 --
 -- Limit establishment windows are the period of samples used to establish Shewhart chart control limits, which are then
 -- applied during a control window. Typical guidance is that limit establishment windows should contain at least 20 to
@@ -61,10 +61,8 @@ create table spc_data.window_relationships (
   unique (control_window_id)
 );
 
--- Samples are periodic occasions on which multiple measurements are collected from an instrument. Each sample belongs
--- to one instrument but may have many measurements.
---
--- Because measurement takes place over time, samples store a period in which measurements were taken.
+-- Samples are periodic occasions on which one or more measurements are collected from an instrument. Each sample
+-- belongs to one window but may have many measurements.
 --
 -- An annotation field is included so that analysts and operators can add freeform notes on particular samples. This
 -- would mostly be useful in marking up out-of-control samples with any discovered assignable cause(s).
@@ -98,9 +96,7 @@ create table spc_data.samples (
 -- sample. Each measurement belongs to a single sample.
 --
 -- Measurements are assumed to take zero time, or to at least have a logically-assigned time at which they occurred.
--- Hence they store a timestamp 'performed_at' to represent this time. Importantly, this timestamp should fit within the
--- 'period' timestamp range stored on the parent sample. This constraint cannot be enforced within the database without
--- writing a trigger, so it is ignored for now and needs to be enforced by application code.
+-- They store a timestamp 'performed_at' to represent this time.
 create table spc_data.measurements (
   id             bigint generated always as identity primary key,
   sample_id      bigint references spc_data.samples (id) not null,
@@ -119,9 +115,7 @@ create table spc_data.measurements (
 -- item was accepted or rejected as whole. No specific data is kept about individual defects or non-conformities that
 -- led to rejection; see unit_conformities_inspections for that kind of data.
 --
--- As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp. It
--- should fit within the 'period' range stored on the parent sample. This constraint is not enforced by the database and
--- must be enforced in application code.
+-- As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp.
 create table spc_data.whole_unit_conformance_inspections (
   id           bigint generated always as identity primary key,
   sample_id    bigint references spc_data.samples (id) not null,
@@ -137,16 +131,14 @@ create table spc_data.whole_unit_conformance_inspections (
 --
 -- This means that conformities/non-conformities inspections carry more fine-grained information than accepting or
 -- rejecting an entire unit by itself, as is done in whole_unit_conformance_inspections. Importantly, an item may have
--- non-*conformities* but not be non-*conformant* as a whole. That is, sometimes we allow slightly imperfect items to be
+-- non-*conformities* but still be *conformant* as a whole. That is, sometimes we allow slightly imperfect items to be
 -- released. In such cases it is still useful to track non-conformities.
 --
 -- This data is used in the chart for counts for non-conformities (aka c charts) and average non-conformities over a
 -- range (aka area of opportunity, span, interval, batch size, group size) of inspections on multiple items (aka u
 -- charts).
 --
--- As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp. It
--- should fit within the 'period' range stored on the parent sample. This constraint is not enforced by the database and
--- must be enforced in application code.
+-- As with measurements, inspections are assumed to happen instantaneously and this time is stored as a timestamp.
 create table spc_data.per_unit_non_conformities_inspections (
   id               bigint generated always as identity primary key,
   sample_id        bigint references spc_data.samples (id) not null,

@@ -17,7 +17,9 @@ create schema if not exists spc_reports;
 -- were in-control and out-of-control according to the x̄R limits on x̄.
 --
 -- x̄R rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
--- by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_x_rules instead.
+-- by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_x_rules instead. If you get a null in
+-- any rule, it is because your sample size = 1. This case is a bug: it indicates that you should not be using this view
+-- with that sample.
 --
 -- The fields are:
 --
@@ -29,15 +31,18 @@ create schema if not exists spc_reports;
 -- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all samples.
 -- * `data_controlled_value`. The value under control. In this case it is the sample mean.
 -- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
---   identical for every row.
+--   identical for every row. Null when sample size = 1.
 -- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
---   identical for every row.
+--   identical for every row. Null when sample size = 1.
 -- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
 --   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
 --   this view.
--- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
--- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
--- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit. Null when sample
+--   size = 1.
 create view spc_reports.x_bar_r_rules as
   select ss.id                                                      as id_sample
        , control_w.id                                               as id_control_window

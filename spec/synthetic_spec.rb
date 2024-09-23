@@ -12,11 +12,11 @@ class SyntheticSpec < SpcSpec
 
   describe "Shewhart charts" do
     describe "Limit in-control / Control in-control" do
-      instrument_id = 1
+      id_instrument = 1
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          DB[:x_bar_r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2, upper: 4.046, lower: -0.046)
@@ -26,7 +26,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          DB[:r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2, upper: 5.148, lower: 0)
@@ -36,7 +36,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          DB[:x_bar_s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2, upper: 3.954, lower: 0.046)
@@ -46,7 +46,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          DB[:s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 1, upper: 2.568, lower: 0)
@@ -56,11 +56,11 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "Limit in-control / Control out-of-control" do
-      instrument_id = 2
+      id_instrument = 2
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          DB[:x_bar_r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 4, upper: 6.514, lower: 1.486)
@@ -72,7 +72,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          DB[:r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 6, upper: 11.544, lower: 0.456)
@@ -84,7 +84,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          DB[:x_bar_s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 4, upper: 6.553, lower: 1.446)
@@ -96,7 +96,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          DB[:s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2.16, upper: 4.066, lower: 0.255)
@@ -108,11 +108,11 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "Limit out-of-control / Control in-control" do
-      instrument_id = 3
+      id_instrument = 3
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          DB[:x_bar_r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
@@ -124,7 +124,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          DB[:r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
@@ -136,7 +136,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          DB[:x_bar_s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
@@ -148,7 +148,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          DB[:s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
@@ -160,11 +160,11 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "Limit out-of-control / Control out-of-control" do
-      instrument_id = 4
+      id_instrument = 4
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          DB[:x_bar_r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 3.695, upper: 6.237, lower: 1.152)
@@ -176,7 +176,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          DB[:r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 6.069, upper: 11.677, lower: 0.461)
@@ -188,7 +188,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          DB[:x_bar_s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 3.695, upper: 6.260, lower: 1.128)
@@ -200,7 +200,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          DB[:s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2.171, upper: 4.086, lower: 0.256)
@@ -212,11 +212,11 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "With exclusions / Limit out-of-control / Control in-control" do
-      instrument_id = 5
+      id_instrument = 5
 
       describe "x̄R rules" do
         subject do
-          DB[:x_bar_r_rules].where(instrument_id:)
+          DB[:x_bar_r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 4, upper: 6.514, lower: 1.486)
@@ -226,7 +226,7 @@ class SyntheticSpec < SpcSpec
 
       describe "R̄ rules" do
         subject do
-          DB[:r_rules].where(instrument_id:)
+          DB[:r_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 6, upper: 11.544, lower: 0.456)
@@ -236,7 +236,7 @@ class SyntheticSpec < SpcSpec
 
       describe "x̄s rules" do
         subject do
-          DB[:x_bar_s_rules].where(instrument_id:)
+          DB[:x_bar_s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 4, upper: 6.553, lower: 1.447)
@@ -246,7 +246,7 @@ class SyntheticSpec < SpcSpec
 
       describe "s̄ rules" do
         subject do
-          DB[:s_rules].where(instrument_id:)
+          DB[:s_rules].where(id_instrument:)
         end
 
         it_has_params(mean: 2.160, upper: 4.066, lower: 0.255)
@@ -258,7 +258,7 @@ class SyntheticSpec < SpcSpec
 
   describe "EWMA charts" do
     describe "in-control / computed mean & std dev" do
-      instrument_id = 6
+      id_instrument = 6
 
       subject do
         DB.from(
@@ -266,7 +266,7 @@ class SyntheticSpec < SpcSpec
                      0.1, # weighting
                      3 # limits
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 9.975, upper: 10.201, lower: 9.749)
@@ -274,7 +274,7 @@ class SyntheticSpec < SpcSpec
       it_has_status_counts_of(in_control: 20, out_of_control_upper: 0, out_of_control_lower: 0)
 
       # @formatter:off
-      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
+      it_has_correct_values(column: :data_exponentially_weighted_moving_average, values: [
         9.8775,   9.8898,   10.0008,  9.9007,   9.9106,
         10.0196,  9.9176,   9.9258,   10.0333,  9.9299,
         9.9369,   10.0432,  9.9389,   9.9450,   10.0505,
@@ -284,7 +284,7 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "out-of-control upper / target mean & std dev" do
-      instrument_id = 7
+      id_instrument = 7
 
       subject do
         DB.from(
@@ -295,7 +295,7 @@ class SyntheticSpec < SpcSpec
                      1# target std dev
 
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 0, upper: 0.299, lower: -0.299)
@@ -305,7 +305,7 @@ class SyntheticSpec < SpcSpec
       it_is_out_of_control_at(upper_samples: [311, 312, 313, 315], lower_samples: [])
 
       # @formatter:off
-      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
+      it_has_correct_values(column: :data_exponentially_weighted_moving_average, values: [
         -0.02265, 0.031169, -0.10190, -0.03014, -0.06845, -0.15743, -0.22870, -0.29335, -0.23038, -0.08910,
         -0.06474, -0.08544, 0.037422, 0.108123, -0.05295, 0.130413, 0.070408, -0.06630, -0.11573, -0.17563,
         -0.20404, -0.27729, -0.18360, -0.24396, -0.04197, -0.07127, -0.17527, -0.07431, -0.01900, -0.09254,
@@ -325,7 +325,7 @@ class SyntheticSpec < SpcSpec
     end
 
     describe "out-of-control lower / target mean & std dev" do
-      instrument_id = 8
+      id_instrument = 8
 
       subject do
         DB.from(
@@ -336,7 +336,7 @@ class SyntheticSpec < SpcSpec
                      1# target std dev
 
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 0, upper: 0.299, lower: -0.299)
@@ -346,7 +346,7 @@ class SyntheticSpec < SpcSpec
       it_is_out_of_control_at(upper_samples: [], lower_samples: [450, 454, 455])
 
       # @formatter:off
-      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
+      it_has_correct_values(column: :data_exponentially_weighted_moving_average, values: [
         -0.02265, 0.031169, -0.10190, -0.03014, -0.06845, -0.32973, -0.22770, -0.19097, -0.20481, -0.25646,
         -0.27679, -0.34276, -0.24253, -0.29699, -0.08970, -0.06527, -0.08593, 0.036986, 0.107731, -0.05330,
         -0.08147, -0.18446, -0.08258, -0.02643, -0.09923, -0.03412, -0.05259, -0.21521, -0.10145, -0.09989,

@@ -17,22 +17,45 @@ create schema if not exists spc_reports;
 -- were in-control and out-of-control according to the x̄R limits on x̄.
 --
 -- x̄R rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
--- by control_status being set to "na". When sample size is 1, use xmr_x_rules instead.
+-- by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_x_rules instead. If you get a null in
+-- any rule, it is because your sample size = 1. This case is a bug: it indicates that you should not be using this view
+-- with that sample.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all samples.
+-- * `data_controlled_value`. The value under control. In this case it is the sample mean.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
+--   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
+--   this view.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit. Null when sample
+--   size = 1.
 create view spc_reports.x_bar_r_rules as
-  select ss.id        as sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , center_line
-       , sample_mean  as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when upper_limit is null and lower_limit is null then 'na'
-           when sample_mean > upper_limit then 'out_of_control_upper'
-           when sample_mean < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end          as control_status
+  select ss.id                                                      as id_sample
+       , control_w.id                                               as id_control_window
+       , limits_w.id                                                as id_limit_establishment_window
+       , i.id                                                       as id_instrument
+       , center_line                                                as data_center_line
+       , sample_mean                                                as data_controlled_value
+       , upper_limit                                                as data_upper_limit
+       , lower_limit                                                as data_lower_limit
+       , upper_limit is not null and lower_limit is not null        as rule_valid_sample_size
+       , sample_mean < upper_limit and sample_mean > lower_limit    as rule_in_control
+       , sample_mean > upper_limit                                  as rule_out_of_control_upper
+       , sample_mean < lower_limit                                  as rule_out_of_control_lower
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -45,23 +68,46 @@ create view spc_reports.x_bar_r_rules as
 -- in-control and out-of-control according the R̄ limits on R. These signals are useful up until sample size = 10;
 -- after that you should switch to using s_rules instead.
 --
--- ̄̄R̄ rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
--- by control_status being set to "na". When sample size is 1, use xmr_mr_rules instead.
+-- R̄̄ rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
+-- by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_mr_rules instead. If you get a null in
+-- any rule, it is because your sample size = 1. This case is a bug: it indicates that you should not be using this view
+-- with that sample.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean range of all samples.
+-- * `data_controlled_value`. The value under control. In this case it is the sample range.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
+--   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
+--   this view.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit. Null when sample
+--   size = 1.
 create view spc_reports.r_rules as
-  select ss.id        as sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , sample_range as controlled_value
-       , center_line
-       , lower_limit
-       , upper_limit
-       , case
-           when upper_limit is null and lower_limit is null then 'na'
-           when sample_range > upper_limit then 'out_of_control_upper'
-           when sample_range < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end          as control_status
+  select ss.id                                                      as id_sample
+       , control_w.id                                               as id_control_window
+       , limits_w.id                                                as id_limit_establishment_window
+       , i.id                                                       as id_instrument
+       , sample_range                                               as data_controlled_value
+       , center_line                                                as data_center_line
+       , upper_limit                                                as data_upper_limit
+       , lower_limit                                                as data_lower_limit
+       , upper_limit is not null and lower_limit is not null        as rule_valid_sample_size
+       , sample_range < upper_limit and sample_range > lower_limit  as rule_in_control
+       , sample_range > upper_limit                                 as rule_out_of_control_upper
+       , sample_range < lower_limit                                 as rule_out_of_control_lower
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -74,22 +120,45 @@ create view spc_reports.r_rules as
 -- in-control and out-of-control according to the x̄s limits on s.
 --
 -- x̄s rules are meaningless when sample size = 1 because there is no deviation when the sample size is 1. This is
--- indicated by control_status being set to "na". When sample size is 1, use xmr_x_rules instead.
+-- indicated by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_x_rules instead. If you get
+-- a null in any rule, it is because your sample size = 1. This case is a bug: it indicates that you should not be using
+-- this view with that sample.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all samples.
+-- * `data_controlled_value`. The value under control. In this case it is the sample mean.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
+--   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
+--   this view.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit. Null when sample
+--   size = 1.
 create view spc_reports.x_bar_s_rules as
-  select ss.id        as sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , center_line
-       , sample_mean  as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when upper_limit is null and lower_limit is null then 'na'
-           when sample_mean > upper_limit then 'out_of_control_upper'
-           when sample_mean < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end          as control_status
+  select ss.id                                                      as id_sample
+       , control_w.id                                               as id_control_window
+       , limits_w.id                                                as id_limit_establishment_window
+       , i.id                                                       as id_instrument
+       , sample_mean                                                as data_controlled_value
+       , center_line                                                as data_center_line
+       , upper_limit                                                as data_upper_limit
+       , lower_limit                                                as data_lower_limit
+       , upper_limit is not null and lower_limit is not null        as rule_valid_sample_size
+       , sample_mean < upper_limit and sample_mean > lower_limit    as rule_in_control
+       , sample_mean > upper_limit                                  as rule_out_of_control_upper
+       , sample_mean < lower_limit                                  as rule_out_of_control_lower
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -102,23 +171,47 @@ create view spc_reports.x_bar_s_rules as
 -- in-control and out-of-control according the s̄ limits on s. These signals are more effective than r_rules when sample
 -- size > 10.
 --
--- ̄S rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
--- by control_status being set to "na". When sample size is 1, use xmr_mr_rules instead.
+-- S̄ rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is
+-- indicated by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_mr_rules instead. If you get
+-- a null in any rule, it is because your sample size = 1. This case is a bug: it indicates that you should not be using
+-- this view with that sample.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of all sample standard
+--   deviations.
+-- * `data_controlled_value`. The value under control. In this case it is the sample standard deviation.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row. Null when sample size = 1.
+-- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
+--   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
+--   this view.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null when sample
+--   size = 1.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit. Null when sample
+--   size = 1.
 create view spc_reports.s_rules as
-  select ss.id         as sample_id
-       , control_w.id  as control_window_id
-       , limits_w.id   as limit_establishment_window_id
-       , i.id          as instrument_id
-       , center_line
-       , sample_stddev as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when upper_limit is null and lower_limit is null then 'na'
-           when sample_stddev > upper_limit then 'out_of_control_upper'
-           when sample_stddev < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end           as control_status
+  select ss.id                                                          as id_sample
+       , control_w.id                                                   as id_control_window
+       , limits_w.id                                                    as id_limit_establishment_window
+       , i.id                                                           as id_instrument
+       , center_line                                                    as data_center_line
+       , sample_stddev                                                  as data_controlled_value
+       , upper_limit                                                    as data_upper_limit
+       , lower_limit                                                    as data_lower_limit
+       , upper_limit is not null and lower_limit is not null            as rule_valid_sample_size
+       , sample_stddev < upper_limit and sample_stddev > lower_limit    as rule_in_control
+       , sample_stddev > upper_limit                                    as rule_out_of_control_upper
+       , sample_stddev < lower_limit                                    as rule_out_of_control_lower
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id
@@ -129,20 +222,37 @@ create view spc_reports.s_rules as
 
 -- This view applies the limits derived in p_limits_non_conformant to matching control windows, showing which sample
 -- fractions non-conforming were in-control and out-of-control according to the limits on the fraction non-conforming.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all fractions
+--   non-conforming in the limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the mean fraction non-conforming in the
+--   control window.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.p_non_conformant_rules as
-  select ss.sample_id
-       , control_w.id                 as control_window_id
-       , limits_w.id                  as limit_establishment_window_id
-       , i.id                         as instrument_id
-       , center_line
-       , mean_fraction_non_conforming as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when mean_fraction_non_conforming > upper_limit then 'out_of_control_upper'
-           when mean_fraction_non_conforming < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end                          as control_status
+  select ss.sample_id                                                                   as id_sample
+       , control_w.id                                                                   as id_control_window
+       , limits_w.id                                                                    as id_limit_establishment_window
+       , i.id                                                                           as id_instrument
+       , center_line                                                                    as data_center_line
+       , mean_fraction_non_conforming                                                   as data_controlled_value
+       , upper_limit                                                                    as data_upper_limit
+       , lower_limit                                                                    as data_lower_limit
+       , mean_fraction_non_conforming < upper_limit and mean_fraction_non_conforming > lower_limit as rule_in_control
+       , mean_fraction_non_conforming > upper_limit                                     as rule_out_of_control_upper
+       , mean_fraction_non_conforming < lower_limit                                     as rule_out_of_control_lower
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
@@ -155,20 +265,38 @@ create view spc_reports.p_non_conformant_rules as
 
 -- This view applies the limits derived in np_limits_non_conformant to matching control windows, showing which sample
 -- counts non-conforming were in-control and out-of-control according to the limits on the counts non-conforming.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all fractions
+--   non-conforming in the limit establishment window multiplied by the mean sample size.
+-- * `data_controlled_value`. The value under control. In this case it is the mean fraction non-conforming in the
+--   control window multiplied by the mean sample size.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.np_non_conformant_rules as
-  select ss.sample_id
-       , control_w.id                               as control_window_id
-       , limits_w.id                                as limit_establishment_window_id
-       , i.id                                       as instrument_id
-       , center_line
-       , mean_fraction_non_conforming * sample_size as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when (mean_fraction_non_conforming * sample_size) > upper_limit then 'out_of_control_upper'
-           when (mean_fraction_non_conforming * sample_size) < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end                                        as control_status
+  select ss.sample_id                                                           as id_sample
+       , control_w.id                                                           as id_control_window
+       , limits_w.id                                                            as id_limit_establishment_window
+       , i.id                                                                   as id_instrument
+       , center_line                                                            as data_center_line
+       , mean_fraction_non_conforming * sample_size                             as data_controlled_value
+       , upper_limit                                                            as data_upper_limit
+       , lower_limit                                                            as data_lower_limit
+       , (mean_fraction_non_conforming * sample_size) < upper_limit
+             and (mean_fraction_non_conforming * sample_size) > lower_limit     as rule_in_control
+       , (mean_fraction_non_conforming * sample_size) > upper_limit             as rule_out_of_control_upper
+       , (mean_fraction_non_conforming * sample_size) < lower_limit             as rule_out_of_control_lower
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id
@@ -181,20 +309,36 @@ create view spc_reports.np_non_conformant_rules as
 
 -- This view applies the limits derived in c_limits to the matching control windows, showing which sample non-conformity
 -- counts were in-control and out-of-control according to the limits.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of non-conformities in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the count of non-conformities in the sample.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.c_rules as
-  select ncss.sample_id
-       , control_w.id     as control_window_id
-       , limits_w.id      as limit_establishment_window_id
-       , i.id             as instrument_id
-       , center_line
-       , non_conformities as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when (non_conformities) > upper_limit then 'out_of_control_upper'
-           when (non_conformities) < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end              as control_status
+  select ncss.sample_id                                                         as id_sample
+       , control_w.id                                                           as id_control_window
+       , limits_w.id                                                            as id_limit_establishment_window
+       , i.id                                                                   as id_instrument
+       , center_line                                                            as data_center_line
+       , non_conformities                                                       as data_controlled_value
+       , upper_limit                                                            as data_upper_limit
+       , lower_limit                                                            as data_lower_limit
+       , non_conformities < upper_limit and non_conformities > lower_limit      as rule_in_control
+       , non_conformities > upper_limit                                         as rule_out_of_control_upper
+       , non_conformities < lower_limit                                         as rule_out_of_control_lower
   from spc_intermediates.non_conformities_sample_statistics ncss
        join spc_data.windows                                control_w on ncss.window_id = control_w.id
        join spc_data.window_relationships                   wr on control_w.id = wr.control_window_id
@@ -210,21 +354,37 @@ create view spc_reports.c_rules as
 -- This rule is more sensitive to shifts in the mean than an ordinary Shewhart chart that groups together measurements
 -- into samples, but on the other hand it is more vulnerable to departures from normality in the data. Montgomery
 -- recommends Cusum and EWMA charts over the chart for individual values.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of measurement values in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the measured value.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.xmr_x_rules as
-  select immr.sample_id
-       , control_w.id   as control_window_id
-       , limits_w.id    as limit_establishment_window_id
-       , i.id           as instrument_id
-       , immr.performed_at
-       , center_line
-       , measured_value as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when measured_value > upper_limit then 'out_of_control_upper'
-           when measured_value < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end            as control_status
+  select immr.sample_id                                                 as id_sample
+       , control_w.id                                                   as id_control_window
+       , limits_w.id                                                    as id_limit_establishment_window
+       , i.id                                                           as id_instrument
+       , immr.performed_at                                              as data_performed_at
+       , center_line                                                    as data_center_line
+       , measured_value                                                 as data_controlled_value
+       , upper_limit                                                    as data_upper_limit
+       , lower_limit                                                    as data_lower_limit
+       , measured_value < upper_limit and measured_value > lower_limit  as rule_in_control
+       , measured_value > upper_limit                                   as rule_out_of_control_upper
+       , measured_value < lower_limit                                   as rule_out_of_control_lower
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
@@ -239,20 +399,41 @@ create view spc_reports.xmr_x_rules as
 --
 -- As with the individual value rule in xmr_x_rules, this rule is more sensitive to shifts in moving range but also more
 -- vulnerable to departures from normality in the data.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of moving ranges in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the moving range between this sample and the
+--   previous sample. For the first sample this value is null because there is no previous value to compare to. It is
+--   not a bug to receive a null value in this field.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Always
+--   zero, because it is impossible to have a negative moving range.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null if
+--   data_controlled_value is null.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null if
+--   data_controlled_value is null.
+-- * `rule_out_of_control_lower`. Always false because no moving range can drop below zero.
 create view spc_reports.xmr_mr_rules as
-  select immr.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , immr.performed_at
-       , center_line
-       , moving_range as controlled_value
-       , upper_limit
-       , 0 as lower_limit -- this is always the case
-       , case
-           when moving_range > upper_limit then 'out_of_control_upper'
-           else 'in_control'
-         end          as control_status
+  select immr.sample_id                                     as id_sample
+       , control_w.id                                       as id_control_window
+       , limits_w.id                                        as id_limit_establishment_window
+       , i.id                                               as id_instrument
+       , immr.performed_at                                  as data_performed_at
+       , center_line                                        as data_center_line
+       , moving_range                                       as data_controlled_value
+       , upper_limit                                        as data_upper_limit
+       , 0                                                  as data_lower_limit
+       , moving_range < upper_limit and moving_range > 0    as rule_in_control
+       , moving_range > upper_limit                         as rule_out_of_control_upper
+       , false                                              as rule_out_of_control_lower
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id
@@ -271,6 +452,8 @@ create view spc_reports.xmr_mr_rules as
 --
 -- The rule is parameterized because EWMA is configurable (unlike the fixed values used in Shewhart rules).
 --
+-- The parameters are:
+--
 -- * `p_weighting` represents how rapidly older values are weighted into insignificance. High values cause faster decay,
 --   meaning that the EWMA is more reactive to new values. Low values retain older values longer, reducing sensitivity
 --   to noise. In literature this parameter is called λ (typical of SPC literature) or α (typical of data science /
@@ -283,40 +466,60 @@ create view spc_reports.xmr_mr_rules as
 --   EWMA calculation. If not provided this value will be derived from the mean value of the limit establishment window.
 -- * `p_target_std_dev` represents a fixed, predefined target value for standard deviation. If not provided this value
 --   will be derived from the standard deviation of the limit establishment window.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_window`. The window ID. You will typically use this in a where clause.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_window_type`. Whether the window is limit establishment or control. In general, you should not use or rely on
+--   this value, because in a EWMA setting there is no limit establishment concept.
+-- * `data_center_line`. The center line of the Shewhart chart. If p_target_mean is provided, this field will have that
+--   value. Otherwise it will be the mean of all values in the window.
+-- * `data_controlled_value`. The value under control. In this case it is the measured value for the sample.
+-- * `data_exponentially_weighted_moving_average`. The EWMA of values up to this sample.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the EWMA. The value varies sample to
+--   sample.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the EWMA. The value varies sample to
+--   sample.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create function spc_reports.ewma_rules(
     p_weighting decimal,
     p_limits_width decimal default 3.0,
     p_target_mean decimal default null,
     p_target_std_dev decimal default null
 ) returns table (
-    sample_id bigint,
-    window_id bigint,
-    instrument_id bigint,
-    window_type spc_data.window_type,
-    performed_at timestamptz,
-    center_line decimal,
-    controlled_value decimal,
-    exponentially_weighted_moving_average decimal,
-    lower_limit decimal,
-    upper_limit decimal,
-    control_status text
+    id_sample                                       bigint,
+    id_window                                       bigint,
+    id_instrument                                   bigint,
+    data_window_type                                spc_data.window_type,
+    data_performed_at                               timestamptz,
+    data_center_line                                decimal,
+    data_controlled_value                           decimal,
+    data_exponentially_weighted_moving_average      decimal,
+    data_upper_limit                                decimal,
+    data_lower_limit                                decimal,
+    rule_in_control                                 boolean,
+    rule_out_of_control_upper                       boolean,
+    rule_out_of_control_lower                       boolean
 ) language sql as
 $$
-  select eim.sample_id
-       , window_id
-       , eim.instrument_id
-       , eim.window_type
-       , eim.performed_at
-       , center_line
-       , measured_value as controlled_value
-       , ewma as exponentially_weighted_moving_average
-       , lower_limit
-       , upper_limit
-       , case
-             when ewma > upper_limit then 'out_of_control_upper'
-             when ewma < lower_limit then 'out_of_control_lower'
-             else 'in_control'
-         end  as control_status
+  select eim.sample_id      as id_sample
+       , window_id          as id_window
+       , eim.instrument_id  as id_instrument
+       , eim.window_type    as data_window_type
+       , eim.performed_at   as data_performed_as
+       , center_line        as data_center_line
+       , measured_value     as data_controlled_value
+       , ewma               as data_exponentially_weighted_moving_average
+       , upper_limit        as data_upper_limit
+       , lower_limit        as data_lower_limit
+       , ewma < upper_limit and ewma > lower_limit as rule_in_control
+       , ewma > upper_limit as rule_out_of_control_upper
+       , ewma < lower_limit as rule_out_of_control_lower
   from  spc_intermediates.ewma_individual_measurements(
                 p_weighting,
                 p_limits_width,
@@ -350,18 +553,19 @@ $$;
 -- `where window_id = 999` or similar in your query. Leaving off such a where clause will cause the calculation to run
 -- over all samples from all windows, instruments etc. Slow and basically useless.
 --
---  Returns:
--- * `sample_id`, `window_id` and `instrument_id`. For filtering by these values. It is recommended to use
---   `where window_id = <some ID>` when using this function.
--- * `measured_value`. As the name suggests.
--- * `deviation`. The net amount by which the measured value differs from the mean.
--- * `deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
--- * `deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
--- * `C_n`. The calculated Cₙ value for this measurement.
--- * `C_plus`. The calculated C⁺ for this measurement.
--- * `C_minus`. The calculated C⁻ for this measurement.
--- * `upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
--- * `lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
+--  The fields are:
+--
+-- * `id_sample`, `id_window` and `id_instrument`. For filtering by these values. It is recommended to use
+--   `where id_window = <some ID>` when using this function.
+-- * `data_measured_value`. As the name suggests.
+-- * `data_deviation`. The net amount by which the measured value differs from the mean.
+-- * `data_deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
+-- * `data_deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
+-- * `data_C_n`. The calculated Cₙ value for this measurement.
+-- * `data_C_plus`. The calculated C⁺ for this measurement.
+-- * `data_C_minus`. The calculated C⁻ for this measurement.
+-- * `rule_breached_upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
+-- * `rule_breached_lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
 create function spc_reports.cusum_rules(
       p_upper_allowance         decimal
     , p_upper_decision_interval decimal
@@ -370,40 +574,40 @@ create function spc_reports.cusum_rules(
     , p_target_mean             decimal default null
 )
 returns table (
-    measurement_id          bigint,
-    sample_id               bigint,
-    window_id               bigint,
-    instrument_id           bigint,
-    measured_value          decimal,
-    deviation               decimal,
-    deviation_plus          decimal,
-    deviation_minus         decimal,
-    C_n                     decimal,
-    C_plus                  decimal,
-    C_minus                 decimal,
-    upper_decision_interval boolean,
-    lower_decision_interval boolean
+    id_measurement                          bigint,
+    id_sample                               bigint,
+    id_window                               bigint,
+    id_instrument                           bigint,
+    data_measured_value                     decimal,
+    data_deviation                          decimal,
+    data_deviation_plus                     decimal,
+    data_deviation_minus                    decimal,
+    data_C_n                                decimal,
+    data_C_plus                             decimal,
+    data_C_minus                            decimal,
+    rule_breached_upper_decision_interval   boolean,
+    rule_breached_lower_decision_interval   boolean
 )
 immutable language sql as
 $$
-      select m.id as measurement_id
-    , m.sample_id
-    , w.id                                                                          as window_id
-    , w.instrument_id
-    , m.measured_value
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as deviation_plus
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as deviation_minus
+      select m.id           as id_measurement
+    , m.sample_id           as id_sample
+    , w.id                  as id_window
+    , w.instrument_id       as id_instrument
+    , m.measured_value      as data_measured_value
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as data_deviation
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as data_deviation_plus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as data_deviation_minus
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
-        over (partition by w.id order by m.id)                                      as C_n
+        over (partition by w.id order by m.id)                                      as data_C_n
     , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample                                                          as C_plus
+        over window_sample                                                          as data_C_plus
     , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample                                                          as C_minus
+        over window_sample                                                          as data_C_minus
     , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample > p_upper_decision_interval                              as upper_decision_interval
+        over window_sample > p_upper_decision_interval                              as rule_breached_upper_decision_interval
     , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample < p_lower_decision_interval                              as lower_decision_interval
+        over window_sample < p_lower_decision_interval                              as rule_breached_lower_decision_interval
 from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
          join spc_data.windows w on s.window_id = w.id
@@ -414,26 +618,26 @@ $$;
 
 -- This is the symmetric form of cusum_rules(), provided for convenience. That is, it only takes a single value for
 -- allowance and decision interval and applies these for both upper and lower calculations. It delegates to the fully
--- asymmetric version of cusum_rules(); see that function for a discussion of parameters and returned values.
+-- asymmetric version of cusum_rules(); see that function for a discussion of parameters and returned fields.
 create function spc_reports.cusum_rules(
       p_allowance           decimal
     , p_decision_interval   decimal
     , p_target_mean         decimal default null
 )
 returns table (
-    measurement_id          bigint,
-    sample_id               bigint,
-    window_id               bigint,
-    instrument_id           bigint,
-    measured_value          decimal,
-    deviation               decimal,
-    deviation_plus          decimal,
-    deviation_minus         decimal,
-    C_n                     decimal,
-    C_plus                  decimal,
-    C_minus                 decimal,
-    upper_decision_interval boolean,
-    lower_decision_interval boolean
+    id_measurement                          bigint,
+    id_sample                               bigint,
+    id_window                               bigint,
+    id_instrument                           bigint,
+    data_measured_value                     decimal,
+    data_deviation                          decimal,
+    data_deviation_plus                     decimal,
+    data_deviation_minus                    decimal,
+    data_C_n                                decimal,
+    data_C_plus                             decimal,
+    data_C_minus                            decimal,
+    rule_breached_upper_decision_interval   boolean,
+    rule_breached_lower_decision_interval   boolean
 )
 immutable language sql as
 $$

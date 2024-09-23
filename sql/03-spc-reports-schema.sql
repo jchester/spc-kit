@@ -17,22 +17,40 @@ create schema if not exists spc_reports;
 -- were in-control and out-of-control according to the x̄R limits on x̄.
 --
 -- x̄R rules are meaningless when sample size = 1 because there is no range when the sample size is 1. This is indicated
--- by control_status being set to "na". When sample size is 1, use xmr_x_rules instead.
+-- by rule_valid_sample_size being set to 'false'. When sample size is 1, use xmr_x_rules instead.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all samples.
+-- * `data_controlled_value`. The value under control. In this case it is the sample mean.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_valid_sample_size`. False if the sample size is 1, true otherwise. If you don't know in advance whether all
+--   your samples will have sample size > 1, ensure that this is true before relying on the values of the other rules in
+--   this view.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.x_bar_r_rules as
-  select ss.id        as sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , center_line
-       , sample_mean  as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when upper_limit is null and lower_limit is null then 'na'
-           when sample_mean > upper_limit then 'out_of_control_upper'
-           when sample_mean < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end          as control_status
+  select ss.id                                                      as id_sample
+       , control_w.id                                               as id_control_window
+       , limits_w.id                                                as id_limit_establishment_window
+       , i.id                                                       as id_instrument
+       , center_line                                                as data_center_line
+       , sample_mean                                                as data_controlled_value
+       , upper_limit                                                as data_upper_limit
+       , lower_limit                                                as data_lower_limit
+       , upper_limit is not null and lower_limit is not null        as rule_valid_sample_size
+       , sample_mean < upper_limit and sample_mean > lower_limit    as rule_in_control
+       , sample_mean > upper_limit                                  as rule_out_of_control_upper
+       , sample_mean < lower_limit                                  as rule_out_of_control_lower
   from spc_intermediates.measurement_sample_statistics ss
        join spc_data.windows                           control_w on ss.window_id = control_w.id
        join spc_data.window_relationships              wr on control_w.id = wr.control_window_id

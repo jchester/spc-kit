@@ -13,11 +13,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Flow Width example" do
-    instrument_id = 1
+    id_instrument = 1
 
     describe "x̄R rules" do
       subject do
-        DB[:x_bar_r_rules].where(instrument_id:)
+        DB[:x_bar_r_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 1.506, upper: 1.693, lower: 1.318)
@@ -29,7 +29,7 @@ class MontgomerySpec < SpcSpec
 
     describe "R̄ rules" do
       subject do
-        DB[:r_rules].where(instrument_id:)
+        DB[:r_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 0.32521, upper: 0.68749, lower: 0)
@@ -146,7 +146,7 @@ class MontgomerySpec < SpcSpec
                      10, # target mean
                      1 # target std dev
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(instrument_id:).order_by(:id_sample)
       end
 
       it_has_params(mean: 10, upper: 10.27, lower: 9.73)
@@ -171,7 +171,7 @@ class MontgomerySpec < SpcSpec
                      0.1, # weighting
                      2.7 # limits
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(instrument_id:).order_by(:id_sample)
       end
 
       it_has_params(mean: 10.315, upper: 10.626, lower: 10.004)
@@ -195,7 +195,7 @@ class MontgomerySpec < SpcSpec
                      5, # decision interval
                      10 # target mean
           )
-        ).where(instrument_id:).order_by(:sample_id)
+        ).where(instrument_id:).order_by(:id_sample)
       end
 
       describe "Calculating net deviation" do

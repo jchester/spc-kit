@@ -266,7 +266,7 @@ class SyntheticSpec < SpcSpec
                      0.1, # weighting
                      3 # limits
           )
-        ).where(id_instrument:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 9.975, upper: 10.201, lower: 9.749)
@@ -295,7 +295,7 @@ class SyntheticSpec < SpcSpec
                      1# target std dev
 
           )
-        ).where(id_instrument:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 0, upper: 0.299, lower: -0.299)
@@ -336,7 +336,7 @@ class SyntheticSpec < SpcSpec
                      1# target std dev
 
           )
-        ).where(id_instrument:).order_by(:sample_id)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 0, upper: 0.299, lower: -0.299)

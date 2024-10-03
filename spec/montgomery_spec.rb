@@ -39,11 +39,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Engine Piston Diameter example" do
-    instrument_id = 2
+    id_instrument = 2
 
     describe "x̄s rules" do
       subject do
-        DB[:x_bar_s_rules].where(instrument_id:)
+        DB[:x_bar_s_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 74.001, upper: 74.014, lower: 73.988)
@@ -53,7 +53,7 @@ class MontgomerySpec < SpcSpec
 
     describe "s̄ rules" do
       subject do
-        DB[:s_rules].where(instrument_id:)
+        DB[:s_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 0.0094, upper: 0.0196, lower: 0)
@@ -63,11 +63,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Orange Juice Can Inspection" do
-    instrument_id = 3
+    id_instrument = 3
 
     describe "p non-conformant rules" do
       subject do
-        DB[:p_non_conformant_rules].where(instrument_id:)
+        DB[:p_non_conformant_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 0.2313, upper: 0.4102, lower: 0.0524)
@@ -79,7 +79,7 @@ class MontgomerySpec < SpcSpec
 
     describe "np non-conformant rules" do
       subject do
-        DB[:np_non_conformant_rules].where(instrument_id:)
+        DB[:np_non_conformant_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 11.565, upper: 20.510, lower: 2.620)
@@ -91,11 +91,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Printed Circuit Boards" do
-    instrument_id = 4
+    id_instrument = 4
 
     describe "c rules" do
       subject do
-        DB[:c_rules].where(instrument_id:)
+        DB[:c_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 19.85, upper: 33.22, lower: 6.48)
@@ -107,11 +107,11 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Mortgage Loan Cost" do
-    instrument_id = 5
+    id_instrument = 5
 
     describe "XmR X rules" do
       subject do
-        DB[:xmr_x_rules].where(instrument_id:)
+        DB[:xmr_x_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 300.5, upper: 321.22, lower: 279.78)
@@ -123,7 +123,7 @@ class MontgomerySpec < SpcSpec
 
     describe "XmR MR rules" do
       subject do
-        DB[:xmr_mr_rules].where(instrument_id:)
+        DB[:xmr_mr_rules].where(id_instrument:)
       end
 
       it_has_params(mean: 7.79, upper: 25.45, lower: 0)
@@ -135,7 +135,7 @@ class MontgomerySpec < SpcSpec
   end
 
   describe "Normal Distribution With Shifting Mean" do
-    instrument_id = 6
+    id_instrument = 6
 
     describe "EWMA with fixed targets" do
       subject do
@@ -146,7 +146,7 @@ class MontgomerySpec < SpcSpec
                      10, # target mean
                      1 # target std dev
           )
-        ).where(instrument_id:).order_by(:id_sample)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 10, upper: 10.27, lower: 9.73)
@@ -171,7 +171,7 @@ class MontgomerySpec < SpcSpec
                      0.1, # weighting
                      2.7 # limits
           )
-        ).where(instrument_id:).order_by(:id_sample)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       it_has_params(mean: 10.315, upper: 10.626, lower: 10.004)
@@ -195,7 +195,7 @@ class MontgomerySpec < SpcSpec
                      5, # decision interval
                      10 # target mean
           )
-        ).where(instrument_id:).order_by(:id_sample)
+        ).where(id_instrument:).order_by(:id_sample)
       end
 
       describe "Calculating net deviation" do

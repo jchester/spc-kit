@@ -354,21 +354,37 @@ create view spc_reports.c_rules as
 -- This rule is more sensitive to shifts in the mean than an ordinary Shewhart chart that groups together measurements
 -- into samples, but on the other hand it is more vulnerable to departures from normality in the data. Montgomery
 -- recommends Cusum and EWMA charts over the chart for individual values.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of measurement values in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the measured value.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.xmr_x_rules as
-  select immr.sample_id
-       , control_w.id   as control_window_id
-       , limits_w.id    as limit_establishment_window_id
-       , i.id           as instrument_id
-       , immr.performed_at
-       , center_line
-       , measured_value as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when measured_value > upper_limit then 'out_of_control_upper'
-           when measured_value < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end            as control_status
+  select immr.sample_id                                                 as id_sample
+       , control_w.id                                                   as id_control_window
+       , limits_w.id                                                    as id_limit_establishment_window
+       , i.id                                                           as id_instrument
+       , immr.performed_at                                              as data_performed_at
+       , center_line                                                    as data_center_line
+       , measured_value                                                 as data_controlled_value
+       , upper_limit                                                    as data_upper_limit
+       , lower_limit                                                    as data_lower_limit
+       , measured_value < upper_limit and measured_value > lower_limit  as rule_in_control
+       , measured_value > upper_limit                                   as rule_out_of_control_upper
+       , measured_value < lower_limit                                   as rule_out_of_control_lower
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id

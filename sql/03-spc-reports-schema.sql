@@ -309,20 +309,36 @@ create view spc_reports.np_non_conformant_rules as
 
 -- This view applies the limits derived in c_limits to the matching control windows, showing which sample non-conformity
 -- counts were in-control and out-of-control according to the limits.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of non-conformities in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the count of non-conformities in the sample.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.c_rules as
-  select ncss.sample_id
-       , control_w.id     as control_window_id
-       , limits_w.id      as limit_establishment_window_id
-       , i.id             as instrument_id
-       , center_line
-       , non_conformities as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when (non_conformities) > upper_limit then 'out_of_control_upper'
-           when (non_conformities) < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end              as control_status
+  select ncss.sample_id                                                         as id_sample
+       , control_w.id                                                           as id_control_window
+       , limits_w.id                                                            as id_limit_establishment_window
+       , i.id                                                                   as id_instrument
+       , center_line                                                            as data_center_line
+       , non_conformities                                                       as data_controlled_value
+       , upper_limit                                                            as data_upper_limit
+       , lower_limit                                                            as data_lower_limit
+       , non_conformities < upper_limit and non_conformities > lower_limit      as rule_in_control
+       , non_conformities > upper_limit                                         as rule_out_of_control_upper
+       , non_conformities < lower_limit                                         as rule_out_of_control_lower
   from spc_intermediates.non_conformities_sample_statistics ncss
        join spc_data.windows                                control_w on ncss.window_id = control_w.id
        join spc_data.window_relationships                   wr on control_w.id = wr.control_window_id

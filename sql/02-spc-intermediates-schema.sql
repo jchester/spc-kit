@@ -182,7 +182,6 @@ create view spc_intermediates.fraction_conforming as
                   group by sample_id)
 
   select sample_id
-       , cast(conformant_count as decimal) / (conformant_count + non_conformant_count)     as fraction_conforming
        , cast(non_conformant_count as decimal) / (conformant_count + non_conformant_count) as fraction_non_conforming
        , conformant_count + non_conformant_count                                           as sample_size
   from counts;
@@ -192,7 +191,6 @@ create view spc_intermediates.fraction_conforming_sample_statistics as
   select fc.sample_id
        , s.window_id
        , s.include_in_limit_calculations
-       , avg(fraction_conforming)     as mean_fraction_conforming
        , avg(fraction_non_conforming) as mean_fraction_non_conforming
        , sum(sample_size)             as sample_size
   from spc_intermediates.fraction_conforming fc

@@ -208,7 +208,6 @@ create view spc_intermediates.fraction_conforming_sample_statistics as
 -- every sample has been reduced to a single number, being the fraction.
 create view spc_intermediates.conformant_limit_establishment_statistics as
   select w.id                              as limit_establishment_window_id
-       , avg(mean_fraction_conforming)     as grand_mean_conforming
        , avg(mean_fraction_non_conforming) as grand_mean_non_conforming
        , avg(sample_size)                  as mean_sample_size
   from spc_intermediates.fraction_conforming_sample_statistics fcss
@@ -216,21 +215,6 @@ create view spc_intermediates.conformant_limit_establishment_statistics as
   where w.type = 'limit_establishment'
     and fcss.include_in_limit_calculations
   group by w.id;
-
--- For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
--- limit for fraction conforming (aka a yield chart). The limits are based on a function of the grand mean of fractions
--- conforming.
---
--- This chart is not very commonly used; it is more traditional to use the fraction non-conforming for control. This is
--- included mostly for completeness.
-create view spc_intermediates.p_limits_conformant as
-  select limit_establishment_window_id
-       , grand_mean_conforming + (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                            mean_sample_size)))                as upper_limit
-       , grand_mean_conforming                                                 as center_line
-       , greatest(0.0, grand_mean_conforming - (3 * (sqrt((grand_mean_conforming * (1.0 - grand_mean_conforming)) /
-                                                          mean_sample_size)))) as lower_limit
-  from spc_intermediates.conformant_limit_establishment_statistics;
 
 -- For each limit establishment window, this view derives the p chart upper control limit, center line and lower control
 -- limit for fraction non-conforming (aka a fallout chart). The limits are based on a function of the grand mean of
@@ -248,20 +232,6 @@ create view spc_intermediates.p_limits_non_conformant as
   from spc_intermediates.conformant_limit_establishment_statistics;
 
 -- np charts
-
--- For each limit establishment window, this view derives the np chart (number conforming) upper control limit, center
--- line and lower control limit. Note that the p chart and np chart can disagree on whether a sample is in-control or
--- not, because the limits are calculated as decimals but samples are composed of an integer number of inspected items.
---
--- This is the conforming version of an np chart, rarely used.
-create view spc_intermediates.np_limits_conformant as
-  select limit_establishment_window_id
-       , (grand_mean_conforming * mean_sample_size) +
-         (3 * (sqrt((grand_mean_conforming * mean_sample_size) * (1.0 - grand_mean_conforming)))) as upper_limit
-       , grand_mean_conforming * mean_sample_size                                                 as center_line
-       , greatest(0.0, (3 * (sqrt((grand_mean_conforming * mean_sample_size) *
-                                  (1.0 - grand_mean_conforming)))))                               as lower_limit
-  from spc_intermediates.conformant_limit_establishment_statistics;
 
 -- For each limit establishment window, this view derives the np chart (number non-conforming) upper control limit,
 -- center line and lower control limit. Note that the p chart and np chart can disagree whether a sample is in-control

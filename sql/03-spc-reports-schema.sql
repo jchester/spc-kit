@@ -399,20 +399,39 @@ create view spc_reports.xmr_x_rules as
 --
 -- As with the individual value rule in xmr_x_rules, this rule is more sensitive to shifts in moving range but also more
 -- vulnerable to departures from normality in the data.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the mean of moving ranges in the
+--   limit establishment window.
+-- * `data_controlled_value`. The value under control. In this case it is the moving range between this sample and the
+--   previous sample. For the first sample this value is null because there is no previous value to compare to. It is
+--   not a bug to receive a null value in this field.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Always
+--   zero, because it is impossible to have a negative moving range.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. Always false because no moving range can drop below zero.
 create view spc_reports.xmr_mr_rules as
-  select immr.sample_id
-       , control_w.id as control_window_id
-       , limits_w.id  as limit_establishment_window_id
-       , i.id         as instrument_id
-       , immr.performed_at
-       , center_line
-       , moving_range as controlled_value
-       , upper_limit
-       , 0 as lower_limit -- this is always the case
-       , case
-           when moving_range > upper_limit then 'out_of_control_upper'
-           else 'in_control'
-         end          as control_status
+  select immr.sample_id                                     as id_sample
+       , control_w.id                                       as id_control_window
+       , limits_w.id                                        as id_limit_establishment_window
+       , i.id                                               as id_instrument
+       , immr.performed_at                                  as data_performed_at
+       , center_line                                        as data_center_line
+       , moving_range                                       as data_controlled_value
+       , upper_limit                                        as data_upper_limit
+       , 0                                                  as data_lower_limit
+       , moving_range < upper_limit and moving_range > 0    as rule_in_control
+       , moving_range > upper_limit                         as rule_out_of_control_upper
+       , false                                              as rule_out_of_control_lower
   from spc_intermediates.individual_measurements_and_moving_ranges immr
        join spc_data.windows                                       control_w on immr.window_id = control_w.id
        join spc_data.window_relationships                          wr on control_w.id = wr.control_window_id

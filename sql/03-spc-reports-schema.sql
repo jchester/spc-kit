@@ -450,6 +450,8 @@ create view spc_reports.xmr_mr_rules as
 --
 -- The rule is parameterized because EWMA is configurable (unlike the fixed values used in Shewhart rules).
 --
+-- The parameters are:
+--
 -- * `p_weighting` represents how rapidly older values are weighted into insignificance. High values cause faster decay,
 --   meaning that the EWMA is more reactive to new values. Low values retain older values longer, reducing sensitivity
 --   to noise. In literature this parameter is called λ (typical of SPC literature) or α (typical of data science /
@@ -462,40 +464,60 @@ create view spc_reports.xmr_mr_rules as
 --   EWMA calculation. If not provided this value will be derived from the mean value of the limit establishment window.
 -- * `p_target_std_dev` represents a fixed, predefined target value for standard deviation. If not provided this value
 --   will be derived from the standard deviation of the limit establishment window.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_window`. The window ID. You will typically use this in a where clause.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_window_type`. Whether the window is limit establishment or control. In general, you should not use or rely on
+--   this value, because in a EWMA setting there is no limit establishment concept.
+-- * `data_center_line`. The center line of the Shewhart chart. If p_target_mean is provided, this field will have that
+--   value. Otherwise it will be the mean of all values in the window.
+-- * `data_controlled_value`. The value under control. In this case it is the measured value for the sample.
+-- * `data_exponentially_weighted_moving_average`. The EWMA of values up to this sample.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the EWMA. The value varies sample to
+--   sample.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the EWMA. The value varies sample to
+--   sample.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create function spc_reports.ewma_rules(
     p_weighting decimal,
     p_limits_width decimal default 3.0,
     p_target_mean decimal default null,
     p_target_std_dev decimal default null
 ) returns table (
-    sample_id bigint,
-    window_id bigint,
-    instrument_id bigint,
-    window_type spc_data.window_type,
-    performed_at timestamptz,
-    center_line decimal,
-    controlled_value decimal,
-    exponentially_weighted_moving_average decimal,
-    lower_limit decimal,
-    upper_limit decimal,
-    control_status text
+    id_sample                                       bigint,
+    id_window                                       bigint,
+    id_instrument                                   bigint,
+    data_window_type                                spc_data.window_type,
+    data_performed_at                               timestamptz,
+    data_center_line                                decimal,
+    data_controlled_value                           decimal,
+    data_exponentially_weighted_moving_average      decimal,
+    data_upper_limit                                decimal,
+    data_lower_limit                                decimal,
+    rule_in_control                                 boolean,
+    rule_out_of_control_upper                       boolean,
+    rule_out_of_control_lower                       boolean
 ) language sql as
 $$
-  select eim.sample_id
-       , window_id
-       , eim.instrument_id
-       , eim.window_type
-       , eim.performed_at
-       , center_line
-       , measured_value as controlled_value
-       , ewma as exponentially_weighted_moving_average
-       , lower_limit
-       , upper_limit
-       , case
-             when ewma > upper_limit then 'out_of_control_upper'
-             when ewma < lower_limit then 'out_of_control_lower'
-             else 'in_control'
-         end  as control_status
+  select eim.sample_id      as id_sample
+       , window_id          as id_window
+       , eim.instrument_id  as id_instrument
+       , eim.window_type    as data_window_type
+       , eim.performed_at   as data_performed_as
+       , center_line        as data_center_line
+       , measured_value     as data_controlled_value
+       , ewma               as data_exponentially_weighted_moving_average
+       , upper_limit        as data_upper_limit
+       , lower_limit        as data_lower_limit
+       , ewma < upper_limit and ewma > lower_limit as rule_in_control
+       , ewma > upper_limit as rule_out_of_control_upper
+       , ewma > lower_limit as rule_out_of_control_lower
   from  spc_intermediates.ewma_individual_measurements(
                 p_weighting,
                 p_limits_width,

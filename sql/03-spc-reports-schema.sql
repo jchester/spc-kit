@@ -265,20 +265,38 @@ create view spc_reports.p_non_conformant_rules as
 
 -- This view applies the limits derived in np_limits_non_conformant to matching control windows, showing which sample
 -- counts non-conforming were in-control and out-of-control according to the limits on the counts non-conforming.
+--
+-- The fields are:
+--
+-- * `id_sample`. The sample ID.
+-- * `id_control_window`. The control window ID. You will typically use this in a where clause.
+-- * `id_limit_establishment_window`. The ID of the limit establishment window associated with the control window.
+-- * `id_instrument`. The instrument ID. Use this carefully as calculations can be incorrect if there are more than one
+--    control window per instrument.
+-- * `data_center_line`. The center line of the Shewhart chart. In this case it is the grand mean of all fractions
+--   non-conforming in the limit establishment window multiplied by the mean sample size.
+-- * `data_controlled_value`. The value under control. In this case it is the mean fraction non-conforming in the
+--   control window multiplied by the mean sample size.
+-- * `data_upper_limit`. The upper control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Is
+--   identical for every row.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_out_of_control_lower`. True if the controlled value is below the lower control limit.
 create view spc_reports.np_non_conformant_rules as
-  select ss.sample_id
-       , control_w.id                               as control_window_id
-       , limits_w.id                                as limit_establishment_window_id
-       , i.id                                       as instrument_id
-       , center_line
-       , mean_fraction_non_conforming * sample_size as controlled_value
-       , lower_limit
-       , upper_limit
-       , case
-           when (mean_fraction_non_conforming * sample_size) > upper_limit then 'out_of_control_upper'
-           when (mean_fraction_non_conforming * sample_size) < lower_limit then 'out_of_control_lower'
-           else 'in_control'
-         end                                        as control_status
+  select ss.sample_id                                                           as id_sample
+       , control_w.id                                                           as id_control_window
+       , limits_w.id                                                            as id_limit_establishment_window
+       , i.id                                                                   as id_instrument
+       , center_line                                                            as data_center_line
+       , mean_fraction_non_conforming * sample_size                             as data_controlled_value
+       , upper_limit                                                            as data_upper_limit
+       , lower_limit                                                            as data_lower_limit
+       , (mean_fraction_non_conforming * sample_size) < upper_limit
+             and (mean_fraction_non_conforming * sample_size) > lower_limit     as rule_in_control
+       , (mean_fraction_non_conforming * sample_size) > upper_limit             as rule_out_of_control_upper
+       , (mean_fraction_non_conforming * sample_size) < lower_limit             as rule_out_of_control_lower
   from spc_intermediates.fraction_conforming_sample_statistics ss
        join spc_data.windows                                   control_w on ss.window_id = control_w.id
        join spc_data.window_relationships                      wr on control_w.id = wr.control_window_id

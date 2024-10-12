@@ -551,18 +551,19 @@ $$;
 -- `where window_id = 999` or similar in your query. Leaving off such a where clause will cause the calculation to run
 -- over all samples from all windows, instruments etc. Slow and basically useless.
 --
---  Returns:
--- * `sample_id`, `window_id` and `instrument_id`. For filtering by these values. It is recommended to use
---   `where window_id = <some ID>` when using this function.
--- * `measured_value`. As the name suggests.
--- * `deviation`. The net amount by which the measured value differs from the mean.
--- * `deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
--- * `deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
--- * `C_n`. The calculated Cₙ value for this measurement.
--- * `C_plus`. The calculated C⁺ for this measurement.
--- * `C_minus`. The calculated C⁻ for this measurement.
--- * `upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
--- * `lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
+--  The fields are:
+--
+-- * `id_sample`, `id_window` and `id_instrument`. For filtering by these values. It is recommended to use
+--   `where id_window = <some ID>` when using this function.
+-- * `data_measured_value`. As the name suggests.
+-- * `data_deviation`. The net amount by which the measured value differs from the mean.
+-- * `data_deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
+-- * `data_deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
+-- * `data_C_n`. The calculated Cₙ value for this measurement.
+-- * `data_C_plus`. The calculated C⁺ for this measurement.
+-- * `data_C_minus`. The calculated C⁻ for this measurement.
+-- * `rule_breached_upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
+-- * `rule_breached_lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
 create function spc_reports.cusum_rules(
       p_upper_allowance         decimal
     , p_upper_decision_interval decimal
@@ -571,40 +572,40 @@ create function spc_reports.cusum_rules(
     , p_target_mean             decimal default null
 )
 returns table (
-    measurement_id          bigint,
-    sample_id               bigint,
-    window_id               bigint,
-    instrument_id           bigint,
-    measured_value          decimal,
-    deviation               decimal,
-    deviation_plus          decimal,
-    deviation_minus         decimal,
-    C_n                     decimal,
-    C_plus                  decimal,
-    C_minus                 decimal,
-    upper_decision_interval boolean,
-    lower_decision_interval boolean
+    id_measurement                          bigint,
+    id_sample                               bigint,
+    id_window                               bigint,
+    id_instrument                           bigint,
+    data_measured_value                     decimal,
+    data_deviation                          decimal,
+    data_deviation_plus                     decimal,
+    data_deviation_minus                    decimal,
+    data_C_n                                decimal,
+    data_C_plus                             decimal,
+    data_C_minus                            decimal,
+    rule_breached_upper_decision_interval   boolean,
+    rule_breached_lower_decision_interval   boolean
 )
 immutable language sql as
 $$
-      select m.id as measurement_id
-    , m.sample_id
-    , w.id                                                                          as window_id
-    , w.instrument_id
-    , m.measured_value
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as deviation
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as deviation_plus
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as deviation_minus
+      select m.id           as id_measurement
+    , m.sample_id           as id_sample
+    , w.id                  as id_window
+    , w.instrument_id       as id_instrument
+    , m.measured_value      as data_measured_value
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as data_deviation
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as data_deviation_plus
+    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as data_deviation_minus
     , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
-        over (partition by w.id order by m.id)                                      as C_n
+        over (partition by w.id order by m.id)                                      as data_C_n
     , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample                                                          as C_plus
+        over window_sample                                                          as data_C_plus
     , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample                                                          as C_minus
+        over window_sample                                                          as data_C_minus
     , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample > p_upper_decision_interval                              as upper_decision_interval
+        over window_sample > p_upper_decision_interval                              as rule_breached_upper_decision_interval
     , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample < p_lower_decision_interval                              as lower_decision_interval
+        over window_sample < p_lower_decision_interval                              as rule_breached_lower_decision_interval
 from spc_data.measurements m
          join spc_data.samples s on s.id = m.sample_id
          join spc_data.windows w on s.window_id = w.id
@@ -615,26 +616,26 @@ $$;
 
 -- This is the symmetric form of cusum_rules(), provided for convenience. That is, it only takes a single value for
 -- allowance and decision interval and applies these for both upper and lower calculations. It delegates to the fully
--- asymmetric version of cusum_rules(); see that function for a discussion of parameters and returned values.
+-- asymmetric version of cusum_rules(); see that function for a discussion of parameters and returned fields.
 create function spc_reports.cusum_rules(
       p_allowance           decimal
     , p_decision_interval   decimal
     , p_target_mean         decimal default null
 )
 returns table (
-    measurement_id          bigint,
-    sample_id               bigint,
-    window_id               bigint,
-    instrument_id           bigint,
-    measured_value          decimal,
-    deviation               decimal,
-    deviation_plus          decimal,
-    deviation_minus         decimal,
-    C_n                     decimal,
-    C_plus                  decimal,
-    C_minus                 decimal,
-    upper_decision_interval boolean,
-    lower_decision_interval boolean
+    id_measurement                          bigint,
+    id_sample                               bigint,
+    id_window                               bigint,
+    id_instrument                           bigint,
+    data_measured_value                     decimal,
+    data_deviation                          decimal,
+    data_deviation_plus                     decimal,
+    data_deviation_minus                    decimal,
+    data_C_n                                decimal,
+    data_C_plus                             decimal,
+    data_C_minus                            decimal,
+    rule_breached_upper_decision_interval   boolean,
+    rule_breached_lower_decision_interval   boolean
 )
 immutable language sql as
 $$

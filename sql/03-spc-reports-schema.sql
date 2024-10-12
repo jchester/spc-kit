@@ -416,8 +416,10 @@ create view spc_reports.xmr_x_rules as
 --   identical for every row.
 -- * `data_lower_limit`. The lower control limit for the control window, based on the limit establishment window. Always
 --   zero, because it is impossible to have a negative moving range.
--- * `rule_in_control`. True if the controlled value is within control limits, false otherwise.
--- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit.
+-- * `rule_in_control`. True if the controlled value is within control limits, false otherwise. Null if
+--   data_controlled_value is null.
+-- * `rule_out_of_control_upper`. True if the controlled value is above the upper control limit. Null if
+--   data_controlled_value is null.
 -- * `rule_out_of_control_lower`. Always false because no moving range can drop below zero.
 create view spc_reports.xmr_mr_rules as
   select immr.sample_id                                     as id_sample

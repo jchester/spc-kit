@@ -298,7 +298,7 @@ create view spc_intermediates.individual_measurements_and_moving_ranges as
        , s.include_in_limit_calculations
        , measured_value
        , abs(measured_value -
-             lag(measured_value, 1) over (partition by w.id order by m.id)) as moving_range
+             lag(measured_value, 1) over (partition by w.instrument_id order by m.id)) as moving_range
   from spc_data.measurements m
        join spc_data.samples s on s.id = m.sample_id
        join spc_data.windows w on s.window_id = w.id;

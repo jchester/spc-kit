@@ -128,7 +128,7 @@ class MontgomerySpec < SpcSpec
 
       it_has_params(mean: 7.79, upper: 25.45, lower: 0)
 
-      it_has_status_counts_of(in_control: 39, out_of_control_upper: 1, out_of_control_lower: 0)
+      it_has_status_counts_of(in_control: 38, out_of_control_upper: 1, out_of_control_lower: 0)
 
       it_is_out_of_control_at(upper_samples: [165], lower_samples: [])
     end

@@ -156,7 +156,7 @@ class MontgomerySpec < SpcSpec
       it_is_out_of_control_at(upper_samples: [195, 196], lower_samples: [])
 
       # @formatter:off
-      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
+      it_has_correct_values(column: :data_exponentially_weighted_moving_average, values: [
         9.945,    9.7495, 9.70355,  9.8992, 10.1253, 10.1307, 9.92167, 10.0755, 9.98796, 10.0232,
         9.92384, 10.0785, 10.1216, 10.0495, 10.0525, 9.98426, 10.0478,  10.074, 9.91864, 10.0108,
         10.0997, 10.0227, 10.2495, 10.3745, 10.3971, 10.4654, 10.4568, 10.5731, 10.6468, 10.6341
@@ -179,7 +179,7 @@ class MontgomerySpec < SpcSpec
       it_has_status_counts_of(in_control: 30, out_of_control_upper: 0, out_of_control_lower: 0)
 
       # @formatter:off
-      it_has_correct_values(column: :exponentially_weighted_moving_average, values: [
+      it_has_correct_values(column: :data_exponentially_weighted_moving_average, values: [
         10.2285, 10.0046, 9.93318, 10.1058, 10.3112, 10.2981, 10.0723, 10.2111, 10.1099, 10.1329,
         10.0226, 10.1674, 10.2016, 10.1215, 10.1173, 10.0426, 10.1003, 10.1213, 9.96119, 10.0490,
         10.1341, 10.0537, 10.2773, 10.3996, 10.4196, 10.4857, 10.4751, 10.5896, 10.6616, 10.6474
@@ -199,7 +199,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating net deviation" do
-        it_has_correct_values(column: :deviation, values: [
+        it_has_correct_values(column: :data_deviation, values: [
           # @formatter:off
           -0.55,  -2.01,  -0.71,  1.66,   2.16,
           0.18,   -1.96,  1.46,   -0.8,   0.34,
@@ -212,7 +212,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating Cₙ" do
-        it_has_correct_values(column: :c_n, values: [
+        it_has_correct_values(column: :data_c_n, values: [
           # @formatter:off
           -0.55,  -2.56,  -3.27,  -1.61,  0.55,
           0.73,   -1.23,  0.23,   -0.57,  -0.23,
@@ -225,7 +225,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating positive deviation" do
-        it_has_correct_values(column: :deviation_plus, values: [
+        it_has_correct_values(column: :data_deviation_plus, values: [
           # @formatter:off
           -1.05,  -2.51,  -1.21,  1.16,   1.66,
           -0.32,  -2.46,  0.96,   -1.3,   -0.16,
@@ -238,7 +238,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating C⁺" do
-        it_has_correct_values(column: :c_plus, values: [
+        it_has_correct_values(column: :data_c_plus, values: [
           # @formatter:off
           0,      0,      0,      1.16,   2.82,
           2.50,   0.04,   1.00,   0,      0,
@@ -251,7 +251,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating negative deviation" do
-        it_has_correct_values(column: :deviation_minus, values: [
+        it_has_correct_values(column: :data_deviation_minus, values: [
           # @formatter:off
           -0.05,  -1.51,  -0.21,  2.16,   2.66,
           0.68,   -1.46,  1.96,   -0.3,   0.84,
@@ -264,7 +264,7 @@ class MontgomerySpec < SpcSpec
       end
 
       describe "Calculating C⁻" do
-        it_has_correct_values(column: :c_minus, values: [
+        it_has_correct_values(column: :data_c_minus, values: [
           # @formatter:off
           -0.05,  -1.56,    -1.77,  0,      0,
           0,      -1.46,    0,      -0.3,   0,

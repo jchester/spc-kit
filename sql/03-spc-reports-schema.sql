@@ -517,7 +517,7 @@ $$
        , lower_limit        as data_lower_limit
        , ewma < upper_limit and ewma > lower_limit as rule_in_control
        , ewma > upper_limit as rule_out_of_control_upper
-       , ewma > lower_limit as rule_out_of_control_lower
+       , ewma < lower_limit as rule_out_of_control_lower
   from  spc_intermediates.ewma_individual_measurements(
                 p_weighting,
                 p_limits_width,

@@ -240,25 +240,30 @@ Each row in a Rule view tells you whether a Sample was within control limits, or
 Let's look at Table 6.2 and see if we can find out-of-control Samples:
 
 ```sql
-select sample_id,
-       controlled_value,
-       upper_limit,
-       control_status
+select id_sample                    as "Sample ID",
+       data_controlled_value        as "Sample Average",
+       data_upper_limit             as "Upper Limit",
+       rule_in_control              as "In Control?",
+       rule_out_of_control_upper    as "Out of Control Upper?"
 from spc_reports.x_bar_r_rules
-where control_window_id = 2
-  and control_status != 'in_control'
-order by sample_id;
+where id_control_window = 2
+  and not rule_in_control
+order by id_sample;
 ```
 
 Giving:
 
-| Sample ID | Sample Average | Upper Limit | Control Status |
-|-----------|----------------|-------------|----------------|
-| 43 | 1.69696 | 1.693224336 | out_of_control_upper |
-| 45 | 1.77 | 1.693224336 | out_of_control_upper |
+| Sample ID | Sample Average | Upper Limit | In Control? | Out of Control Upper? |
+|-----------|----------------|-------------|-------------|-----------------------|
+| 43        | 1.69696        | 1.693224336 | false       | true                  |
+| 45        | 1.77           | 1.693224336 | false       | true                  |
 
-We can see that samples 43 and 45 are unusually high: they are `out_of_control_upper`. This means we need to perform an
+We can see that samples 43 and 45 are unusually high: they are out of control. This means we need to perform an
 investigation to establish what has occurred to cause the unusual sample average.
+
+You may have noticed the prefixes for each column. They follow a consistent pattern across different views and
+functions: `id_` refers to an ID from another table, `data_` represents some value as of that sample and `rule_` is
+whether a particular rule has been matched or not.
 
 ## References and Further Reading
 

@@ -269,8 +269,8 @@ whether a particular rule has been matched or not.
 
 Listed in suggested order of priority.
 
-* Stjernlöf, C. ["Statistical Process Control: A Practitioner's Guide"](https://two-wrongs.com/statistical-process-control-a-practitioners-guide.html),
-  _Two Wrongs_.
+* Stjernlöf, C. ["Statistical Process Control: A Practitioner's Guide"](https://entropicthoughts.com/statistical-process-control-a-practitioners-guide),
+  _Entropic Thoughts_.
 * Chin, C. ["Becoming Data Driven, From First Principles"](https://commoncog.com/becoming-data-driven-first-principles/),
   _Commoncog_.
 * Montgomery, Douglas C. _Introduction to Statistical Quality Control_, 8th EMEA Ed.

@@ -566,6 +566,7 @@ $$;
 -- * `data_C_n`. The calculated Cₙ value for this measurement.
 -- * `data_C_plus`. The calculated C⁺ for this measurement.
 -- * `data_C_minus`. The calculated C⁻ for this measurement.
+-- * `rule_in_control`. True if both C⁺ and C⁻ are within their respective decision intervals.
 -- * `rule_out_of_control_upper`. Signals whether C⁺ has gone above the upper decision interval.
 -- * `rule_out_of_control_lower`. Signals whether C⁻ has gone below the lower decision interval.
 create function spc_reports.cusum_rules(
@@ -586,6 +587,7 @@ returns table (
     data_C_n                                decimal,
     data_C_plus                             decimal,
     data_C_minus                            decimal,
+    rule_in_control                         boolean,
     rule_out_of_control_upper               boolean,
     rule_out_of_control_lower               boolean
 )
@@ -624,8 +626,9 @@ select
     , data_C_n
     , data_C_plus
     , data_C_minus
-    , data_C_plus > p_upper_decision_interval       as rule_out_of_control_upper
-    , data_C_minus < -p_lower_decision_interval     as rule_out_of_control_lower
+    , data_C_plus < p_upper_decision_interval and data_C_minus > -p_lower_decision_interval as rule_in_control
+    , data_C_plus > p_upper_decision_interval                                               as rule_out_of_control_upper
+    , data_C_minus < -p_lower_decision_interval                                             as rule_out_of_control_lower
 from  id_and_data_values;
 $$;
 
@@ -648,6 +651,7 @@ returns table (
     data_C_n                                decimal,
     data_C_plus                             decimal,
     data_C_minus                            decimal,
+    rule_in_control                         boolean,
     rule_out_of_control_upper               boolean,
     rule_out_of_control_lower               boolean
 )

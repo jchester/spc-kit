@@ -471,16 +471,16 @@ $$;
 
 create function spc_intermediates.cusum_c_plus_step(
       last_c_plus decimal
-    , measurement decimal
+    , controlled_value decimal
     , allowance   decimal
     , target_mean decimal
 ) returns decimal immutable language sql as
 $$
-    select greatest(coalesce(last_c_plus, 0) + (measurement - target_mean - allowance), 0);
+    select greatest(coalesce(last_c_plus, 0) + (controlled_value - target_mean - allowance), 0);
 $$;
 
 create aggregate spc_intermediates.cusum_c_plus(
-      measurement decimal
+      controlled_value decimal
     , allowance decimal
     , target_mean decimal
 ) (
@@ -490,16 +490,16 @@ create aggregate spc_intermediates.cusum_c_plus(
 
 create function spc_intermediates.cusum_c_minus_step(
       last_c_minus decimal
-    , measurement  decimal
+    , controlled_value  decimal
     , allowance    decimal
     , target_mean  decimal
 ) returns decimal immutable language sql as
 $$
-    select least(coalesce(last_c_minus, 0) + (measurement - target_mean + allowance), 0);
+    select least(coalesce(last_c_minus, 0) + (controlled_value - target_mean + allowance), 0);
 $$;
 
 create aggregate spc_intermediates.cusum_c_minus(
-      measurement decimal
+      controlled_value decimal
     , allowance decimal
     , target_mean decimal
 ) (

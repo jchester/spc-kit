@@ -557,15 +557,16 @@ $$;
 --
 -- * `id_sample`, `id_window` and `id_instrument`. For filtering by these values. It is recommended to use
 --   `where id_window = <some ID>` when using this function.
--- * `data_measured_value`. As the name suggests.
+-- * `data_controlled_value`. The mean of the sample. This means you can either use single measurements (by creating
+--   samples with a single measurement) or use multiple measurements per sample.
 -- * `data_deviation`. The net amount by which the measured value differs from the mean.
 -- * `data_deviation_plus`. The amount by which the measured value differs from the mean + the upper allowance.
 -- * `data_deviation_minus`. The amount by which the measured value differs from the mean - the lower allowance.
 -- * `data_C_n`. The calculated Cₙ value for this measurement.
 -- * `data_C_plus`. The calculated C⁺ for this measurement.
 -- * `data_C_minus`. The calculated C⁻ for this measurement.
--- * `rule_breached_upper_decision_interval`. Signals whether C⁺ has gone above the upper decision interval.
--- * `rule_breached_lower_decision_interval`. Signals whether C⁻ has gone below the lower decision interval.
+-- * `rule_out_of_control_upper`. Signals whether C⁺ has gone above the upper decision interval.
+-- * `rule_out_of_control_lower`. Signals whether C⁻ has gone below the lower decision interval.
 create function spc_reports.cusum_rules(
       p_upper_allowance         decimal
     , p_upper_decision_interval decimal
@@ -574,46 +575,57 @@ create function spc_reports.cusum_rules(
     , p_target_mean             decimal default null
 )
 returns table (
-    id_measurement                          bigint,
     id_sample                               bigint,
     id_window                               bigint,
     id_instrument                           bigint,
-    data_measured_value                     decimal,
+    data_controlled_value                   decimal,
     data_deviation                          decimal,
     data_deviation_plus                     decimal,
     data_deviation_minus                    decimal,
     data_C_n                                decimal,
     data_C_plus                             decimal,
     data_C_minus                            decimal,
-    rule_breached_upper_decision_interval   boolean,
-    rule_breached_lower_decision_interval   boolean
+    rule_out_of_control_upper               boolean,
+    rule_out_of_control_lower               boolean
 )
 immutable language sql as
 $$
-      select m.id           as id_measurement
-    , m.sample_id           as id_sample
+with id_and_data_values as (
+    select
+      s.id                  as id_sample
     , w.id                  as id_window
     , w.instrument_id       as id_instrument
-    , m.measured_value      as data_measured_value
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value)               as data_deviation
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as data_deviation_plus
-    , m.measured_value - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as data_deviation_minus
-    , sum(m.measured_value - coalesce(p_target_mean, mean_measured_value))
-        over (partition by w.id order by m.id)                                      as data_C_n
-    , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
+    , mss.sample_mean       as data_controlled_value
+    , mss.sample_mean - coalesce(p_target_mean, mean_measured_value)               as data_deviation
+    , mss.sample_mean - coalesce(p_target_mean, mean_measured_value) - p_upper_allowance as data_deviation_plus
+    , mss.sample_mean - coalesce(p_target_mean, mean_measured_value) + p_lower_allowance as data_deviation_minus
+    , sum(mss.sample_mean - coalesce(p_target_mean, mean_measured_value))
+        over window_sample                                                          as data_C_n
+    , spc_intermediates.cusum_c_plus(mss.sample_mean, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
         over window_sample                                                          as data_C_plus
-    , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
+    , spc_intermediates.cusum_c_minus(mss.sample_mean, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
         over window_sample                                                          as data_C_minus
-    , spc_intermediates.cusum_c_plus(m.measured_value, p_upper_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample > p_upper_decision_interval                              as rule_breached_upper_decision_interval
-    , spc_intermediates.cusum_c_minus(m.measured_value, p_lower_allowance, coalesce(p_target_mean, mean_measured_value))
-        over window_sample < p_lower_decision_interval                              as rule_breached_lower_decision_interval
-from spc_data.measurements m
-         join spc_data.samples s on s.id = m.sample_id
+    from  spc_data.samples s
          join spc_data.windows w on s.window_id = w.id
          join spc_data.instruments i on i.id = w.instrument_id
          join spc_intermediates.individual_measurement_statistics_window imsw on w.id = imsw.window_id
-window window_sample as (partition by w.id order by m.sample_id);
+         join spc_intermediates.measurement_sample_statistics mss on w.id = mss.window_id and mss.id = s.id
+    window window_sample as (partition by w.id order by s.id)
+)
+select
+      id_sample
+    , id_window
+    , id_instrument
+    , data_controlled_value
+    , data_deviation
+    , data_deviation_plus
+    , data_deviation_minus
+    , data_C_n
+    , data_C_plus
+    , data_C_minus
+    , data_C_plus > p_upper_decision_interval       as rule_out_of_control_upper
+    , data_C_minus < -p_lower_decision_interval     as rule_out_of_control_lower
+from  id_and_data_values;
 $$;
 
 -- This is the symmetric form of cusum_rules(), provided for convenience. That is, it only takes a single value for
@@ -625,19 +637,18 @@ create function spc_reports.cusum_rules(
     , p_target_mean         decimal default null
 )
 returns table (
-    id_measurement                          bigint,
     id_sample                               bigint,
     id_window                               bigint,
     id_instrument                           bigint,
-    data_measured_value                     decimal,
+    data_controlled_value                   decimal,
     data_deviation                          decimal,
     data_deviation_plus                     decimal,
     data_deviation_minus                    decimal,
     data_C_n                                decimal,
     data_C_plus                             decimal,
     data_C_minus                            decimal,
-    rule_breached_upper_decision_interval   boolean,
-    rule_breached_lower_decision_interval   boolean
+    rule_out_of_control_upper               boolean,
+    rule_out_of_control_lower               boolean
 )
 immutable language sql as
 $$

@@ -545,7 +545,8 @@ $$;
 --    depending on sensitivity requirements. See Montgomery §9.1.3 for a discussion of selecting K and H based on the
 --    desired Average Run Length (how long, on average, between false alarms).
 -- * `p_lower_allowance`. Same as `p_upper_allowance`, but for C⁻.
--- * `p_lower_decision_interval`. Same as `p_upper_decision_interval`, but for C⁻.
+-- * `p_lower_decision_interval`. Same as `p_upper_decision_interval`, but for C⁻. This value gets negated during
+--    calculation, so pass a positive value for the lower decision interval for correct results.
 -- * `p_target_mean` represents a fixed, known value for the mean of the process. If not provided this will be derived
 --    from the limit establishment window.
 --

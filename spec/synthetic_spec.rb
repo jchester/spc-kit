@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Jacques Chester. See LICENSE.
+
 require_relative 'spc_spec'
 
 class SyntheticSpec < SpcSpec

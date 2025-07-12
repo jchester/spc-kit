@@ -1,3 +1,5 @@
+-- Copyright (C) 2024 Jacques Chester. See LICENSE.
+
 -- This schema is where you add your data. Just tables. When using ORM these will be your base objects.
 create schema if not exists spc_data;
 

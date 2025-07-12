@@ -1,3 +1,5 @@
+-- Copyright (C) 2024 Jacques Chester. See LICENSE.
+
 -- This schema encapsulates a variety of intermediate calculations, taking data from spc_data and exposing calculated
 -- values that are used in spc_reports.
 create schema if not exists spc_intermediates;

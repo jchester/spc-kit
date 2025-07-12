@@ -1,3 +1,5 @@
+-- Copyright (C) 2024 Jacques Chester. See LICENSE.
+
 -- This is where you read out the control status of individual samples, based on the application of various rules.
 -- Control status can be one of four conditions:
 --

@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Jacques Chester. See LICENSE.
+
 require 'minitest/autorun'
 require 'sequel'
 require 'logger'
